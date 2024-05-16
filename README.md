@@ -8,27 +8,14 @@
 
 Project configuration files:
 
-+-------------------------------------+----------------------------------------------------------------------+
-| Configuration files                 | Description                                                          |
-+=====================================+======================================================================+
-| ├── 📒 `_quarto.yml`                | YAML config file for project                                         |
-+-------------------------------------+----------------------------------------------------------------------+
-| ├── 🧾 `_common.R`                  | R setup script run at top of each chapter containing meaningful code |
-|                                     |                                                                      |
-|                                     | -   `knitr` chunk global settings                                    |
-|                                     |                                                                      |
-|                                     | -   Core packages                                                    |
-|                                     |                                                                      |
-|                                     | -   Plot rendering settings for different formats                    |
-+-------------------------------------+----------------------------------------------------------------------+
-| ├── ⚙️ `faar.Rproj`                 | Project options file                                                 |
-+-------------------------------------+----------------------------------------------------------------------+
-| ├── ⚙️ `.gitignore`                 | Files and folders omitted in user commits                            |
-+-------------------------------------+----------------------------------------------------------------------+
-| ├── ⚙️ `.gitattributes`             | Enables Git Large File Storage (LFS)                                 |
-+-------------------------------------+----------------------------------------------------------------------+
-| ├── ⚙️ `.nojekyll`                  | Github Pages config file                                             |
-+-------------------------------------+----------------------------------------------------------------------+
+| Configuration files | Description |
+|---------------------|-------------|
+| ├── 📒 `_quarto.yml` | YAML config file for project |
+| ├── 🧾 `_common.R` | R setup script with `knitr` chunk global settings, core packages, and plot rendering settings |
+| ├── ⚙️ `faar.Rproj` | Project options file |
+| ├── ⚙️ `.gitignore` | Files and folders omitted in user commits |
+| ├── ⚙️ `.gitattributes` | Enables Git Large File Storage (LFS) |
+| ├── ⚙️ `.nojekyll` | Github Pages config file |
 
 Quarto documents with study content:
 
