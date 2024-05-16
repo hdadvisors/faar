@@ -1,0 +1,15 @@
+{
+  "hash": "68482985be99564c1209dad603788e1d",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\nengine: knitr\n---\n\n\n# About this study {.unnumbered}\n\nThis study is...\n\n*Completed May 16, 2024*\n\n```\nAbout this study\n\nExecutive summary\n\nIntroduction\n└── Background\n└── Engagement\n└── Data notes\n\nHousing spectrum\n└── Regional\n└── Core workforce\n\nHousing market\n└── Homeownership\n└── Rental\n\nHousing gaps\n└── Current gaps\n└── Projected gaps\n\nLocal fact sheets\n└── Fredericksburg, etc.\n\n[if needed] References\n\n[if needed] Appendices\n```\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
