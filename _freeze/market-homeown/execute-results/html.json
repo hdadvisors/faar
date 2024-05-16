@@ -1,0 +1,15 @@
+{
+  "hash": "206606cf115608849dbaaba6f1ed454b",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Homeownership market {#sec-market-homeown}\n\n\n::: {.cell}\n\n:::\n\n\n. . .\n\n\n::: {.cell layout-align=\"left\"}\n\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

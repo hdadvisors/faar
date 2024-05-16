@@ -1,0 +1,15 @@
+{
+  "hash": "15e0041b46c5011affc81cf05cd4095e",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Core workforce spectrum {#sec-spectrum-work}\n\n\n::: {.cell}\n\n:::\n\n\n. . .\n\n\n::: {.cell layout-align=\"left\"}\n\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

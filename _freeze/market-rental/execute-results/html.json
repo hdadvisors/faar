@@ -1,0 +1,15 @@
+{
+  "hash": "c95b76143fc5097e8216ab53b5e58ee5",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Rental market {#sec-market-rental}\n\n\n::: {.cell}\n\n:::\n\n\n. . .\n\n\n::: {.cell layout-align=\"left\"}\n\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

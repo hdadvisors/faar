@@ -1,0 +1,15 @@
+{
+  "hash": "e28b2edd15cdf25d94305896a3e2fd50",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Projected gaps {#sec-gaps-proj}\n\n\n::: {.cell}\n\n:::\n\n\n. . .\n\n\n::: {.cell layout-align=\"left\"}\n\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
