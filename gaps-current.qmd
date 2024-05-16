@@ -1,0 +1,22 @@
+# Current gaps {#sec-gaps-current}
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+source("_common.R")
+
+# Load packages other than tidyverse and hdatools
+# 
+# library(scales)
+
+```
+
+. . .
+
+```{r}
+
+```
+

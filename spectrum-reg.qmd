@@ -1,0 +1,22 @@
+# Regional spectrum {#sec-spectrum-reg}
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+source("_common.R")
+
+# Load packages other than tidyverse and hdatools
+# 
+# library(scales)
+
+```
+
+. . .
+
+```{r}
+
+```
+

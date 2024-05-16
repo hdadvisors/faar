@@ -1,0 +1,39 @@
+---
+engine: knitr
+---
+
+# About this study {.unnumbered}
+
+This study is...
+
+*Completed `r format(Sys.Date(), "%B %d, %Y")`*
+
+```
+About this study
+
+Executive summary
+
+Introduction
+└── Background
+└── Engagement
+└── Data notes
+
+Housing spectrum
+└── Regional
+└── Core workforce
+
+Housing market
+└── Homeownership
+└── Rental
+
+Housing gaps
+└── Current gaps
+└── Projected gaps
+
+Local fact sheets
+└── Fredericksburg, etc.
+
+[if needed] References
+
+[if needed] Appendices
+```

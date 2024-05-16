@@ -1,0 +1,88 @@
+project:
+  type: book
+  execute-dir: project
+  output-dir: docs
+
+execute: 
+  freeze: auto
+
+book:
+
+  title: "Fredericksburg Area Housing Gap Analysis"
+  repo-url: https://github.com/hdadvisors/faar
+  output-file: "faar-housing-study"
+  # downloads: docx
+  author:
+    - name: HDAdvisors
+      url: https://hdadvisors.net/
+  date: today
+  date-format: long
+  
+  chapters:
+    - index.qmd
+    - exec-sum.qmd
+    - part: "Introduction"
+      chapters:
+        - background.qmd
+        - engagement.qmd
+        - data-notes.qmd
+    - part: "Housing spectrum"
+      chapters:
+        - spectrum-reg.qmd
+        - spectrum-work.qmd
+    - part: "Housing market"
+      chapters:
+        - market-homeown.qmd
+        - market-rental.qmd
+    - part: "Housing gaps"
+      chapters:
+        - gaps-current.qmd
+        - gaps-proj.qmd
+    - part: "Local fact sheets"
+      chapters:
+        - local-fred.qmd
+        - local-caro.qmd
+        - local-kg.qmd
+        - local-orng.qmd
+        - local-spot.qmd
+        - local-staf.qmd
+  #   - references.qmd
+  # 
+  # appendices: 
+  #   - a1-appendix.qmd
+
+format:
+
+  html:
+    theme:
+      - lumen
+      # - hfv-custom.scss
+    grid: 
+      sidebar-width: 375px
+    fontsize: "100%"
+    # template-partials:
+    #   - toc.html
+    toc-title: "On this page"
+    
+  # docx: 
+  #   toc: true
+  #   toc-depth: 1
+  #   number-sections: true
+  #   reference-doc: hfv-report-template.docx
+  #   fig-align: left
+  #   filters: 
+  #     - hfv-colors.lua
+  #   
+  # pdf:
+  #   documentclass: scrreprt
+  #   mainfont: "Open Sans"
+  #   fig-pos: "H"
+  #   include-in-header:
+  #     text: |
+  #       \usepackage{float}
+  #       \raggedbottom
+
+bibliography: references.bib
+
+
+
