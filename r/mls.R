@@ -71,5 +71,27 @@ faar_mls_address2 <- faar_mls3 |>
 
 faar_geocode <- rbind(faar_mls_address, faar_mls_address1, faar_mls_address2)
 
-write_rds(faar_geocode, "data/faar_mls.rds")
+faar_geocode <- read_rds("data/faar_mls.rds")
+
+cpi_sales <- cpi_rent <- fredr(
+  series_id = "CUSR0000SEHC" #  Consumer Price Index for All Urban Consumers: Owners' Equivalent Rent of Residences in U.S. City Average
+) |> 
+  mutate(month = as.yearmon(date)) |> 
+  mutate(year = year(month)) |> 
+  filter(year >= 2019)
+  
+faar_geocode_cpi <- faar_geocode |> 
+  mutate(close_price = as.numeric(gsub("[\\$,]", "", close_price))) |> 
+  mutate(list_price = as.numeric(gsub("[\\$,]", "", list_price))) |>  
+  mutate(sale_date = as.Date(close_date, format = "%m/%d/%y")) |> 
+  mutate(month = as.yearmon(sale_date)) |> 
+  mutate(year = year(month)) |> 
+  filter(year >= 2019) |> 
+  left_join(cpi_sales, by = "month") |> 
+  mutate(adj_sales = (407.844/value) * close_price) # April 2024 CPI
+
+
+write_rds(faar_geocode_)
+
+write_rds(faar_geocode_cpi, "data/faar_mls.rds")
   

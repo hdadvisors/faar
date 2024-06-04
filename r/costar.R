@@ -21,7 +21,7 @@ orange <- read_excel("data/raw/orange_mf_grid.xlsx")|>
 kg <- read_excel("data/raw/kg_mf_grid.xlsx") |> 
   mutate(locality = "King George County")
 spotsy <- read_excel("data/raw/spotsy_mf_grid.xlsx") |> 
-  mutate(locality = "Caroline Spotsylvania County")
+  mutate(locality = "Spotsylvania County")
 
 costar <- rbind(staff, fxburg, caroline, orange, kg, spotsy) |> 
   janitor::clean_names() |> 
@@ -30,8 +30,8 @@ costar <- rbind(staff, fxburg, caroline, orange, kg, spotsy) |>
   filter(year >= 2016)
 
 
-cpi_ls <- fredr(
-  series_id = "CUSR0000SA0L2" # Consumer Price Index for All Urban Consumers: All Items Less Shelter in U.S. City Average
+cpi_rent <- fredr(
+  series_id = "CUUR0000SEHA" # Consumer Price Index for All Urban Consumers: Rent of Primary Residence in U.S. City Average
 ) |> 
   mutate(quarters = as.yearqtr(date)) |> 
   mutate(year = year(quarters)) |> 
@@ -39,5 +39,16 @@ cpi_ls <- fredr(
   group_by(quarters) |> 
   summarise(cpi = mean(value))
 
+
+costar_adj <- costar |> 
+  left_join(cpi_rent, by = "quarters") |> 
+  mutate(adj_rent = (416.3860/cpi) * asking_rent_per_unit) # 416.3860 is 2024 Q2 value
+
+
+ggplot(costar_adj,
+       aes(x = quarters,
+           y = adj_rent,
+           color = locality)) +
+  geom_line()
 
 
