@@ -10,7 +10,8 @@ source("_common.R")
 
 # Load packages other than tidyverse and hdatools
 # 
-# library(scales)
+library(scales)
+library(sf)
 
 ```
 
@@ -18,5 +19,47 @@ source("_common.R")
 
 ```{r}
 
+# Create a bar chart showing the number of home sales per quarter.
+
+sales <- read_rds("data/faar_mls_cpi.rds") |> 
+  group_by(county, quarter) |> 
+  summarise(count = n_distinct(mls_number))
+
+ggplot(sales,
+       aes(x = quarter,
+           y = count,
+           fill = county)) +
+  geom_col(position = "stack")
+  
+
 ```
+```{r}
+
+# Create a hex grid map showing home sale concentrations in FAAR region.
+
+library(leaflet)
+
+sales <- read_rds("data/faar_mls_cpi.rds") |> 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+hex_grid <- st_make_grid(sales, n = c(25,25),
+                         what = "polygons", square = FALSE)
+
+hex_grid_sf <- st_sf(hex_grid) %>% 
+  mutate(grid_id = 1:length(lengths(hex_grid)))
+
+hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
+
+hex_count <- filter(hex_grid_sf, n_pts > 0)
+
+leaflet(hex_count) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addPolygons()
+  
+
+
+
+```
+
+
 

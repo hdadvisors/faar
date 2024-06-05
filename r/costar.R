@@ -31,7 +31,7 @@ costar <- rbind(staff, fxburg, caroline, orange, kg, spotsy) |>
 
 
 cpi_rent <- fredr(
-  series_id = "CUUR0000SEHA" # Consumer Price Index for All Urban Consumers: Rent of Primary Residence in U.S. City Average
+  series_id = "CUUR0000SA0L2" # Consumer Price Index for All Urban Consumers: Rent of Primary Residence in U.S. City Average
 ) |> 
   mutate(quarters = as.yearqtr(date)) |> 
   mutate(year = year(quarters)) |> 
@@ -42,7 +42,7 @@ cpi_rent <- fredr(
 
 costar_adj <- costar |> 
   left_join(cpi_rent, by = "quarters") |> 
-  mutate(adj_rent = (416.3860/cpi) * asking_rent_per_unit) # 416.3860 is 2024 Q2 value
+  mutate(adj_rent = (284.2240/cpi) * asking_rent_per_unit) 
 
 
 ggplot(costar_adj,
@@ -51,4 +51,4 @@ ggplot(costar_adj,
            color = locality)) +
   geom_line()
 
-
+write_rds(costar_adj, "data/faar_costar.rds")
