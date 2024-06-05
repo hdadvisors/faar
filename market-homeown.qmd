@@ -15,13 +15,96 @@ library(sf)
 
 ```
 
-. . .
+```{r}
+#| label: sales-map
+#| fig-cap: "Map of total homes sales from 2020 through April 2024"
+
+# Create a hex grid map showing home sale concentrations in FAAR region.
+
+library(leaflet)
+library(sf)
+library(geojsonio)
+library(classInt)
+
+# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
+#   mutate(longitude = case_when(
+#     mls_number == "630778" ~ -78.329369,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "630778" ~ 38.214775,
+#     TRUE ~ latitude)) |>
+#   mutate(longitude = case_when(
+#     mls_number == "VAOR2002600" ~ -78.181042,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "VAOR2002600" ~ 38.137717,
+#     TRUE ~ latitude)) |>
+#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
+#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+# 
+# 
+# write_rds(sales, "data/faar_mls_check.rds")
+# geojson_write(sales, file = "data/mls.geojson")
+# 
+
+
+sales <- read_rds("data/faar_mls_check.rds")
+
+# leaflet(sales) |> 
+#   addProviderTiles(providers$CartoDB.Positron) |> 
+#   addCircleMarkers()
+
+hex_grid <- st_make_grid(sales, n = c(50,50),
+                         what = "polygons", square = FALSE)
+
+hex_grid_sf <- st_sf(hex_grid) %>% 
+  mutate(grid_id = 1:length(lengths(hex_grid)))
+
+hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
+
+hex_count <- filter(hex_grid_sf, n_pts > 0)
+
+palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
+
+quantiles <- classIntervals(hex_count$n_pts, n=7, style='quantile')
+palette_quantiles <- colorBin('Greens', domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
+
+
+leaflet(hex_count) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addPolygons(
+    fillColor = ~palette_quantiles(n_pts),
+    fillOpacity = 0.7,
+    opacity = 1,
+    weight = 1,
+    color='white',
+    label = ~as.character(n_pts),  # Show n_pts value when hovered over
+    highlightOptions = highlightOptions(
+      weight = 3,
+      color = '#666',
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
+  ) |> 
+  addLegend(
+    pal = palette_quantiles,
+    values = ~n_pts,
+    title = "Number of Sales",
+    position = "bottomleft"
+  )
+
+
+
+```
 
 ```{r}
+#| label: sales-bar
+#| fig-cap: "Sales by quarter and jurisdiction"
 
-# Create a bar chart showing the number of home sales per quarter.
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
-sales <- read_rds("data/faar_mls_cpi.rds") |> 
+sales <- read_rds("data/faar_mls_check.rds") |> 
   group_by(county, quarter) |> 
   summarise(count = n_distinct(mls_number))
 
@@ -33,33 +116,9 @@ ggplot(sales,
   
 
 ```
-```{r}
-
-# Create a hex grid map showing home sale concentrations in FAAR region.
-
-library(leaflet)
-
-sales <- read_rds("data/faar_mls_cpi.rds") |> 
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-
-hex_grid <- st_make_grid(sales, n = c(25,25),
-                         what = "polygons", square = FALSE)
-
-hex_grid_sf <- st_sf(hex_grid) %>% 
-  mutate(grid_id = 1:length(lengths(hex_grid)))
-
-hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
-
-hex_count <- filter(hex_grid_sf, n_pts > 0)
-
-leaflet(hex_count) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addPolygons()
-  
 
 
 
-```
 
 
 

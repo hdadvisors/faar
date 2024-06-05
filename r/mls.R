@@ -1,6 +1,9 @@
 library(tidyverse)
 library(janitor)
 library(tidygeocoder)
+library(fredr)
+library(zoo)
+library(lubridate)
 
 
 
@@ -8,6 +11,7 @@ library(tidygeocoder)
 
 fburg <- read_csv("data/raw/fburg_mls.csv")
 kg <- read_csv("data/raw/kg_mls.csv")
+caro <- read_csv("data/raw/caroline_mls.csv")
 orange <- read_csv("data/raw/orange_mls.csv")
 spots1 <- read_csv("data/raw/spots1_mls.csv")
 spots2 <- read_csv("data/raw/spots2_mls.csv")
@@ -22,7 +26,7 @@ staff4 <- read_csv("data/raw/staff4_mls.csv")
 staff5 <- read_csv("data/raw/staff5_mls.csv")
 
 
-faar_mls <- rbind(fburg, kg, orange, spots1, spots2, spots3, spots4, spots5,
+faar_mls <- rbind(fburg, kg, orange, caro, spots1, spots2, spots3, spots4, spots5,
                   staff1, staff2, staff3, staff4, staff5) |>
   clean_names() |>
   mutate(zip_code = as.character(zip_code))
@@ -37,21 +41,24 @@ list_of_dfs <- split(faar_mls, chunks)
 faar_mls1 <- data.frame(list_of_dfs[1])
 faar_mls2 <- data.frame(list_of_dfs[2])
 faar_mls3 <- data.frame(list_of_dfs[3])
+faar_mls4 <- data.frame(list_of_dfs[4])
 
 
 
 colnames(faar_mls1) <- sub("^X1\\.", "", colnames(faar_mls1))
 colnames(faar_mls2) <- sub("^X2\\.", "", colnames(faar_mls2))
 colnames(faar_mls3) <- sub("^X3\\.", "", colnames(faar_mls3))
+colnames(faar_mls4) <- sub("^X4\\.", "", colnames(faar_mls4))
 
 
-parts <- c(faar_mls1, faar_mls2, faar_mls3)
+
+parts <- c(faar_mls1, faar_mls2, faar_mls3, faar_mls4)
 
 
 faar_mls_address <- faar_mls1 |>
   mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
   geocode(address = full_address,
-          method = 'geocodio',
+          method = 'google',
           lat = latitude,
           long = longitude,
           full_results = TRUE)
@@ -59,7 +66,7 @@ faar_mls_address <- faar_mls1 |>
 faar_mls_address1 <- faar_mls2 |>
   mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
   geocode(address = full_address,
-          method = 'geocodio',
+          method = 'google',
           lat = latitude,
           long = longitude,
           full_results = TRUE)
@@ -67,14 +74,24 @@ faar_mls_address1 <- faar_mls2 |>
 faar_mls_address2 <- faar_mls3 |>
   mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
   geocode(address = full_address,
-          method = 'geocodio',
+          method = 'google',
           lat = latitude,
           long = longitude,
           full_results = TRUE)
 
-faar_geocode <- rbind(faar_mls_address, faar_mls_address1, faar_mls_address2)
+faar_mls_address3 <- faar_mls4 |>
+  mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
+  geocode(address = full_address,
+          method = 'google',
+          lat = latitude,
+          long = longitude,
+          full_results = TRUE)
 
-faar_geocode <- read_rds("data/faar_mls.rds")
+faar_geocode <- rbind(faar_mls_address, faar_mls_address1, faar_mls_address2, faar_mls_address3)
+
+# faar_geocode <- read_rds("data/faar_mls.rds")
+# write_rds(faar_geocode, "data/faar_mls_google.rds")
+faar_geocode <- read_rds("data/faar_mls_google.rds")
 
 cpi_sales <- cpi_rent <- fredr(
   series_id = "CUUR0000SA0L2" 
@@ -96,7 +113,8 @@ faar_geocode_cpi <- faar_geocode |>
   mutate(adj_sales = (284.2240/cpi) * close_price)
 
 
-write_rds(faar_geocode_cpi, "data/faar_mls_cpi.rds")
+# write_rds(faar_geocode_cpi, "data/faar_mls_cpi.rds")
+write_rds(faar_geocode_cpi, "data/faar_mls_cpi_google.rds")
 
 # write_rds(faar_geocode, "data/faar_mls.rds")
   
