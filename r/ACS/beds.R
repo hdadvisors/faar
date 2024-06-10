@@ -37,6 +37,4 @@ b25042_raw <- b25042_raw |>
   right_join(b25042_vars_cleaned, by = "variable") |> 
   select(NAME, GEOID, year, tenure, br, estimate)
 
-b25042_data <- b25042_raw |> 
-  mutate(NAME = str_remove_all(NAME, ", Virginia")) |>
-  select(NAME, GEOID, year, tenure, br, estimate) 
+
