@@ -10,3 +10,6 @@ gwrc <- va_puma |>
   filter(str_detect(NAMELSAD20, "George Washington Regional Commission"))
 
 mapview(va_local) + mapview(gwrc)
+
+
+library(tidycensus)
