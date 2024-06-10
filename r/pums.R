@@ -1,4 +1,6 @@
 library(tidycensus)
+library(tidyverse)
+library(spatstat)
 
 pums_vars_2021 <- pums_variables %>% 
   filter(year == 2021, survey == "acs5")
@@ -38,9 +40,12 @@ pums_fxburg <- pums_data |>
     pct_ami > 1 & pct_ami <= 1.15 ~ "81-115% AMI",
     pct_ami > 1.15 & pct_ami <= 1.50 ~ "115-150% AMI",
     pct_ami > 1.50 ~ "151% AMI and greater")) |> 
-  group_by(ami) |> 
+  mutate(WIF = as.numeric(WIF)) |> 
+  mutate(NOC = as.numeric(NOC)) |>
+  distinct(SERIALNO, .keep_all = TRUE) |> 
+  group_by(ami, HHT2_label, WIF_label, NAICSP_label) |> 
   summarise(
     mean_hhage = weighted.mean(HHLDRAGEP, WGTP),
-    mode_hht2 = mod
-    
+    med_inc = weighted.mean(HINCP, WGTP),
+    mode = sum(WGTP)
   )
