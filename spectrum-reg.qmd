@@ -1,5 +1,7 @@
 # Regional spectrum {#sec-spectrum-reg}
 
+This report outlines the “housing spectrum” concept and its utility for understanding housing market dynamics. It includes assessments of households in the region by various demographic and socioeconomic characteristics, primarily by wages/income. Special analysis is included for the region's core workforce, i.e. persons both living and working within the region.
+
 ```{r}
 #| label: setup
 #| echo: false
