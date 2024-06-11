@@ -11,5 +11,3 @@ gwrc <- va_puma |>
 
 mapview(va_local) + mapview(gwrc)
 
-
-library(tidycensus)
