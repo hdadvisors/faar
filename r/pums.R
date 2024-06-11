@@ -37,7 +37,7 @@ pums_fxburg <- pums_data |>
     pct_ami > 0.3 & pct_ami <= 0.5 ~ "31-50% AMI",
     pct_ami > 0.5 & pct_ami <= 0.8 ~ "51-80% AMI",
     pct_ami > 0.8 & pct_ami <= 1 ~ "81-100% AMI",
-    pct_ami > 1 & pct_ami <= 1.15 ~ "81-115% AMI",
+    pct_ami > 1 & pct_ami <= 1.15 ~ "101-115% AMI",
     pct_ami > 1.15 & pct_ami <= 1.50 ~ "115-150% AMI",
     pct_ami > 1.50 ~ "151% AMI and greater")) |> 
   mutate(WIF = as.numeric(WIF)) |> 
