@@ -197,7 +197,8 @@ sales_sf <- read_rds("data/faar_mls_check.rds") |>
     TRUE ~ "Resale"
   )) |> 
   select(total_finished_sqft, type) |> 
-  filter(total_finished_sqft != 0)
+  filter(total_finished_sqft != 0) |> 
+  filter(total_finished_sqft < 5000)
 
 title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
 
@@ -205,10 +206,9 @@ title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and 
 ggplot(sales_sf, 
        aes(x = total_finished_sqft,
            fill = type)) +
-  geom_histogram(binwidth = 100, 
-                 alpha = 0.7, 
-                 position = 'identity') +
-  facet_wrap(~type) +
+  geom_density(
+    alpha = 0.6
+  ) +
   labs(title = "Distribution of Square Footage by Home Type",
        x = "Square Footage",
        y = "Count")
@@ -235,13 +235,43 @@ title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and 
 ggplot(sales_lot, 
        aes(x = lot_size_acres,
            fill = type)) +
-  geom_density() +
+  geom_density(
+    alpha = 0.6
+  ) +
   labs(title = "Distribution of Lot Size by Home Type",
        x = "Acres",
        y = "Count")
 
 ```
 
+```{r}
+#| label: typical-sale
+#| fig-cap: "Lot Size"
 
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_lot <- read_rds("data/faar_mls_check.rds") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  select(lot_size_acres, type) |> 
+  filter(lot_size_acres != 0) |> 
+  filter(lot_size_acres < 10)
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+
+ggplot(sales_lot, 
+       aes(x = lot_size_acres,
+           fill = type)) +
+  geom_density(
+    alpha = 0.6
+  ) +
+  labs(title = "Distribution of Lot Size by Home Type",
+       x = "Acres",
+       y = "Count")
+
+```
 
 
