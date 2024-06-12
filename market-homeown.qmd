@@ -19,6 +19,35 @@ library(hdatools)
 ```
 
 ```{r}
+#| label: bps-chart
+#| fig-cap: "Building Permits"
+
+bps <- read_rds("data/faar_cbps.rds") |> 
+  filter(NAMELSAD != "Orange County") |> 
+  mutate(type = case_when(
+    type == "2-units" ~ "2-4 units",
+    type == "3-4 units" ~ "2-4 units",
+    TRUE ~ type
+  )) |> 
+  group_by(year, type) |> 
+  summarise(units = sum(units))
+
+
+ggplot(bps, 
+       aes(x = year,
+           y = units,
+           fill = type)) +
+  geom_col() +
+  facet_wrap(~type, nrow = 1) +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(caption = "Source: Census Building Permits Survey")
+  
+
+```
+
+
+```{r}
 #| label: sales-map
 #| fig-cap: "Map of total homes sales from 2020 through April 2024"
 
@@ -28,6 +57,8 @@ library(leaflet)
 library(sf)
 library(geojsonio)
 library(classInt)
+library(htmltools)
+library(htmlwidgets)
 
 # sales <- read_rds("data/faar_mls_cpi_google.rds") |>
 #   mutate(longitude = case_when(
@@ -51,7 +82,9 @@ library(classInt)
 # 
 
 
-sales <- read_rds("data/faar_mls_check.rds")
+sales <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  filter(structure_type != "Garage/Parking Space")
 
 # leaflet(sales) |> 
 #   addProviderTiles(providers$CartoDB.Positron) |> 
@@ -67,13 +100,28 @@ hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
 
 hex_count <- filter(hex_grid_sf, n_pts > 0)
 
-palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
+# Define the base color
+base_color <- "#445ca9"
 
-quantiles <- classIntervals(hex_count$n_pts, n=7, style='quantile')
-palette_quantiles <- colorBin('Greens', domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
+# Create a color palette function based on the base color
+color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
+
+# Number of bins (adjust as needed)
+bins <- 9
+
+# Generate the color palette for the bins
+palette_colors <- color_palette(bins)
+
+# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
 
 
-leaflet(hex_count) |> 
+# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
+
+quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
+palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
+
+
+m <- leaflet(hex_count) |> 
   addProviderTiles(providers$CartoDB.Positron) |> 
   addPolygons(
     fillColor = ~palette_quantiles(n_pts),
@@ -97,6 +145,49 @@ leaflet(hex_count) |>
     position = "bottomleft"
   )
 
+saveWidget(
+  m, 
+  file = "leaflet_map_with_download.html", 
+  selfcontained = TRUE,
+  libdir = NULL,
+  knitrOptions = list(
+    'self_contained' = TRUE
+  )
+)
+
+# Custom JavaScript for the download button
+js <- '
+function addDownloadButton(map) {
+  var downloadButton = L.control({position: "topright"});
+  downloadButton.onAdd = function(map) {
+    var div = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+    div.innerHTML = "<a href=\'#\' id=\'download-map\' title=\'Download Map\'><i class=\'fa fa-download\'></i></a>";
+    div.style.backgroundColor = "white";     
+    div.style.width = "30px";
+    div.style.height = "30px";
+    return div;
+  };
+  downloadButton.addTo(map);
+
+  document.getElementById("download-map").onclick = function(e) {
+    e.preventDefault();
+    html2canvas(map.getContainer(), {
+      useCORS: true
+    }).then(function(canvas) {
+      var link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = "leaflet_map.png";
+      link.click();
+    });
+  };
+}
+'
+
+# Use htmlwidgets to add custom JavaScript to the map
+onRender(m, js)
+
+# Save the final map with the download button
+saveWidget(m, "leaflet_map_with_download_button.html", selfcontained = TRUE)
 
 
 ```
@@ -107,7 +198,9 @@ leaflet(hex_count) |>
 
 # Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
-sales_price <- read_rds("data/faar_mls_check.rds")  |> 
+sales_price <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  filter(structure_type != "Garage/Parking Space") |> 
   mutate(type = case_when(
     new_construction_yn == "Yes" ~ "New Construction",
     TRUE ~ "Resale"
@@ -118,7 +211,7 @@ sales_price <- read_rds("data/faar_mls_check.rds")  |>
   summarise(med_sales = median(adj_sales))
 
 
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
 
 ggplot(sales_price,
        aes(x = quarter,
@@ -126,7 +219,12 @@ ggplot(sales_price,
            color = type)) +
   geom_line(size = 1) +
   geom_point() +
-  scale_color_hfv()
+  scale_color_hda() + 
+  theme_hda(base_size = 10) +
+  labs(title = title_text,
+       subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
+  scale_y_continuous(labels = dollar_format())
 
 ```
 
@@ -136,25 +234,36 @@ ggplot(sales_price,
 
 # Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
-sales_type <- read_rds("data/faar_mls_check.rds") |> 
+sales_type <- read_rds("data/faar_mls_check.rds")|> 
+  filter(county != "Orange, VA") |> 
   mutate(type = case_when(
     new_construction_yn == "Yes" ~ "New Construction",
     TRUE ~ "Resale"
   )) |> 
-  mutate(quarter = zoo::as.yearqtr(quarter)) |> 
-  group_by(type, quarter) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  mutate(structure_type = case_when(
+    structure_type == "End of Row/Townhouse" ~ "Townhouse",
+    structure_type == "Interior Row/Townhouse" ~ "Townhouse",
+    structure_type == "Penthouse Unit/Flat/Apartment" ~ "Unit/Flat/Apartment",
+    structure_type == "Mobile Pre 1976" ~ "Other",
+    TRUE ~ structure_type
+  )) |> 
+  group_by(structure_type, type, quarter) |> 
   summarise(count = n_distinct(mls_number))
 
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+# title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span> by quarter"
 
 ggplot(sales_type,
        aes(x = quarter,
            y = count,
-           fill = type)) +
+           fill = reorder(structure_type, -count))) +
   geom_col(position = "stack") +
-  theme_hfv(base_size = 10) +
-  scale_fill_hfv() +
-  labs(title = title_text)
+  facet_wrap(~type) +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(caption = "Source: BrightMLS") +
+  theme(legend.position = "right") +
+  scale_y_continuous(labels = number_format(big.mark = ","))
 
 ```
 ```{r}
@@ -164,27 +273,76 @@ ggplot(sales_type,
 # Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
 sales_dom <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |>
   mutate(type = case_when(
     new_construction_yn == "Yes" ~ "New Construction",
     TRUE ~ "Resale"
   )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
   select(quarter, cdom, type) |> 
   filter(cdom != 0) |> 
   group_by(quarter, type) |> 
   summarise(med_dom = median(cdom))
 
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
 
 ggplot(sales_dom,
        aes(x = quarter,
            y = med_dom,
            fill = type)) +
   geom_col(position = "dodge") +
-  theme_hfv(base_size = 10) +
-  scale_fill_hfv() +
-  labs(title = title_text)
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  labs(title = title_text,
+       caption = "Source: BrightMLS")
+```
+
+```{r}
+#| label: bed-plot
+#| fig-cap: "Bedrooms"
+
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+beds <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space",
+         beds != 0) |> 
+  mutate(beds = case_when(
+    beds > 6 ~ 6,
+    TRUE ~ beds
+  )) |> 
+  mutate(beds = as.character(beds)) |> 
+  mutate(beds = case_when(
+    beds == "6" ~ "6 or more",
+    TRUE ~ beds
+  )) |> 
+  mutate(count = 1) |> 
+  group_by(type, beds) |> 
+  summarise(sum = sum(count))
+
+
+ggplot(beds, 
+       aes(x = beds,
+           y = sum,
+           fill = type)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Bedrooms",
+       x = "Square Footage",
+       y = "Density",
+       caption = "Source: BrightMLS, excludes listings where bedrooms are listed as zero.") +
+  facet_wrap(~type, nrow = 1) +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format(big.mark = ","))
+
+
 
 ```
+
 ```{r}
 #| label: sf-plot
 #| fig-cap: "Square Footage"
@@ -192,15 +350,17 @@ ggplot(sales_dom,
 # Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
 sales_sf <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
   mutate(type = case_when(
     new_construction_yn == "Yes" ~ "New Construction",
     TRUE ~ "Resale"
   )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
   select(total_finished_sqft, type) |> 
   filter(total_finished_sqft != 0) |> 
   filter(total_finished_sqft < 5000)
 
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+subtitle_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
 
 
 ggplot(sales_sf, 
@@ -209,11 +369,18 @@ ggplot(sales_sf,
   geom_density(
     alpha = 0.6
   ) +
-  labs(title = "Distribution of Square Footage by Home Type",
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Square Footage",
+       subtitle = subtitle_text,
        x = "Square Footage",
-       y = "Count")
+       y = "Density",
+       caption = "Source: BrightMLS, excludes listings where sq. ft. is listed as zero or above 5,000.") +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format())
+
 
 ```
+
 ```{r}
 #| label: lot-plot
 #| fig-cap: "Lot Size"
@@ -221,10 +388,12 @@ ggplot(sales_sf,
 # Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
 sales_lot <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
   mutate(type = case_when(
     new_construction_yn == "Yes" ~ "New Construction",
     TRUE ~ "Resale"
   )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
   select(lot_size_acres, type) |> 
   filter(lot_size_acres != 0) |> 
   filter(lot_size_acres < 10)
@@ -238,40 +407,17 @@ ggplot(sales_lot,
   geom_density(
     alpha = 0.6
   ) +
-  labs(title = "Distribution of Lot Size by Home Type",
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Lot Size",
+       subtitle = subtitle_text,
        x = "Acres",
-       y = "Count")
+       y = "Density",
+       caption = "Source: BrightMLS, excludes listings where lot size is listed as zero or above 10 acres.") +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format())
 
 ```
 
-```{r}
-#| label: typical-sale
-#| fig-cap: "Lot Size"
 
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
-
-sales_lot <- read_rds("data/faar_mls_check.rds") |> 
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  select(lot_size_acres, type) |> 
-  filter(lot_size_acres != 0) |> 
-  filter(lot_size_acres < 10)
-
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
-
-
-ggplot(sales_lot, 
-       aes(x = lot_size_acres,
-           fill = type)) +
-  geom_density(
-    alpha = 0.6
-  ) +
-  labs(title = "Distribution of Lot Size by Home Type",
-       x = "Acres",
-       y = "Count")
-
-```
 
 
