@@ -12,6 +12,9 @@ source("_common.R")
 # 
 library(scales)
 library(sf)
+library(ggtext)
+library(hdatools)
+
 
 ```
 
@@ -99,25 +102,145 @@ leaflet(hex_count) |>
 ```
 
 ```{r}
-#| label: sales-bar
-#| fig-cap: "Sales by quarter and jurisdiction"
+#| label: price-line
+#| fig-cap: "Median sales price"
 
 # Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
 
-sales <- read_rds("data/faar_mls_check.rds") |> 
-  group_by(county, quarter) |> 
-  summarise(count = n_distinct(mls_number))
+sales_price <- read_rds("data/faar_mls_check.rds")  |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |>  
+  select(quarter, type, adj_sales) |> 
+  st_drop_geometry() |> 
+  group_by(quarter, type) |> 
+  summarise(med_sales = median(adj_sales))
 
-ggplot(sales,
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+ggplot(sales_price,
        aes(x = quarter,
-           y = count,
-           fill = county)) +
-  geom_col(position = "stack")
-  
+           y = med_sales,
+           color = type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_color_hfv()
 
 ```
 
+```{r}
+#| label: type-bar
+#| fig-cap: "Total sales"
 
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_type <- read_rds("data/faar_mls_check.rds") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  mutate(quarter = zoo::as.yearqtr(quarter)) |> 
+  group_by(type, quarter) |> 
+  summarise(count = n_distinct(mls_number))
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+ggplot(sales_type,
+       aes(x = quarter,
+           y = count,
+           fill = type)) +
+  geom_col(position = "stack") +
+  theme_hfv(base_size = 10) +
+  scale_fill_hfv() +
+  labs(title = title_text)
+
+```
+```{r}
+#| label: dom-bar
+#| fig-cap: "Days on Market"
+
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_dom <- read_rds("data/faar_mls_check.rds") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  select(quarter, cdom, type) |> 
+  filter(cdom != 0) |> 
+  group_by(quarter, type) |> 
+  summarise(med_dom = median(cdom))
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+ggplot(sales_dom,
+       aes(x = quarter,
+           y = med_dom,
+           fill = type)) +
+  geom_col(position = "dodge") +
+  theme_hfv(base_size = 10) +
+  scale_fill_hfv() +
+  labs(title = title_text)
+
+```
+```{r}
+#| label: sf-plot
+#| fig-cap: "Square Footage"
+
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_sf <- read_rds("data/faar_mls_check.rds") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  select(total_finished_sqft, type) |> 
+  filter(total_finished_sqft != 0)
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+
+ggplot(sales_sf, 
+       aes(x = total_finished_sqft,
+           fill = type)) +
+  geom_histogram(binwidth = 100, 
+                 alpha = 0.7, 
+                 position = 'identity') +
+  facet_wrap(~type) +
+  labs(title = "Distribution of Square Footage by Home Type",
+       x = "Square Footage",
+       y = "Count")
+
+```
+```{r}
+#| label: lot-plot
+#| fig-cap: "Lot Size"
+
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_lot <- read_rds("data/faar_mls_check.rds") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  select(lot_size_acres, type) |> 
+  filter(lot_size_acres != 0) |> 
+  filter(lot_size_acres < 10)
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+
+ggplot(sales_lot, 
+       aes(x = lot_size_acres,
+           fill = type)) +
+  geom_density() +
+  labs(title = "Distribution of Lot Size by Home Type",
+       x = "Acres",
+       y = "Count")
+
+```
 
 
 
