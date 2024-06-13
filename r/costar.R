@@ -22,8 +22,10 @@ kg <- read_excel("data/raw/kg_mf_grid.xlsx") |>
   mutate(locality = "King George County")
 spotsy <- read_excel("data/raw/spotsy_mf_grid.xlsx") |> 
   mutate(locality = "Spotsylvania County")
+region <- read_excel("data/raw/faar_costar.xlsx") |> 
+  mutate(locality = "Region")
 
-costar <- rbind(staff, fxburg, caroline, orange, kg, spotsy) |> 
+costar <- rbind(staff, fxburg, caroline, orange, kg, spotsy, region) |> 
   janitor::clean_names() |> 
   mutate(quarters = as.yearqtr(period)) |> 
   mutate(year = year(quarters)) |> 

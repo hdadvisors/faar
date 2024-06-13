@@ -20,3 +20,18 @@ source("_common.R")
 
 ```
 
+
+```{r}
+#| label: rent-line
+#| fig-cap: "Average asking rent"
+
+rent <- read_rds("data/faar_costar.rds") |> 
+  filter(locality == "Region") |> 
+  select(quarters, adj_rent, rent = asking_rent_per_unit)
+
+ggplot(rent,
+       aes(x = quarters,
+           y = adj_rent)) +
+  geom_line()
+
+```
