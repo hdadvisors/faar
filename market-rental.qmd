@@ -10,7 +10,9 @@ source("_common.R")
 
 # Load packages other than tidyverse and hdatools
 # 
-# library(scales)
+library(scales)
+library(ggtext)
+library(leaflet)
 
 ```
 
@@ -27,11 +29,120 @@ source("_common.R")
 
 rent <- read_rds("data/faar_costar.rds") |> 
   filter(locality == "Region") |> 
-  select(quarters, adj_rent, rent = asking_rent_per_unit)
+  select(year, quarters, adj_rent, rent = asking_rent_per_unit) |> 
+  filter(year >= 2020)
+
+
 
 ggplot(rent,
        aes(x = quarters,
-           y = adj_rent)) +
-  geom_line()
+           y = adj_rent,
+           color = adj_rent)) +
+  geom_line() +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_fill_gradientn(colours = c("#cce0ce", "#8baeaa", "#445ca9", "#233068")) +
+  labs(subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: CoStar Group, Inc.")
+  
+
+```
+
+
+
+```{r}
+#| label: growth-bar
+#| fig-cap: "Asking versus effective rent growth"
+
+growth <- read_rds("data/faar_costar.rds") |> 
+  filter(locality == "Region") |> 
+  select(year, quarters, ask = asking_rent_percent_growth_yr, eff = effective_rent_percent_growth_yr) |> 
+  filter(year >= 2020) |> 
+  pivot_longer(3:4,
+               names_to = "rent") |> 
+  mutate(value = as.numeric(value))
+
+title_text <- "<span style = 'color:#445ca9'><b>Asking</b></span> versus <span style = 'color:#8baeaa'><b>effective</span> rent growth"
+
+
+
+ggplot(growth,
+       aes(x = quarters,
+           y = value,
+           fill = rent)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = percent_format()) +
+  labs(title = title_text,
+       caption = "Source: CoStar Group, Inc.") +
+  scale_fill_hda() +
+  theme_hda(base_size = 10)
+  
+```
+
+```{r}
+#| label: vac-line
+#| fig-cap: "Rental vacancy"
+
+vac <- read_rds("data/faar_costar.rds") |> 
+  filter(locality == "Region") |> 
+  select(year, quarters, vac = vacancy_percent, vac_pct = vacancy_percent_growth_yr) |> 
+  filter(year >= 2020) |> 
+  mutate(vac = as.numeric(vac),
+         vac_pct = as.numeric(vac_pct))
+
+title_text <- "<span style = 'color:#445ca9'><b>Rental vacancy rate</b></span> and <span style = 'color:#e9ab3f'><b>percent change in vacancy</span>"
+
+
+ggplot(vac,
+       aes(x = quarters)) +
+  geom_line(
+    aes(y = vac),
+        color = "#445ca9") +
+  geom_col(
+    aes(y = vac_pct),
+        fill = "#e9ab3f") +
+  labs(title = title_text,
+       caption = "Source: CoStar Group, Inc.") +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = percent_format())
+
+
+```
+
+```{r}
+#| label: prop-type
+#| fig-cap: "Rental property by class"
+
+
+props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
+  janitor::clean_names() 
+
+props_sf <- sf::st_as_sf(props, coords = c("longitude", "latitude"), crs = 4326)
+
+pal <- colorFactor(palette = c("#445ca9", "#e9ab3f", "#8baeaa", "#50787e"), 
+                   domain = c("A", "B", "C", "F"))
+
+leaflet(props_sf) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addCircleMarkers(
+    color = ~pal(building_class),  # Use the palette to set the color
+    radius = 5, 
+    stroke = FALSE,
+    fillOpacity = 0.9,
+    popup = ~building_class
+  ) |> 
+  addLegend("bottomright", pal = pal, values = ~building_class, 
+            title = "Building Class",
+            opacity = 1)
+  
+
+
+```
+
+```{r}
+
+subsidy <- read_rds("data/nhpd_subsidies.rds")
+
+
 
 ```

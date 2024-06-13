@@ -47,10 +47,4 @@ costar_adj <- costar |>
   mutate(adj_rent = (284.2240/cpi) * asking_rent_per_unit) 
 
 
-ggplot(costar_adj,
-       aes(x = quarters,
-           y = adj_rent,
-           color = locality)) +
-  geom_line()
-
 write_rds(costar_adj, "data/faar_costar.rds")

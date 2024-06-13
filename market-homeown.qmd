@@ -192,6 +192,7 @@ saveWidget(m, "leaflet_map_with_download_button.html", selfcontained = TRUE)
 
 ```
 
+
 ```{r}
 #| label: price-line
 #| fig-cap: "Median sales price"
@@ -227,6 +228,7 @@ ggplot(sales_price,
   scale_y_continuous(labels = dollar_format())
 
 ```
+
 
 ```{r}
 #| label: type-bar
@@ -266,6 +268,8 @@ ggplot(sales_type,
   scale_y_continuous(labels = number_format(big.mark = ","))
 
 ```
+
+
 ```{r}
 #| label: dom-bar
 #| fig-cap: "Days on Market"
@@ -296,6 +300,7 @@ ggplot(sales_dom,
   labs(title = title_text,
        caption = "Source: BrightMLS")
 ```
+
 
 ```{r}
 #| label: bed-plot
@@ -343,6 +348,7 @@ ggplot(beds,
 
 ```
 
+
 ```{r}
 #| label: sf-plot
 #| fig-cap: "Square Footage"
@@ -380,6 +386,7 @@ ggplot(sales_sf,
 
 
 ```
+
 
 ```{r}
 #| label: lot-plot

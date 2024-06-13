@@ -16,11 +16,11 @@ properties <- read_excel("data/raw/nhpd_va_pull_05.20.24.xlsx") |>
          fmr = fair_market_rent, target = target_tenant_type) |> 
   filter(property_status == c("Active", "Inconclusive"))
 
-subsidies <- read_excel("data/raw/nhpd_va_pull_sub_05.20.24.xlsx") |> 
+subsidies <- read_excel("data/raw/nhpd_va_pull_sub_05.20.24.xlsx")|> 
   clean_names() |> 
-  left_join(properties, by = "nhpd_property_id") |> 
-  select(nhpd_property_id, subsidy_status, subsidy_name, subsidy_subname,
-         start_date, end_date, assisted_units, property_name.x) |> 
+  right_join(properties, by = "nhpd_property_id") |> 
+  select(nhpd_property_id, lat, long, subsidy_status, subsidy_name, subsidy_subname,
+         start_date, end_date, assisted_units, property_name.x, county) |> 
   filter(subsidy_status == c("Active", "Inconclusive"))
 
 
