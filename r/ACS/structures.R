@@ -5,9 +5,9 @@ cv <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
 # Table B25127: Tenure by year structure built by units in structure
 
-years <- 2019:2021
+years <- 2019:2022
 
-b25127_vars <- load_variables(2021, "acs5") |> 
+b25127_vars <- load_variables(2022, "acs5") |> 
   filter(str_sub(name, end = 6) %in% "B25127")
 
 b25127_raw <- map_dfr(years, function(yr){

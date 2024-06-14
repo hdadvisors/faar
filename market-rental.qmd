@@ -13,6 +13,7 @@ source("_common.R")
 library(scales)
 library(ggtext)
 library(leaflet)
+library(readxl)
 
 ```
 
@@ -140,9 +141,113 @@ leaflet(props_sf) |>
 ```
 
 ```{r}
+#| label: prop-type
+#| fig-cap: "Rental property by asking rent"
 
-subsidy <- read_rds("data/nhpd_subsidies.rds")
+
+props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
+  janitor::clean_names() 
+
+props_sf <- sf::st_as_sf(props, coords = c("longitude", "latitude"), crs = 4326)
+
+pal <- colorNumeric(
+  palette = "YlGnBu", # You can choose any palette from RColorBrewer
+  domain = prop$avg_asking_unit # The numeric values to base the color on
+)
+
+leaflet(props_sf) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addCircleMarkers(
+    color = ~pal(avg_asking_unit),  # Use the palette to set the color
+    radius = 5, 
+    stroke = FALSE,
+    fillOpacity = 0.9,
+    popup = ~as.character(paste0("$", avg_asking_unit))
+  ) |> 
+  addLegend("bottomright", pal = pal, values = ~avg_asking_unit, 
+            title = "Building Class",
+            opacity = 1)
+  
+
+
+```
+
+```{r}
+
+subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
+  filter(county != "Orange") |> 
+  group_by(subsidy_name) |> 
+  summarise(units = sum(assisted_units))
+
+ggplot(subsidy,
+       aes(x = reorder(subsidy_name, -units),
+           y = units,
+           fill = subsidy_name)) +
+  geom_col() +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  scale_fill_hda()
+  
 
 
 
 ```
+
+```{r}
+
+subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
+  filter(county != "Orange") |> 
+  mutate(name = paste0(property_name.x, ":", subsidy_name)) |> 
+  select(name, subsidy_name, assisted_units, start_date, end_date)
+
+subsidy$duration <- subsidy$end_date - subsidy$start_date
+
+ggplot(subsidy, 
+       aes(x = reorder(name, end_date), 
+           y = start_date, 
+           yend = end_date)) +
+  scale_color_hda() +
+  geom_segment(aes(xend = name, color = subsidy_name), stat = "identity", size = 3) +
+  coord_flip() +
+  geom_text(aes(label = assisted_units, y = end_date), vjust = 0.5, hjust = -0.5, color = "darkgrey", size = 2.5) +
+  labs(title = "Rental subsidy duration",
+       subtitle = "With number of units at-risk",
+       caption = "Source: National Housing Preservation Database")
+
+
+
+
+
+```
+
+
+
+```{r}
+
+prop <- read_rds("data/nhpd_properties.rds") |> 
+  filter(county != "Orange")
+
+prop <- sf::st_as_sf(prop, coords = c("long", "lat"), crs = 4326)
+
+pal <- colorNumeric(
+  palette = "YlGnBu", # You can choose any palette from RColorBrewer
+  domain = prop$fmr, # The numeric values to base the color on
+  na.color = "grey"
+)
+
+leaflet(prop) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addCircleMarkers(
+    color = ~pal(fmr),
+    radius = 5, 
+    stroke = FALSE,
+    fillOpacity = 0.9,
+    popup = ~fmr
+  ) |> 
+  addLegend(
+    "bottomright",
+    pal = pal,
+    values =  ~fmr)
+
+```
+

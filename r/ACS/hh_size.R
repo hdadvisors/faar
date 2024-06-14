@@ -5,9 +5,9 @@ library(tidyverse)
 
 cv <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
-years <- 2019:2021
+years <- 2019:2022
 
-b25010_vars <- load_variables(2021, "acs5") |> 
+b25010_vars <- load_variables(2022, "acs5") |> 
   filter(str_sub(name, end = 6) %in% "B25009")
 
 b25010_raw <- map_dfr(years, function(yr){
