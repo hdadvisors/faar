@@ -51,3 +51,6 @@ b25127_data <- b25127_raw |>
     structure == "50 or more" ~ "20 or more units",
     TRUE ~ "Other"
   )) 
+
+
+write_rds(b25127_data, "data/b25127.rds")
