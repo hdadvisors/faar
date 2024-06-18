@@ -1,9 +1,9 @@
 library(tidycensus)
 library(tidyverse)
+library(hdatools)
 
 
 faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
-
 
 
 # Estimating supply
@@ -64,7 +64,8 @@ custom_order <- factor(b25094_region$monthly, levels = c("Less than $599", "$600
 ggplot(b25094_region,
        aes(x = custom_order,
            y = estimate)) +
-  geom_col()
+  geom_col(stat = "identity", fill = "#445ca9") +
+  theme_hda(base_size = 10)
   
 
 # TABLE B25063: GROSS RENT
@@ -123,8 +124,17 @@ b25063_region <- b25063 |>
   group_by(rent) |> 
   summarise(estimate = sum(estimate))
 
+custom_order <- factor(b25063_region$rent, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+                                                         "$1,500 to $1,999", "More than $2,000"))
 
-# TABLE B25042
+ggplot(b25063_region,
+       aes(x = custom_order,
+           y = estimate)) +
+  geom_col(stat = "identity", fill = "#445ca9") +
+  theme_hda(base_size = 10)
+
+
+# TABLE B25042: TENURE BY BEDROOMS
 
 b25042_pull <- get_acs(
   geography = "county",
@@ -154,6 +164,17 @@ b25042 <- b25042_pull |>
 b25042_region <- b25042 |> 
   group_by(tenure, br) |> 
   summarise(estimate = sum(estimate))
+
+custom_order <- factor(b25042_region$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
+                                                    "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
+
+ggplot(b25042_region,
+       aes(x = custom_order,
+           y = estimate, 
+           fill = tenure)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda()
   
   
   
@@ -200,6 +221,15 @@ b25068_region <- b25068 |>
   mutate(vacant = pct*2954) |> 
   mutate(adj_estmate = estimate + vacant)
 
+library(gt)
+
+
+tb <- b25068_region |> 
+  select(br, rent, estimate) |> 
+  pivot_wider(names_from = "br",
+              values_from = "estimate") 
+
+
 # ggplot(b25068_region,
 #        aes(x = br,
 #            y = estimate,
@@ -208,7 +238,7 @@ b25068_region <- b25068 |>
 #   facet_grid(~rent)
 
 
-# Table B25004: Vacant Units
+# Table B25004: VACANT UNITS
 
 b25004_pull <- get_acs(
   geography = "county",
@@ -256,7 +286,7 @@ b25127_raw <- map_dfr(years, function(yr){
 })
 
 b25127_raw <- b25127_raw |> 
-  subset(GEOID %in% cv) 
+  subset(GEOID %in% faar) 
 
 b25127_vars_cleaned <- b25127_vars |> 
   separate(label, into = c("est", "total", "tenure", "yrbuilt", "structure"), sep = "!!") |> 
@@ -277,7 +307,7 @@ b25127_data <- b25127_raw |>
          yrbuilt = str_remove_all(yrbuilt, "Built ")) |>
   select(NAME, GEOID, year, tenure, yrbuilt, structure, estimate) |> 
   mutate(structure = case_when(
-    structure == "1, detached  or attached" ~ "Single-family",
+    structure == "1, detached or attached" ~ "Single-family",
     structure == "2 to 4" ~ "2 to 4 units",
     structure == "5 to 19" ~ "5 to 19 units",
     structure == "20 to 49" ~ "20 or more units",
@@ -287,11 +317,19 @@ b25127_data <- b25127_raw |>
 
 b25127_region <- b25127_data |> 
   filter(GEOID != "51137") |> 
-  group_by(yrbuilt, structure, tenure) |> 
-  summarise(estimate = sum(estimate))
+  group_by(year, yrbuilt, structure, tenure) |> 
+  summarise(estimate = sum(estimate)) |> 
+  filter(year == 2022)
 
-ggplot(b5127_region,
-       )
+
+ggplot(b25127_region,
+       aes(x = yrbuilt,
+           y = estimate,
+           fill = structure)) +
+  geom_col() +
+  theme_hda(base_size = 10) +
+  scale_fill_hda(direction = -1)
+
 
 # Estimating housing demand
 
@@ -319,7 +357,7 @@ pums_fxburg <- pums_data |>
   filter(PUMA20 %in% c("17700", "17900")) |> 
   filter(TEN_label != "N/A (GQ/vacant)") |> 
   mutate(TEN_label = case_when(
-    TEN_label == "Rented"
+    TEN_label == "Rented" ~ "Renter"
   ))
 
 
