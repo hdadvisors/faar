@@ -55,7 +55,7 @@ b25094_region <- b25094 |>
   mutate(total = sum(estimate)) |> 
   mutate(pct = estimate/total) |> 
   mutate(vacant = pct*1049) |> 
-  mutate(adj_estmate = estimate + vacant)
+  mutate(adj_estimate = estimate + vacant)
 
 
 write_rds(b25094_region, "data/b25094_region.rds")
@@ -127,7 +127,12 @@ b25063 <- b25063_pull |>
 
 b25063_region <- b25063 |> 
   group_by(rent) |> 
-  summarise(estimate = sum(estimate))
+  summarise(estimate = sum(estimate)) |> 
+  ungroup() |> 
+  mutate(total = sum(estimate)) |> 
+  mutate(pct = estimate/total) |> 
+  mutate(vacant = pct*2954) |> 
+  mutate(adj_estmate = estimate + vacant)
 
 write_rds(b25063_region, "data/b25063_region.rds")
 
@@ -173,7 +178,17 @@ b25042 <- b25042_pull |>
 
 b25042_region <- b25042 |> 
   group_by(tenure, br) |> 
-  summarise(estimate = sum(estimate))
+  summarise(estimate = sum(estimate)) |> 
+  ungroup() |> 
+  group_by(tenure) |> 
+  mutate(total = sum(estimate)) |> 
+  mutate(pct = estimate/total) |> 
+  mutate(vacant = case_when(
+    tenure == "Renter" ~ pct * 2954,
+    tenure == "Homeowner" ~ pct * 1049
+  )) |> 
+  mutate(adj_estimate = estimate + vacant)
+
 
 write_rds(b25042_region, "data/b25042_region.rds")
 
@@ -231,7 +246,9 @@ b25068_region <- b25068 |>
   mutate(total = sum(estimate)) |> 
   mutate(pct = estimate/total) |> 
   mutate(vacant = pct*2954) |> 
-  mutate(adj_estmate = estimate + vacant)
+  mutate(adj_estimate = estimate + vacant)
+
+write_rds(b25068_region, "data/b25068_region.rds")
 
 library(gt)
 
@@ -331,7 +348,16 @@ b25127_region <- b25127_data |>
   filter(GEOID != "51137") |> 
   group_by(year, yrbuilt, structure, tenure) |> 
   summarise(estimate = sum(estimate)) |> 
-  filter(year == 2022)
+  filter(year == 2022) |> 
+  ungroup() |> 
+  group_by(tenure) |> 
+  mutate(total = sum(estimate)) |> 
+  mutate(pct = estimate/total) |> 
+  mutate(vacant = case_when(
+    tenure == "Renter" ~ pct * 2954,
+    tenure == "Homeowner" ~ pct * 1049
+  )) |> 
+  mutate(adj_estimate = estimate + vacant)
 
 write_rds(b25127_region, "data/b25127_region.rds")
 

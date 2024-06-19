@@ -21,40 +21,50 @@ library(hdatools)
 #| label: owner-supply
 #| fig-cap: "Existing homeowner supply by monthly housing costs"
 
+
+# Read in the selected monthly housing cost data for homeowners.
 owner_supply <- read_rds("data/b25094_region.rds") 
 
 # The data visualization below shows the distribution of owner-occupied housing
-# based on monthly housing costs. This viz is focused on the entire region. It 
+# based on monthly housing costs in 2022. This viz is focused on the entire region. It 
 # accounts for vacant housing units by applying an equal distribution of vacant 
 # units based on the distribution by cost.
 
+# Create a custom order to arrange the monthly cost values appropriately.
 custom_order <- factor(owner_supply$monthly, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
                                                          "$1,500 to $1,999", "More than $2,000"))
 
 ggplot(owner_supply,
        aes(x = custom_order,
-           y = estimate)) +
+           y = adj_estimate)) +
   geom_col(stat = "identity", fill = "#445ca9") +
   theme_hda(base_size = 10) +
   scale_y_continuous(labels = number_format(big.mark = ",")) +
   labs(title = "Existing homeowner supply by monthly cost",
        caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25094.")
 
-
 ```
+
+
 ```{r}
 #| label: owner-bedroom
 #| fig-cap: "Existing homeowner supply by bedrooms"
 
+# The data visualization below shows the distribution of homeowner occupied housing
+# units by the number of bedrooms in 2022. This viz is focused on the entire region. It 
+# accounts for vacant housing units by applying an equal distribution of vacant 
+# units based on the distribution of bedrooms.
+
+# Read in the tenure by bedrooms data and filter for only homeowners.
 owner_bedroom <- read_rds("data/b25042_region.rds") |> 
   filter(tenure == "Homeowner")
 
+# Create a custom order to arrange the monthly cost values appropriately.
 custom_order <- factor(owner_bedroom$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
                                                     "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
-
 ggplot(owner_bedroom,
        aes(x = custom_order,
-           y = estimate)) +
+           y = adj_estimate)) +
   geom_col(position = "dodge", fill = "#445ca9") +
   theme_hda(base_size = 10) +
   scale_fill_hda() +
@@ -63,20 +73,32 @@ ggplot(owner_bedroom,
        caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
 
 ```
+
+
 ```{r}
 #| label: owner-type
 #| fig-cap: "Existing homeowner supply by type and year built"
 
+# The data visualization below shows the distribution of homeowner occupied housing
+# units by structure type and year built in 2022. This viz is focused on the entire region. It 
+# accounts for vacant housing units by applying an equal distribution of vacant 
+# units based on the distribution of units by structure and year.
+# 
+# Table B25136 could have been possibly used by the break out of structure type doesn't align.
+
+# Read in the tenure by structure and yearbuilt data and filter for only homeowners.
 owner_type <- read_rds("data/b25127_region.rds") |> 
   filter(tenure == "Homeowner")
 
+# Create a title text object with html/css for styling
 title_text <- "<span style = 'color:#445ca9'><b>Single-family</b></span> housing has dominated construction"
 
+# Create a title text object with html/css for styling
 subtitle_text <- "<span style = 'color:#cce0ce'><b>Other</b></span> housing like manufactured housing follows, but still pales in comparison"
 
 ggplot(owner_type,
        aes(x = yrbuilt,
-           y = estimate,
+           y = adj_estimate,
            fill = structure)) +
   geom_col() +
   theme_hda(base_size = 10) +
@@ -94,6 +116,8 @@ ggplot(owner_type,
 #| label: bps-chart
 #| fig-cap: "Building Permits"
 
+# The data visualization below shows building trends broken out by type of housing in the FAAR region.
+
 bps <- read_rds("data/faar_cbps.rds") |> 
   filter(NAMELSAD != "Orange County") |> 
   mutate(type = case_when(
@@ -104,6 +128,7 @@ bps <- read_rds("data/faar_cbps.rds") |>
   group_by(year, type) |> 
   summarise(units = sum(units))
 
+subtitle_text <- "However, <span style = 'color: #e9ab3f'><b>larger multifamily</b></span> construction has been on the rise."
 
 ggplot(bps, 
        aes(x = year,
@@ -113,7 +138,9 @@ ggplot(bps,
   facet_wrap(~type, nrow = 1) +
   scale_fill_hda() +
   theme_hda(base_size = 10) +
-  labs(caption = "Source: Census Building Permits Survey")
+  labs(title = "The region has still not recovered to pre-Great Recession construction levels",
+       subtitle = subtitle_text,
+       caption = "Source: Census Building Permits Survey")
   
 
 ```
@@ -269,7 +296,8 @@ saveWidget(m, "leaflet_map_with_download_button.html", selfcontained = TRUE)
 #| label: price-line
 #| fig-cap: "Median sales price"
 
-# Create a bar chart showing the number of home sales per quarter. 
+# The data visualization below shows median home sales price for new construction and resale
+# homes in the FAAR region in 2024 Q2 dollars. 
 
 sales_price <- read_rds("data/faar_mls_check.rds") |> 
   filter(county != "Orange, VA") |> 
