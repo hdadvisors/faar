@@ -21,6 +21,94 @@ library(readxl)
 
 ```{r}
 
+renter_supply <- read_rds("data/b25063_region.rds") 
+
+# The data visualization below shows the distribution of renter-occupied housing based on gross monthly rent. This viz is focused on the entire region. It accounts for vacant housing units by applying an equal distribution of vacant units based on the distribution by cost.
+
+custom_order <- factor(renter_supply$rent, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+                                                         "$1,500 to $1,999", "More than $2,000"))
+
+ggplot(renter_supply,
+       aes(x = custom_order,
+           y = estimate)) +
+  geom_col(stat = "identity", fill = "#445ca9") +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = "Existing renter supply by gross monthly rent")
+
+
+```
+
+
+```{r}
+
+renter_bedroom <- read_rds("data/b25042_region.rds") |> 
+  filter(tenure == "Renter")
+
+custom_order <- factor(renter_bedroom$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
+                                                    "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
+
+ggplot(renter_bedroom,
+       aes(x = custom_order,
+           y = estimate)) +
+  geom_col(position = "dodge", fill = "#445ca9") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = "Existing renter supply by bedrooms")
+
+```
+
+
+```{r}
+
+renter_type <- read_rds("data/b25127_region.rds") |> 
+  filter(tenure == "Renter")
+
+title_text <- "Existing rental supply is diverse"
+
+subtitle_text <- "<span style = 'color:#445ca9'><b>Single-family housing</b></span> has increasingly been a large proportion of rental"
+
+ggplot(renter_type,
+       aes(x = yrbuilt,
+           y = estimate,
+           fill = structure)) +
+  geom_col() +
+  theme_hda(base_size = 10) +
+  scale_fill_hda(direction = -1) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = title_text,
+       subtitle = subtitle_text)
+
+
+```
+
+```{r}
+#| label: bps-chart
+#| fig-cap: "Building Permits"
+
+bps <- read_rds("data/faar_cbps.rds") |> 
+  filter(NAMELSAD != "Orange County") |> 
+  mutate(type = case_when(
+    type == "2-units" ~ "2-4 units",
+    type == "3-4 units" ~ "2-4 units",
+    TRUE ~ type
+  )) |> 
+  group_by(year, type) |> 
+  summarise(units = sum(units))
+
+
+ggplot(bps, 
+       aes(x = year,
+           y = units,
+           fill = type)) +
+  geom_col() +
+  facet_wrap(~type, nrow = 1) +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(caption = "Source: Census Building Permits Survey")
+  
+
 ```
 
 
@@ -186,9 +274,7 @@ ggplot(subsidy,
   geom_col() +
   theme_hda(base_size = 10) +
   scale_y_continuous(labels = number_format(big.mark = ",")) +
-  scale_fill_hda()
-  
-
+  scale_fill_hda(direction = 1)
 
 
 ```

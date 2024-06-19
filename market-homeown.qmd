@@ -15,6 +15,78 @@ library(sf)
 library(ggtext)
 library(hdatools)
 
+```
+
+```{r}
+#| label: owner-supply
+#| fig-cap: "Existing homeowner supply by monthly housing costs"
+
+owner_supply <- read_rds("data/b25094_region.rds") 
+
+# The data visualization below shows the distribution of owner-occupied housing
+# based on monthly housing costs. This viz is focused on the entire region. It 
+# accounts for vacant housing units by applying an equal distribution of vacant 
+# units based on the distribution by cost.
+
+custom_order <- factor(owner_supply$monthly, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+                                                         "$1,500 to $1,999", "More than $2,000"))
+
+ggplot(owner_supply,
+       aes(x = custom_order,
+           y = estimate)) +
+  geom_col(stat = "identity", fill = "#445ca9") +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = "Existing homeowner supply by monthly cost",
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25094.")
+
+
+```
+```{r}
+#| label: owner-bedroom
+#| fig-cap: "Existing homeowner supply by bedrooms"
+
+owner_bedroom <- read_rds("data/b25042_region.rds") |> 
+  filter(tenure == "Homeowner")
+
+custom_order <- factor(owner_bedroom$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
+                                                    "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
+
+ggplot(owner_bedroom,
+       aes(x = custom_order,
+           y = estimate)) +
+  geom_col(position = "dodge", fill = "#445ca9") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = "Existing homeowner supply by bedrooms",
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
+
+```
+```{r}
+#| label: owner-type
+#| fig-cap: "Existing homeowner supply by type and year built"
+
+owner_type <- read_rds("data/b25127_region.rds") |> 
+  filter(tenure == "Homeowner")
+
+title_text <- "<span style = 'color:#445ca9'><b>Single-family</b></span> housing has dominated construction"
+
+subtitle_text <- "<span style = 'color:#cce0ce'><b>Other</b></span> housing like manufactured housing follows, but still pales in comparison"
+
+ggplot(owner_type,
+       aes(x = yrbuilt,
+           y = estimate,
+           fill = structure)) +
+  geom_col() +
+  theme_hda(base_size = 10) +
+  scale_fill_hda(direction = -1) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = title_text,
+       subtitle = subtitle_text,
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25127.")
+
+
 
 ```
 
@@ -197,7 +269,7 @@ saveWidget(m, "leaflet_map_with_download_button.html", selfcontained = TRUE)
 #| label: price-line
 #| fig-cap: "Median sales price"
 
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+# Create a bar chart showing the number of home sales per quarter. 
 
 sales_price <- read_rds("data/faar_mls_check.rds") |> 
   filter(county != "Orange, VA") |> 
@@ -288,7 +360,7 @@ sales_dom <- read_rds("data/faar_mls_check.rds") |>
   group_by(quarter, type) |> 
   summarise(med_dom = median(cdom))
 
-title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span> median days on market"
 
 ggplot(sales_dom,
        aes(x = quarter,
@@ -306,26 +378,27 @@ ggplot(sales_dom,
 #| label: bed-plot
 #| fig-cap: "Bedrooms"
 
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+# Create a data viz that shows the distribution of home sales based on bedroom count.
+
 
 beds <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  mutate(type = case_when(
+  filter(county != "Orange, VA") |> # Filter out Orange County
+  mutate(type = case_when( # Create a label for New Construction and Resale
     new_construction_yn == "Yes" ~ "New Construction",
     TRUE ~ "Resale"
   )) |> 
-  filter(structure_type != "Garage/Parking Space",
-         beds != 0) |> 
-  mutate(beds = case_when(
-    beds > 6 ~ 6,
+  filter(structure_type != "Garage/Parking Space", # Remove garage and parking space sales
+         beds != 0) |>  # Remove home sales wherein there are no bedrooms listed due to incomplete entries
+  mutate(beds = case_when( # Group bedrooms of 5 or more
+    beds > 5 ~ 5, 
     TRUE ~ beds
   )) |> 
-  mutate(beds = as.character(beds)) |> 
-  mutate(beds = case_when(
-    beds == "6" ~ "6 or more",
+  mutate(beds = as.character(beds)) |> # Transform beds into character rather than a numeric
+  mutate(beds = case_when( # Transform the 5 count to "5 or more"
+    beds == "5" ~ "5 or more",
     TRUE ~ beds
   )) |> 
-  mutate(count = 1) |> 
+  mutate(count = 1) |> # Create a column to help calculate a sum
   group_by(type, beds) |> 
   summarise(sum = sum(count))
 
@@ -353,7 +426,8 @@ ggplot(beds,
 #| label: sf-plot
 #| fig-cap: "Square Footage"
 
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+# Create a data viz that shows the distribution of home sales based on square footage.
+# Density plot more easily handles outliers.
 
 sales_sf <- read_rds("data/faar_mls_check.rds") |> 
   filter(county != "Orange, VA") |> 
@@ -373,7 +447,8 @@ ggplot(sales_sf,
        aes(x = total_finished_sqft,
            fill = type)) +
   geom_density(
-    alpha = 0.6
+    alpha = 0.6,
+    color = "white"
   ) +
   theme_hda(base_size = 10) +
   labs(title = "Distribution of Square Footage",
@@ -392,7 +467,8 @@ ggplot(sales_sf,
 #| label: lot-plot
 #| fig-cap: "Lot Size"
 
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+# Create a data viz that shows the distribution of home sales based on lot size.
+# Density plot more easily handles outliers.
 
 sales_lot <- read_rds("data/faar_mls_check.rds") |> 
   filter(county != "Orange, VA") |> 
@@ -412,7 +488,8 @@ ggplot(sales_lot,
        aes(x = lot_size_acres,
            fill = type)) +
   geom_density(
-    alpha = 0.6
+    alpha = 0.6,
+    color = "white"
   ) +
   theme_hda(base_size = 10) +
   labs(title = "Distribution of Lot Size",

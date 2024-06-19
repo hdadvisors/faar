@@ -56,6 +56,9 @@ b25094_region <- b25094 |>
   mutate(pct = estimate/total) |> 
   mutate(vacant = pct*1049) |> 
   mutate(adj_estmate = estimate + vacant)
+
+
+write_rds(b25094_region, "data/b25094_region.rds")
          
 # The data visualization below shows the distribution of owner-occupied housing
 # based on monthly housing costs. This viz is focused on the entire region.
@@ -126,6 +129,8 @@ b25063_region <- b25063 |>
   group_by(rent) |> 
   summarise(estimate = sum(estimate))
 
+write_rds(b25063_region, "data/b25063_region.rds")
+
 # The data visualization below shows the distribution of renter-occupied housing
 # based on monthly housing costs. This viz is focused on the entire region.
 
@@ -169,6 +174,8 @@ b25042 <- b25042_pull |>
 b25042_region <- b25042 |> 
   group_by(tenure, br) |> 
   summarise(estimate = sum(estimate))
+
+write_rds(b25042_region, "data/b25042_region.rds")
 
 custom_order <- factor(b25042_region$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
                                                     "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
@@ -326,6 +333,8 @@ b25127_region <- b25127_data |>
   summarise(estimate = sum(estimate)) |> 
   filter(year == 2022)
 
+write_rds(b25127_region, "data/b25127_region.rds")
+
 
 ggplot(b25127_region,
        aes(x = yrbuilt,
@@ -421,6 +430,8 @@ fxburg_supply <- fxburg_units |>
     value == "hh" ~ "Demand",
     value == "units" ~ "Supply"
   ))
+
+write_rds(fxburg_supply, "data/fxburg_supply_demand.rds")
 
 
 ami_order <- factor(fxburg_supply$ami, levels = c("30% AMI or below", "31-50% AMI",

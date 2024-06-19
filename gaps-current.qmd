@@ -10,13 +10,37 @@ source("_common.R")
 
 # Load packages other than tidyverse and hdatools
 # 
-# library(scales)
+library(scales)
+library(ggtext)
 
 ```
 
 . . .
 
 ```{r}
+
+supply_demand <- read_rds("data/fxburg_supply_demand.rds")
+
+ami_order <- factor(supply_demand$ami, levels = c("30% AMI or below", "31-50% AMI",
+                                           "51-80% AMI", "81-100% AMI", "101-120% AMI",
+                                           "121% AMI and greater"))
+
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region"
+
+
+
+ggplot(supply_demand,
+       aes(x = reorder(ami_order, desc(ami_order)),
+           y = estimate,
+           fill = value)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~tenure) +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  coord_flip() +
+  labs(title = title_text)
+
 
 ```
 
