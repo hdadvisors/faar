@@ -18,5 +18,28 @@ source("_common.R")
 
 ```{r}
 
+tenure_trend <- read_rds("data/b25003_project.rds") |> 
+  filter(year == 2022) |> 
+  ungroup() |> 
+  select(tenure, estimate, projection_2030, projection_2035, projection_2040) |> 
+  pivot_longer(cols = 2:5,
+               names_to = "yr") |> 
+  mutate(yr = case_when(
+    yr == "estimate" ~ 2022,
+    yr == "projection_2030" ~ 2030,
+    yr == "projection_2035" ~ 2035,
+    yr == "projection_2040" ~ 2040
+  )) |> 
+  mutate(yr = as.character(yr)) |> 
+  group_by(yr) |> 
+  mutate(pct = value/sum(value))
+
+ggplot(tenure_trend,
+       aes(x = yr,
+           y = value,
+           fill = tenure)) +
+  geom_col()
+
+
 ```
 
