@@ -44,3 +44,52 @@ ggplot(supply_demand,
 
 ```
 
+
+```{r}
+## Create a bar graph showing the distribution of households by tenure. Focus on showing the change in households by tenure in terms of percent change from 2019 to 2022.
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(readr)
+
+# Read and process the data
+tenure_data <- read_rds("data/b25003_project.rds")
+
+# Filter for the years 2019 to 2022 and select necessary columns
+tenure_filtered <- tenure_data |> 
+  filter(year %in% c(2019, 2020, 2021, 2022)) |> 
+  select(year, tenure, estimate)
+
+# Calculate year-to-year percent changes
+tenure_percent_change <- tenure_filtered |> 
+  pivot_wider(names_from = year, values_from = estimate) |> 
+  mutate(
+    change_2020 = ((`2020` - `2019`) / `2019`) * 100,
+    change_2021 = ((`2021` - `2020`) / `2020`) * 100,
+    change_2022 = ((`2022` - `2021`) / `2021`) * 100
+  ) |> 
+  select(tenure, change_2020, change_2021, change_2022) |> 
+  pivot_longer(cols = starts_with("change"), names_to = "year", values_to = "percent_change") |> 
+  mutate(year = case_when(
+    year == "change_2020" ~ "2020",
+    year == "change_2021" ~ "2021",
+    year == "change_2022" ~ "2022"
+  ))
+
+# Plotting the data
+ggplot(tenure_percent_change, aes(x = year, y = percent_change, fill = tenure)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_hda(base_size = 10) +  # Apply custom theme
+  scale_fill_hda() +           # Apply custom scale
+  labs(title = "Year-to-Year Percent Change in Households by Tenure (2019-2022)",
+       x = "Year",
+       y = "Percent Change (%)",
+       fill = "Tenure") +
+  geom_text(aes(label = round(percent_change, 1)), position = position_dodge(width = 0.9), vjust = -0.5)
+
+
+
+```
+
