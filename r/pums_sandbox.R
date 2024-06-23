@@ -2,14 +2,22 @@ library(tidycensus)
 library(tidyverse)
 library(spatstat)
 
+# Use PUMS Microdata from 2022 ACS to create a profile of a typical household at 
+# each AREA MEDIAN INCOME band. 
+
+
+# Use the below to explore available PUMS variables to utilize in building the
+# profile.
+
 pums_vars_2022 <- pums_variables %>% 
   filter(year == 2022, survey == "acs5")
 
 
-fxburg <- c("51115", "51120")
-faar <- c("17700", "17900")
+fxburg <- c("51115", "51120") # 2010 PUMA CODES
+faar <- c("17700", "17900") # 2020 PUMA CODES
 
 # Variables
+# PUMA = "PUMA20"
 # Household Type = "HHT2"
 # Age of Householder =  "HHLDRAGEP"
 # Number of Persons Associated w/ Housing Record = "NP"
@@ -18,10 +26,33 @@ faar <- c("17700", "17900")
 # Adjustment Factor for Household Income = "ADJINC"
 # NAICS Code = "NAICSP"
 # Number of Own Children in Household = "NOC"
+# Structure Type = "BLD"
+# Gross Monthly Rent = "GRNTP"
+# Selected Monthly Costs = "SMOCP"
+# Ethnicity = "HHLDRHISP"
+# Race = "HHLDRRAC1P"
+# Tenure = "TEN"
+
+
+# Get PUMS microdata for 2022 5-Year ACS and filter to the FAAR region.
 
 pums_data <- get_pums(
-  variables = c("PUMA20", "HHT2", "HHLDRAGEP", "NP", "HINCP", "ADJINC", 
-                "WIF", "NAICSP", "NOC", "TEN", "HHLDRHISP", "HHLDRRAC1P", "SMOCP", "GRNTP"),
+  variables = c("PUMA20", 
+                "HHT2", 
+                "HHLDRAGEP", 
+                "NP", 
+                "HINCP", 
+                "ADJINC", 
+                "BLD",
+                "WIF", 
+                "NAICSP", 
+                "NOC", 
+                "OCCP", 
+                "TEN", 
+                "HHLDRHISP", 
+                "HHLDRRAC1P", 
+                "SMOCP", 
+                "GRNTP"),
   year = 2022,
   state = "VA",
   survey = "acs5",
@@ -48,7 +79,6 @@ pums_join <- pums_data |>
     TRUE ~ "121% AMI or more"
   )) |> 
   filter(TEN_label != "N/A (GQ/vacant)") |> 
-  filter(SPORDER == 1) |> 
   mutate(ADJINC = as.numeric(ADJINC)) |> 
   mutate(race = case_when(
     HHLDRHISP_label != "Not Spanish/Hispanic/Latino" ~ "Hispanic, or Latino",
@@ -77,15 +107,18 @@ pums_join <- pums_data |>
     pct_ami_unit > 1.20 ~ "121% AMI or more"))
   
 fxburg_units <- pums_join |> 
+  filter(SPORDER == 1) |> 
   group_by(ami_unit, tenure) |> 
   summarise(estimate = sum(WGTP)) |> 
   select(ami = ami_unit, tenure, estimate)
 
 fxburg_hh <- pums_join |> 
+  filter(SPORDER == 1) |> 
   group_by(ami, tenure) |> 
   summarise(estimate = sum(WGTP)) 
 
 pums_race <- pums_join |> 
+  filter(SPORDER == 1) |> 
   group_by(ami, race) |> 
   summarise(estimate = sum(WGTP)) |> 
   ungroup() |> 
@@ -129,9 +162,27 @@ ggplot(fxburg_supply,
 
 # TOP INDUSTRIES BY AMI
 
+top_occ <- pums_join |> 
+  mutate(OCCP_label = as.character(OCCP_label)) |> 
+  filter(OCCP_label != "NA") |> 
+  group_by(ami, tenure, OCCP_label) |> 
+  summarise(count = sum(PWGTP), .groups = 'drop') |> 
+  group_by(ami, tenure) |> 
+  arrange(ami, tenure, desc(count)) %>%
+  slice_head(n = 1) %>%
+  ungroup()
+
 top_jobs <- pums_join |> 
 filter(NAICSP != "N") |> 
 group_by(ami, tenure, NAICSP_label) |> 
+  summarise(count = sum(PWGTP), .groups = 'drop') |> 
+  group_by(ami, tenure) |> 
+  arrange(ami, tenure, desc(count)) %>%
+  slice_head(n = 1) %>%
+  ungroup()
+
+top_bld <- pums_join |> 
+  group_by(ami, tenure, BLD_label) |> 
   summarise(count = sum(PWGTP), .groups = 'drop') |> 
   group_by(ami, tenure) |> 
   arrange(ami, tenure, desc(count)) %>%
@@ -143,6 +194,7 @@ group_by(ami, tenure, NAICSP_label) |>
 # Average household age
 # Median Household Income
 # Average number of workers
+# Average number of children
 
 stat <- pums_join |> 
   mutate(WIF = as.numeric(WIF)) |> 
@@ -151,14 +203,50 @@ stat <- pums_join |>
   summarise(
     mean_hhage = weighted.mean(HHLDRAGEP, WGTP),
     med_inc = weighted.median(HINCP, WGTP, na.rm = TRUE),
-    mean_wif = weighted.mean(WIF, WGTP, na.rm = TRUE))
+    mean_wif = weighted.mean(WIF, WGTP, na.rm = TRUE),
+    mean_noc = round(weighted.mean(NOC, WGTP, na.rm = TRUE), 1))
 
 # Top Household Type by AMI
 
 top_hht <- pums_join |> 
   group_by(ami, tenure, HHT2_label) |> 
-  summarise(count = sum(PWGTP), .groups = 'drop') |> 
-  group_by(ami) |> 
-  arrange(ami, desc(count)) %>%
+  summarise(count = sum(WGTP), .groups = 'drop') |> 
+  group_by(ami, tenure) |> 
+  arrange(ami, tenure, desc(count)) %>%
   slice_head(n = 1) %>%
   ungroup()
+
+# Create a data frame that breaks out
+# 
+
+new_order <- c("30% AMI or less", "31 to 50% AMI", "51 to 80% AMI", "81 to 100% AMI",
+               "101 to 120% AMI", "121% AMI or more")
+
+profile <- top_jobs |> 
+  left_join(stat, by = c("ami", "tenure")) |> 
+  left_join(top_hht, by = c("ami", "tenure")) |> 
+  left_join(top_occ, by = c("ami", "tenure")) |> 
+  left_join(top_bld, by = c("ami", "tenure")) |> 
+  mutate(Industry = str_replace(NAICSP_label, ".*-", "")) |> 
+  mutate(Industry = str_replace_all(Industry, "\\s*\\([^\\)]+\\)", "")) |> 
+  mutate(Occupation = str_replace(OCCP_label, ".*-", "")) |> 
+  mutate(hht = case_when(
+    HHT2_label == "Married couple household with children of the householder less than 18" ~ "Married couple with children",
+    HHT2_label == "Married couple household, no children of the householder less than 18" ~ "Married couple",
+    HHT2_label == "Female householder, no spouse/partner present, living alone" ~ "Single female",
+    HHT2_label == "Male householder, no spouse/partner present, living alone" ~ "Single male"
+  )) |> 
+  mutate(structure = case_when(
+    BLD_label == "One-family house detached" ~ "Single-family detached home",
+    BLD_label == "10-19 Apartments" ~ "Small-sized multifamily (10-19 units)",
+    BLD_label == "20-49 Apartments" ~ "Medium-sized multifamily (20 to 49 units)" 
+  )) |> 
+  select(ami, tenure, Industry, hht, structure, mean_hhage, mean_wif, med_inc, mean_noc)
+
+
+profile$ami <- factor(profile$ami, levels = new_order) 
+  
+
+profile_table <- profile |> 
+  arrange(ami) 
+
