@@ -52,7 +52,8 @@ pums_data <- get_pums(
                 "HHLDRHISP", 
                 "HHLDRRAC1P", 
                 "SMOCP", 
-                "GRNTP"),
+                "GRNTP",
+                "BDSP"),
   year = 2022,
   state = "VA",
   survey = "acs5",
@@ -159,10 +160,22 @@ ggplot(fxburg_supply,
   scale_fill_hda() +
   theme(legend.position = "right")
 
+# Top Household Type
+
+top_hht <- pums_join |> 
+  group_by(ami, tenure, HHT2_label) |> 
+  summarise(count = sum(WGTP)) |> 
+  group_by(ami, tenure) |> 
+  arrange(ami, tenure, desc(count)) %>%
+  slice_head(n = 1) %>%
+  ungroup() |> 
+  select(ami, tenure, HHT2_label)
+
 
 # TOP INDUSTRIES BY AMI
 
 top_occ <- pums_join |> 
+  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> # Nesting based on top household type
   mutate(OCCP_label = as.character(OCCP_label)) |> 
   filter(OCCP_label != "NA") |> 
   group_by(ami, tenure, OCCP_label) |> 
@@ -173,8 +186,9 @@ top_occ <- pums_join |>
   ungroup()
 
 top_jobs <- pums_join |> 
-filter(NAICSP != "N") |> 
-group_by(ami, tenure, NAICSP_label) |> 
+  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> 
+  filter(NAICSP != "N") |> 
+  group_by(ami, tenure, NAICSP_label) |> 
   summarise(count = sum(PWGTP), .groups = 'drop') |> 
   group_by(ami, tenure) |> 
   arrange(ami, tenure, desc(count)) %>%
@@ -182,6 +196,7 @@ group_by(ami, tenure, NAICSP_label) |>
   ungroup()
 
 top_bld <- pums_join |> 
+  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> 
   group_by(ami, tenure, BLD_label) |> 
   summarise(count = sum(PWGTP), .groups = 'drop') |> 
   group_by(ami, tenure) |> 
@@ -197,24 +212,21 @@ top_bld <- pums_join |>
 # Average number of children
 
 stat <- pums_join |> 
+  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> # Nesting based on top household type
   mutate(WIF = as.numeric(WIF)) |> 
   mutate(NOC = as.numeric(NOC)) |>
+  mutate(BDSP = as.numeric(BDSP)) |> 
   group_by(tenure, ami) |> 
   summarise(
     mean_hhage = weighted.mean(HHLDRAGEP, WGTP),
     med_inc = weighted.median(HINCP, WGTP, na.rm = TRUE),
     mean_wif = weighted.mean(WIF, WGTP, na.rm = TRUE),
-    mean_noc = round(weighted.mean(NOC, WGTP, na.rm = TRUE), 1))
+    mean_noc = round(weighted.mean(NOC, WGTP, na.rm = TRUE), 1),
+    mean_bed = weighted.mean(BDSP, WGTP, na.rm = TRUE))
 
 # Top Household Type by AMI
 
-top_hht <- pums_join |> 
-  group_by(ami, tenure, HHT2_label) |> 
-  summarise(count = sum(WGTP), .groups = 'drop') |> 
-  group_by(ami, tenure) |> 
-  arrange(ami, tenure, desc(count)) %>%
-  slice_head(n = 1) %>%
-  ungroup()
+
 
 # Create a data frame that breaks out
 # 
@@ -229,7 +241,9 @@ profile <- top_jobs |>
   left_join(top_bld, by = c("ami", "tenure")) |> 
   mutate(Industry = str_replace(NAICSP_label, ".*-", "")) |> 
   mutate(Industry = str_replace_all(Industry, "\\s*\\([^\\)]+\\)", "")) |> 
-  mutate(Occupation = str_replace(OCCP_label, ".*-", "")) |> 
+  mutate(Occupation = str_replace(OCCP_label, ".*-", "")) 
+
+|> 
   mutate(hht = case_when(
     HHT2_label == "Married couple household with children of the householder less than 18" ~ "Married couple with children",
     HHT2_label == "Married couple household, no children of the householder less than 18" ~ "Married couple",
