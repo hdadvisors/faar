@@ -1,3 +1,112 @@
 # Fredericksburg fact sheet {#sec-local-fred}
 
-...
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+source("_common.R")
+
+# Load packages other than tidyverse and hdatools
+# 
+library(scales)
+library(sf)
+library(ggtext)
+library(hdatools)
+
+local_var <- "Fredericksburg city"
+mls_var <- "Fredericksburg City, VA"
+costar_var <- "Fredericksburg"
+
+```
+
+```{r}
+
+# What have local building trends been like?
+
+bps <- read_rds("data/faar_cbps.rds") |> 
+  filter(NAMELSAD == local_var) |> 
+  mutate(type = case_when(
+    type == "2-units" ~ "2-4 units",
+    type == "3-4 units" ~ "2-4 units",
+    TRUE ~ type
+  )) |> 
+  group_by(year, type) |> 
+  summarise(units = sum(units))
+
+subtitle_text <- "<span style = 'color: #e9ab3f'><b>Multifamily</b></span> construction, even smaller-scale, has not been part of the county's supply."
+
+ggplot(bps, 
+       aes(x = year,
+           y = units,
+           fill = type)) +
+  geom_col() +
+  facet_wrap(~type, nrow = 1) +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(title = "Caroline County has only recently been building more diverse housing.",
+       subtitle = subtitle_text,
+       caption = "Source: Census Building Permits Survey")
+
+```
+
+
+```{r}
+
+# What has the median sales price been like?
+
+sales_price <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county == mls_var) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |>  
+  select(quarter, type, adj_sales) |> 
+  st_drop_geometry() |> 
+  group_by(quarter, type) |> 
+  summarise(med_sales = median(adj_sales))
+
+
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
+
+ggplot(sales_price,
+       aes(x = quarter,
+           y = med_sales,
+           color = type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_color_hda() + 
+  theme_hda(base_size = 10) +
+  labs(title = title_text,
+       subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
+  scale_y_continuous(labels = dollar_format())
+
+
+```
+
+```{r}
+
+
+rent <- read_rds("data/faar_costar.rds")|> 
+  filter(locality == costar_var) |>  
+  select(year, quarters, adj_rent, rent = asking_rent_per_unit) |> 
+  filter(year >= 2019)
+
+# Only 12 rental properties and 470 units
+
+ggplot(rent,
+       aes(x = quarters,
+           y = adj_rent,
+           color = adj_rent)) +
+  geom_line() +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_fill_gradientn(colours = c("#cce0ce", "#8baeaa", "#445ca9", "#233068")) +
+  labs(subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: CoStar Group, Inc.")
+
+
+```
