@@ -3,7 +3,14 @@ library(tidyverse)
 library(hdatools)
 
 
-faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
+faar <- c("51630", "51033", "51099", "51177", "51179") # FAAR FIPS codes
+
+
+#
+# The following data collection takes cues from the Assessing Affordable Housing Need 
+# methodology that was created for the St. Louis Affordable Housing Report Card. More 
+# information can be found at:  https://www.affordablestl.com/demand-model-methodology
+# 
 
 
 # Estimating supply
@@ -11,6 +18,8 @@ faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS code
 
 # TABLE B25094: SELECTED MONTHLY OWNER COSTS
 
+# Pull the raw data from the Census API utilizing tidycensus. Subset to only the 
+# counties within the FAAR region.
 
 b25094_pull <- get_acs(
   geography = "county",
@@ -59,7 +68,7 @@ b25094_region <- b25094 |>
 
 
 write_rds(b25094_region, "data/b25094_region.rds")
-         
+
 # The data visualization below shows the distribution of owner-occupied housing
 # based on monthly housing costs. This viz is focused on the entire region.
 
@@ -464,12 +473,6 @@ ami_order <- factor(fxburg_supply$ami, levels = c("30% AMI or below", "31-50% AM
                                            "51-80% AMI", "81-100% AMI", "101-120% AMI",
                                            "121% AMI and greater"))
 
-library(ggtext)
-
-title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span>"
-
-
-
 
 ggplot(fxburg_supply,
        aes(x = ami_order,
@@ -483,18 +486,6 @@ ggplot(fxburg_supply,
 
 
 
-
-
-
-
-|> 
-  summarise(med_inc = weighted.median(HINCP, WGTP, na.rm = TRUE))
-
-pum
-
-
-median_income <- 114850 # Weighted median household income 
-income_thresholds <- ami_levels * median_income
 
 
 
