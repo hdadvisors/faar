@@ -14,6 +14,7 @@ library(scales)
 library(ggtext)
 library(leaflet)
 library(readxl)
+library(ggiraph)
 
 ```
 
@@ -36,6 +37,7 @@ ggplot(renter_supply,
   scale_y_continuous(labels = number_format(big.mark = ",")) +
   labs(title = "Existing renter supply by gross monthly rent",
        caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25063.")
+
 
 
 ```
@@ -110,7 +112,8 @@ ggplot(bps,
   facet_wrap(~type, nrow = 1) +
   scale_fill_hda() +
   theme_hda(base_size = 10) +
-  labs(caption = "Source: Census Building Permits Survey")
+  labs(title = "Residential construction permits by type",
+       caption = "Source: Census Building Permits Survey")
   
 
 ```
@@ -219,9 +222,11 @@ pal <- colorFactor(palette = c("#445ca9", "#e9ab3f", "#8baeaa", "#50787e"),
 leaflet(props_sf) |> 
   addProviderTiles(providers$CartoDB.Positron) |> 
   addCircleMarkers(
-    color = ~pal(building_class),  # Use the palette to set the color
+    fillColor = ~pal(building_class),  # Use the palette to set the color
     radius = 5, 
-    stroke = FALSE,
+    stroke = TRUE,
+    color = "white",
+    weight = 1,
     fillOpacity = 0.9,
     popup = ~building_class
   ) |> 
@@ -236,6 +241,8 @@ leaflet(props_sf) |>
 ```{r}
 #| label: prop-type-bar
 #| fig-cap: "Rental property by class"
+
+# The below data visualization shows distribution of rental properties via CoStar in the FAAR region by property class and structure type.
 
 
 props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
@@ -269,6 +276,7 @@ ggplot(type_class,
 #| label: prop-type
 #| fig-cap: "Rental property by asking rent"
 
+# The below data visualization shows a map of rental properties via CoStar by asking rent.
 
 props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
   janitor::clean_names() 
@@ -293,11 +301,14 @@ leaflet(props_sf) |>
             title = "Asking Rent",
             opacity = 1)
   
-
-
 ```
 
 ```{r}
+#| label: subsidy-type
+#| fig-cap: "Assisted rental units by subsidy"
+
+
+# The below data visualization shows the distribution of assisted rental units by subsidy type in the FAAR region.
 
 subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
   filter(county != "Orange") |> 
@@ -315,10 +326,11 @@ ggplot(subsidy,
   scale_y_continuous(labels = number_format(big.mark = ",")) +
   scale_fill_hda(direction = 1)
 
-
 ```
 
 ```{r}
+#| label: subsidy-risk
+#| fig-cap: "Rental subsidy duration"
 
 subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
   filter(county != "Orange") |> 
@@ -339,15 +351,13 @@ ggplot(subsidy,
        subtitle = "With number of units at-risk",
        caption = "Source: National Housing Preservation Database")
 
-
-
-
-
 ```
 
 
 
 ```{r}
+#| label: nhpd-map
+#| fig-cap: "Assisted rental propeties"
 
 prop <- read_rds("data/nhpd_properties.rds") |> 
   filter(county != "Orange")
