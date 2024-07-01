@@ -611,6 +611,51 @@ text_chart <- affordability %>%
 # Print the text chart
 cat(text_chart)
 
+# Reformat in HDA style/kableExtra 
+## Install needed packages 
+
+install.packages("kableExtra")
+library(kableExtra)
+library(dplyr)
+
+# Example text_chart
+text_chart <- "
+Occupation: Data Scientist
+Jobs: 5000
+Mean annual wage: $90,000
+Affordable Rent: $2,250
+Affordable Home Sale: $270,000
+
+Occupation: Software Engineer
+Jobs: 6000
+Mean annual wage: $85,000
+Affordable Rent: $2,125
+Affordable Home Sale: $255,000
+"
+cat(text_chart)
+
+# Format the table using kable and kableExtra::kable_styling
+library(dplyr)
+library(kableExtra)
+install.packages("scales")
+library(scales)
+
+styled_table <- affordability %>%
+  select(occupation, employees_2023, a_median_2023, affordable_rent, affordable_sale) %>%
+  mutate(
+    employees_2023 = comma(employees_2023),
+    a_median_2023 = dollar(a_median_2023),
+    affordable_rent = dollar(affordable_rent),
+    affordable_sale = dollar(affordable_sale)
+  ) %>%
+  kable(caption = "Top Five Occupations and What they Can Afford in 2023",
+        align = "lrrr",
+        col.names = c("Occupation", "Jobs", "Median Wage 2023", "Affordable Rent", "Affordable Home Sale")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+# Print or display the styled table
+styled_table
+
 ```
 
 ```{r}
