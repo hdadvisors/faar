@@ -8,6 +8,8 @@
 
 source("_common.R")
 
+source("r/affordcalc.R")
+
 # Load packages other than tidyverse and hdatools
 # 
 library(scales)
@@ -180,6 +182,257 @@ ggplot(supply_demand,
 
 
 ```
+
+
+```{r}
+
+# Who can afford home prices today?
+
+# Rent Q2 - 1765.885
+# Sales Q2 New  - 498745.0
+# Sales Q2 Resale - 450000.0
+
+# library(FinCal)
+# 
+# price_df <- data.frame(
+#   locality = c("Region"),
+#   new_price = c(450000),
+#   resale_price = c(498745.0),
+#   avg_rent = c(1765.885)
+# )
+# 
+# calc_income_needed <- function(data, new_price_col, resale_price_col, rent_col) {
+#   
+#   
+#   calc_buy_income <- function(med_price){
+#     downpayment <- 0.05 # 5% downpayment
+#     principal <- med_price - (med_price * downpayment)
+#     closingcosts <- 0.015 # 1.5% closing costs
+#     loanamt <- principal / (1 - closingcosts) # Closing costs added to loan amount 
+#     int_rate <- 0.0694 # U.S. WEEKLY AVG AS OF 05.23.2024
+#     utilities <- 250 # Assume $250/month for utilities
+#     
+#     payment <- abs(pmt(int_rate/12, 360, loanamt, 0)) + utilities
+#   
+#     inc_needed <- (payment/0.28)*12
+#     
+#     return(inc_needed)
+#   }
+#   
+#   data <- data %>%
+#     mutate(
+#       renter_income = format((!!sym(rent_col)/0.30) * 12, scientific = FALSE), # 30% of annual income goes to rent
+#       new_buyer_income = calc_buy_income(!!sym(new_price_col)),
+#       
+#       resale_buyer_income = calc_buy_income(!!sym(resale_price_col))
+#     )
+#   
+#   return(data)
+# }
+# 
+# # Assuming price_df is your data frame with the columns "median_price" and "avg_rent"
+# price_df <- calc_income_needed(price_df, "new_price", "resale_price", "avg_rent")
+# 
+# price_table <- price_df |> 
+#   pivot_longer(cols = 5:7)
+
+afford_df <- data.frame(
+  type = c("Rental", "New Construction Purchase", "Resale Purchase"),
+  cost = c("$1,765.89", "$498,745", "$450,000"),
+  income = c("$70,635.40", "$133,714.80", "$147,038.50")
+)
+
+library(kableExtra)
+
+afford_df |> 
+  kbl(col.names = c("Housing Type", "2024 Q2 Cost", "Income Needed to Afford"),
+        align = "lrr") |> 
+  kable_material(c("striped", "hover")) |> 
+  kable_styling(font_size = 20)
+
+
+
+```
+
+```{r}
+
+# What can the average household in the region afford?
+
+
+pums_join <- read_rds("data/faar_pums_join.rds")
+
+pums_med_inc <- pums_join |> 
+  mutate(hh_age = case_when(
+    HHLDRAGEP < 25 ~ "Under 25 years",
+    HHLDRAGEP >= 25 & HHLDRAGEP <=44 ~ "25 to 44 years",
+    HHLDRAGEP >= 45 & HHLDRAGEP <= 64 ~ "45 to 64 years",
+    HHLDRAGEP >= 65  ~ "65 years and over",
+  )) |>
+  filter(SPORDER == 1) |> 
+  filter(tenure != "NA") |> 
+  mutate(inc = ADJINC*HINCP) |> 
+  group_by(hh_age, tenure) |> 
+  summarise(med_inc = weighted.median(inc, WGTP, na.rm = TRUE)) 
+
+pums_afford <- calc_affordable_rent(pums_med_inc, "med_inc")
+
+pums_afford <- calc_affordable_sales(pums_afford, "med_inc", 0.03, 0.10, 0.20)
+
+
+pums_afford_df <- pums_afford |> 
+  select(tenure, hh_age, affordable_rent, 7:9) |> 
+  pivot_longer(3:6,
+               names_to = "type") |> 
+  mutate(type = case_when(
+    type == "affordable_rent" ~ "Affordable rent",
+    type == "affordable_sales_0.03" ~ "Affordable purchase w/ 3% down",
+    type == "affordable_sales_0.1" ~ "Affordable purchase w/ 10% down",
+    type == "affordable_sales_0.2" ~ "Affordable purchase w/ 20% down"
+  )) |> 
+  filter(tenure == "Renter")
+
+age_order <- c("Under 25 years", "25 to 44 years", "45 to 64 years", "65 years and over")
+pums_afford_df$hh_age <- factor(pums_afford_df$hh_age, levels = age_order)
+
+ggplot(pums_afford_df,
+       aes(x = hh_age,
+           y = value,
+           fill = type)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~type, scales = "free_y") +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_fill_hda() +
+  labs(title = "Income needed by renters",
+       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, PUMS Microdata; calculations by HDAdvisors.")
+
+
+```
+```{r}
+
+# What can the average household in the region afford?
+
+
+pums_join <- read_rds("data/faar_pums_join.rds")
+
+pums_med_inc <- pums_join |> 
+  mutate(hh_size = case_when(
+    NP == 1 ~ 1,
+    NP == 2 ~ 2,
+    NP == 3 ~ 3, 
+    NP == 4 ~ 4,
+    TRUE ~ 5
+  )) |> 
+  mutate(hh_size = as.character(hh_size),
+         hh_size = case_when(
+           hh_size == "5" ~ "5 or more",
+           TRUE ~ hh_size
+         )) |> 
+  filter(SPORDER == 1) |> 
+  filter(tenure != "NA") |> 
+  mutate(inc = ADJINC*HINCP) |> 
+  group_by(hh_size, tenure) |> 
+  summarise(med_inc = weighted.median(inc, WGTP, na.rm = TRUE))
+
+pums_afford <- calc_affordable_rent(pums_med_inc, "med_inc")
+
+pums_afford <- calc_affordable_sales(pums_afford, "med_inc", 0.03, 0.10, 0.20)
+
+
+pums_afford_df <- pums_afford |> 
+  select(tenure, hh_size, affordable_rent, 7:9) |> 
+  pivot_longer(3:6,
+               names_to = "type") |> 
+  mutate(type = case_when(
+    type == "affordable_rent" ~ "Affordable rent",
+    type == "affordable_sales_0.03" ~ "Affordable purchase w/ 3% down",
+    type == "affordable_sales_0.1" ~ "Affordable purchase w/ 10% down",
+    type == "affordable_sales_0.2" ~ "Affordable purchase w/ 20% down"
+  )) |> 
+  filter(tenure == "Renter")
+
+ggplot(pums_afford_df,
+       aes(x = hh_size,
+           y = value,
+           fill = type)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~type, scales = "free_y") +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_fill_hda() +
+  labs(title = "Income needed by renters",
+       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, PUMS Microdata; calculations by HDAdvisors.")
+
+
+```
+```{r}
+
+wages <- read_csv("data/faar_locality_wages.csv") |> 
+  filter(locality != "Orange") |> 
+  select(locality, job, salary, `salary type`) |> 
+  filter(`salary type` == "average")
+
+calc_affordable_rent <- function(data, input_col){
+  
+  data |> 
+    mutate(affordable_rent := (0.3*!!sym(input_col))/12)
+}
+
+wages_afford <- calc_affordable_rent(wages, "salary")
+
+wages_afford <- calc_affordable_sales(wages_afford, "salary", 0.03, 0.10, 0.20)
+
+wages_afford_df <- wages_afford |> 
+  select(locality, job, salary, affordable_rent,8:10) |> 
+  pivot_longer(4:7,
+               names_to = "type") |> 
+  mutate(type = case_when(
+    type == "affordable_rent" ~ "Affordable rent",
+    type == "affordable_sales_0.03" ~ "Affordable purchase w/ 3% down",
+    type == "affordable_sales_0.1" ~ "Affordable purchase w/ 10% down",
+    type == "affordable_sales_0.2" ~ "Affordable purchase w/ 20% down"
+  ))
+
+wages_afford_rent <- wages_afford_df |> 
+  filter(type == "Affordable rent") |> 
+  mutate(job_location = paste(job, locality, sep = "-"))
+
+ggplot(wages_afford_rent,
+       aes(x = reorder(job_location, value),
+           y = value,
+           fill = locality)) +
+  geom_col() +
+  scale_y_continuous(labels = dollar_format()) +
+  coord_flip() +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(title = "Affordable rent based on average salary",
+       caption = "Source: Virginia Department of Education; Bureau of Labor Statistics; calculations by HDAdvisors.")
+
+```
+
+
+```{r}
+
+# You need to run the chunk above to run this chunk.
+
+wages_afford_own <- wages_afford_df |> 
+  filter(type == "Affordable purchase w/ 20% down")|> 
+  mutate(job_location = paste(job, locality, sep = "-"))
+
+ggplot(wages_afford_own,
+       aes(x = reorder(job_location, value),
+           y = value,
+           fill = locality)) +
+  geom_col() +
+  scale_y_continuous(labels = dollar_format()) +
+  coord_flip() +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(title = "Affordable purchase price w/ 20% down based on average salary",
+       caption = "Source: Virginia Department of Education; Bureau of Labor Statistics; calculations by HDAdvisors.")
+
+
+```
+
 
 ```{r}
 ## Create a bar graph showing the distribution of households by tenure. Focus on showing the change in households by tenure in terms of percent change from 2019 to 2022.
