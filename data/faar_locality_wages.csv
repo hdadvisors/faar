@@ -1,0 +1,31 @@
+locality,job,job_actual,salary,salary type,FY,source
+Fredericksburg,Teacher,Teacher 10-Month,"50,939.00",starting,25,FY25 Superintendent's Proposed Budget
+Stafford,Firefighter,Fire & Rescue Technician,"50,960.00",starting,25,Stafford Co Data Report
+Stafford,Police Officer,Deputy Sheriff,"47,632.00",starting,25,Stafford Co Data Report
+Stafford,Teacher,Teacher,"48,000.00",starting,25,Stafford Co Data Report
+Spotsylvania,Firefighter,Firefighter,"67,980.83",starting,24,Spotsylvania - Sheriff and FREM Department Pay Scale 
+Spotsylvania,Police Officer,Deputy Sherrif,"53,367.92",starting,24,Spotsylvania - Sheriff and FREM Department Pay Scale 
+Fredericksburg ,Teacher,Teacher,"62,916.00",average,24,VDOE Report Data
+Spotsylvania,Teacher,Teacher,"65,008.00",average,24,VDOE Report Data
+Stafford,Teacher,Teacher,"69,226.00",average,24,VDOE Report Data
+Caroline ,Teacher,Teacher,"52,940.00",average,24,VDOE Report Data
+King George,Teacher,Teacher,"65,027.00",average,24,VDOE Report Data
+Orange,Teacher,Teacher,"56,932.00",average,24,VDOE Report Data
+Orange,Fire/EMS,Firefighter/EMT,"51,320.00",median ,,email with HR
+Orange,Fire/Medic,Firefighter/Medic,"56,577.00",median ,,email with HR
+Orange,Police Officer,Sherriff's Deputy/Police Officer,"52,500.00",median ,,email with HR
+Orange,Social Worker,Social Services Worker - Benefits Program Specialist,"32,415.00",median ,,email with HR
+King George,Police Officer,Parole and Probation Officer,"58,065.00",average,22,BLS - Parole and Probation Offices
+Fredericksburg,Police Officer,Parole and Probation Officer,"60,741.00",average,22,BLS - Parole and Probation Offices
+Caroline ,Police Officer,Parole and Probation Officer,"63,731.00",average,22,BLS - Parole and Probation Offices
+Spotsylvania,Police Officer,Parole and Probation Officer,"56,699.00",average,22,BLS - Parole and Probation Offices
+Spotsylvania,Social Worker,Social Assistance,"58,709.00",average,22,BLS - Social Assistance
+Stafford,Social Worker,Social Assistance,"50,734.00",average,22,BLS - Social Assistance
+Orange,Social Worker,Social Assistance,"49,302.00",average,22,BLS - Social Assistance
+Fredericksburg,Social Worker,Social Assistance,"53,162.00",average,22,BLS - Social Assistance
+King George,Social Worker,Social Assistance,"71,308.00",average,22,BLS - Social Assistance
+Caroline ,Social Worker,Social Assistance,"69,990.00",average,22,BLS - Social Assistance
+Fredericksburg,Fire,Fire Protection,"76,354.00",average,22,BLS - Fire Protection
+Orange,Fire,Fire Protection,"18,112.00",average,22,BLS - Fire Protection
+Stafford,Fire,Fire Protection,"100,470.00",average,22,BLS - Fire Protection
+Spotsylvania,Fire,Fire Protection,"87,705.00",average,22,BLS - Fire Protection
