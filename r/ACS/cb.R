@@ -21,8 +21,8 @@ b25106_raw <- map_dfr(years, function(yr) {
     mutate(year = yr)
 })
 
-# b25106_raw <- b25106_raw |> 
-#   subset(GEOID %in% faar)
+b25106_raw <- b25106_raw |>
+  subset(GEOID %in% faar)
 
 b25106_vars_cleaned <- b25106_vars |> 
   separate(label, into = c("est", "total", "tenure", "income", "cb"), sep = "!!") |> 
@@ -50,26 +50,25 @@ b25106_data <- b25106_raw |>
   summarise(estimate = sum(estimate))
 
 
-va_cb <- b25106_data |> 
-  group_by(year, tenure, cb) |> 
-  summarise(estimate = sum(estimate)) |> 
-  ungroup() |> 
-  group_by(year, tenure) |> 
-  mutate(pct = round(estimate/sum(estimate), 3)) |> 
-  mutate(year = as.character(year)) |> 
-  filter(tenure == "Renter")
-
-write_csv(va_cb, "data/va_cb.csv")
-
-ggplot(va_cb,
-       aes(x = year,
-           y = pct,
-           fill = cb)) +
-  geom_col(position = "stack") +
-  facet_wrap(~tenure) +
-  scale_y_continuous(labels = scales::percent_format())
+# va_cb <- b25106_data |> 
+#   group_by(year, tenure, cb) |> 
+#   summarise(estimate = sum(estimate)) |> 
+#   ungroup() |> 
+#   group_by(year, tenure) |> 
+#   mutate(pct = round(estimate/sum(estimate), 3)) |> 
+#   mutate(year = as.character(year)) |> 
+#   filter(tenure == "Renter")
+# 
+# write_csv(va_cb, "data/va_cb.csv")
+# 
+# ggplot(va_cb,
+#        aes(x = year,
+#            y = pct,
+#            fill = cb)) +
+#   geom_col(position = "stack") +
+#   facet_wrap(~tenure) +
+#   scale_y_continuous(labels = scales::percent_format())
 
 
 write_rds(b25106_data, "data/b25106.rds")
 
-```
