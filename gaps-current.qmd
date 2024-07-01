@@ -144,15 +144,65 @@ FAAR_age_plot <- ggplot(cv_age,
     )))
 
 
+```
 
 
+```{r}
+##BLS: Top 5 Occupations and Annual Wage
 
+## Create a text chart that shows the top five occupations in the region with their respective annual wage.
 
+# Load libraries
+library(dplyr)
+library(ggplot2)
 
+# transform column titles 
 
+occupation_data <- oews_data %>%
+  rename(
+    occupation = occ_title,
+  )
+    
+# View the first few rows of the data to understand its structure
+head(occupation_data)
 
+# Calculate percentage change
+occupation_data %>%
+  mutate(pct_change = ((a_median_2023 - a_median_2020) / a_median_2020) * 100)
 
+# Calculate affordability for top occupations
+# Define a sample affordcalc function for illustration
 
+affordcalc <- function(annual_wage, type) {
+  if (type == "rent") {
+    return(annual_wage * 0.3 / 12)  # 30% of monthly income for rent
+  } else if (type == "sale") {
+    return(annual_wage * 3)  # Assuming 3 times annual income for home price
+  }
+}
 
+# Calculate 2023 affordability for top occupations
+affordability <- occupation_data %>%
+  mutate(
+    affordable_rent = affordcalc(a_median_2023, "rent"),
+    affordable_sale = affordcalc(a_median_2023, "sale")
+  )
+
+# Create a text chart  
+text_chart <- affordability %>%
+  mutate(
+    text = paste0(
+      "Occupation: ", occupation, "\n",
+      "Median Wage 2023: $", round(a_median_2023, 2), "\n",
+      "Affordable Rent: $", round(affordable_rent, 2), "\n",
+      "Affordable Sale: $", round(affordable_sale, 2)
+    )
+  ) %>%
+  pull(text) %>%
+  paste(collapse = "\n\n")
+
+# Print the text chart
+cat(text_chart)
 
 ```
+
