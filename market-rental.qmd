@@ -34,7 +34,8 @@ ggplot(renter_supply,
   geom_col(stat = "identity", fill = "#445ca9") +
   theme_hda(base_size = 10) +
   scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Existing renter supply by gross monthly rent")
+  labs(title = "Existing renter supply by gross monthly rent",
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25063.")
 
 
 ```
@@ -55,7 +56,8 @@ ggplot(renter_bedroom,
   theme_hda(base_size = 10) +
   scale_fill_hda() +
   scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Existing renter supply by bedrooms")
+  labs(title = "Existing renter supply by bedrooms",
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
 
 ```
 
@@ -78,7 +80,9 @@ ggplot(renter_type,
   scale_fill_hda(direction = -1) +
   scale_y_continuous(labels = number_format(big.mark = ",")) +
   labs(title = title_text,
-       subtitle = subtitle_text)
+       subtitle = subtitle_text,
+       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, Table B25127.") +
+  theme(legend.position = "right")
 
 
 ```
@@ -131,7 +135,8 @@ ggplot(rent,
   theme_hda(base_size = 10) +
   scale_y_continuous(labels = dollar_format()) +
   scale_fill_gradientn(colours = c("#cce0ce", "#8baeaa", "#445ca9", "#233068")) +
-  labs(subtitle = "In 2024 Q2 inflation-adjusted dollars",
+  labs(title = "Average asking rent per unit",
+       subtitle = "In 2024 Q2 inflation-adjusted dollars",
        caption = "Source: CoStar Group, Inc.")
   
 
@@ -229,6 +234,38 @@ leaflet(props_sf) |>
 ```
 
 ```{r}
+#| label: prop-type-bar
+#| fig-cap: "Rental property by class"
+
+
+props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
+  janitor::clean_names() 
+
+pal <- colorFactor(palette = c("#445ca9", "#e9ab3f", "#8baeaa", "#50787e"), 
+                   domain = c("A", "B", "C", "F"))
+
+fill_values <- c("A" = "#445ca9", "B" = "#e9ab3f", "C" = "#8baeaa", "F" = "#50787e")
+
+type_class <- props |> 
+  group_by(building_class, county_name, style) |> 
+  summarise(count = n())
+
+ggplot(type_class,
+       aes(x = style,
+           y = count, 
+           fill = building_class)) +
+  geom_col(stat = "identity", position = "stack") +
+  # facet_wrap(~county_name, nrow = 1) +
+  scale_fill_manual(values = fill_values) +
+  theme_hda(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(title = "Rental properties by building class",
+       caption = "Source: CoStar Group, Inc.")
+
+
+```
+
+```{r}
 #| label: prop-type
 #| fig-cap: "Rental property by asking rent"
 
@@ -240,7 +277,7 @@ props_sf <- sf::st_as_sf(props, coords = c("longitude", "latitude"), crs = 4326)
 
 pal <- colorNumeric(
   palette = "YlGnBu", # You can choose any palette from RColorBrewer
-  domain = prop$avg_asking_unit # The numeric values to base the color on
+  domain = props$avg_asking_unit # The numeric values to base the color on
 )
 
 leaflet(props_sf) |> 
@@ -253,7 +290,7 @@ leaflet(props_sf) |>
     popup = ~as.character(paste0("$", avg_asking_unit))
   ) |> 
   addLegend("bottomright", pal = pal, values = ~avg_asking_unit, 
-            title = "Building Class",
+            title = "Asking Rent",
             opacity = 1)
   
 
@@ -273,6 +310,8 @@ ggplot(subsidy,
            fill = subsidy_name)) +
   geom_col() +
   theme_hda(base_size = 10) +
+  labs(title = "Assisted rental units by subsidy",
+       caption = "Source: National Housing Preservation Database; Note: Subsidies may overlap a single rental unit.") +
   scale_y_continuous(labels = number_format(big.mark = ",")) +
   scale_fill_hda(direction = 1)
 

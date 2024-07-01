@@ -368,17 +368,33 @@ b25127_region <- b25127_data |>
   )) |> 
   mutate(adj_estimate = estimate + vacant)
 
+b25127_locality <- b25127_data |> 
+  filter(GEOID != "51137") |> 
+  group_by(year, NAME, yrbuilt, structure, tenure) |> 
+  summarise(estimate = sum(estimate)) |> 
+  filter(year == 2022) |> 
+  ungroup() |> 
+  group_by(tenure) |> 
+  mutate(total = sum(estimate)) |> 
+  mutate(pct = estimate/total) |> 
+  mutate(vacant = case_when(
+    tenure == "Renter" ~ pct * 2954,
+    tenure == "Homeowner" ~ pct * 1049
+  )) |> 
+  mutate(adj_estimate = estimate + vacant) |> 
+  filter(tenure == "Homeowner")
+
 write_rds(b25127_region, "data/b25127_region.rds")
 
 
-ggplot(b25127_region,
+ggplot(b25127_locality,
        aes(x = yrbuilt,
            y = estimate,
            fill = structure)) +
   geom_col() +
   theme_hda(base_size = 10) +
   scale_fill_hda(direction = -1) +
-  facet_wrap(~tenure)
+  facet_wrap(~NAME, nrow = 1)
 
 
 # Estimating housing demand

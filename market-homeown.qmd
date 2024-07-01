@@ -126,7 +126,9 @@ bps <- read_rds("data/faar_cbps.rds") |>
     TRUE ~ type
   )) |> 
   group_by(year, type) |> 
-  summarise(units = sum(units))
+  summarise(units = sum(units)) 
+
+
 
 subtitle_text <- "However, <span style = 'color: #e9ab3f'><b>larger multifamily</b></span> construction has been on the rise."
 
@@ -363,7 +365,8 @@ ggplot(sales_type,
   facet_wrap(~type) +
   scale_fill_hda() +
   theme_hda(base_size = 10) +
-  labs(caption = "Source: BrightMLS") +
+  labs(title = "Residential sales by sale type and structure type",
+       caption = "Source: BrightMLS") +
   theme(legend.position = "right") +
   scale_y_continuous(labels = number_format(big.mark = ","))
 
@@ -428,22 +431,24 @@ beds <- read_rds("data/faar_mls_check.rds") |>
   )) |> 
   mutate(count = 1) |> # Create a column to help calculate a sum
   group_by(type, beds) |> 
-  summarise(sum = sum(count))
+  summarise(sum = sum(count)) |> 
+  ungroup() |>
+  group_by(type) |> 
+  mutate(pct = sum/sum(sum))
 
 
 ggplot(beds, 
        aes(x = beds,
-           y = sum,
+           y = pct,
            fill = type)) +
   geom_col(position = "dodge") +
   theme_hda(base_size = 10) +
   labs(title = "Distribution of Bedrooms",
-       x = "Square Footage",
-       y = "Density",
+       subtitle = "Percent of total by sales type",
        caption = "Source: BrightMLS, excludes listings where bedrooms are listed as zero.") +
   facet_wrap(~type, nrow = 1) +
   scale_fill_hda() +
-  scale_y_continuous(labels = number_format(big.mark = ","))
+  scale_y_continuous(labels = percent_format())
 
 
 
