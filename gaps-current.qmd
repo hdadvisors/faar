@@ -298,14 +298,31 @@ library(ggplot2)
 occupation_data <- oews_data %>%
   rename(
     occupation = occ_title,
+    employees_2023 = tot_emp_2023, 
+    employees_2020 = tot_emp_2020 
   )
-    
-# View the first few rows of the data to understand its structure
-head(occupation_data)
 
-# Calculate percentage change
-occupation_data %>%
-  mutate(pct_change = ((a_median_2023 - a_median_2020) / a_median_2020) * 100)
+# Aggregate data by occupation
+aggregated_data <- occupation_data %>%
+  group_by(occupation) %>%
+  summarise(
+    employees_2023 = sum(employees_2023, na.rm = TRUE),
+    employees_2020 = sum(employees_2020, na.rm = TRUE),
+    a_median_2023 = mean(a_median_2023, na.rm = TRUE),  
+    a_median_2020 = mean(a_median_2020, na.rm = TRUE)   
+  )
+
+# Calculate average number of employees
+
+aggregated_data <- aggregated_data %>%
+  mutate(average_employees = (employees_2023 + employees_2020) / 2)
+
+
+# Get top five occupations by total employed
+ 
+top_occupations <- aggregated_data %>%
+  arrange(desc(average_employees)) %>%
+  slice_head(n = 5)
 
 # Calculate affordability for top occupations
 # Define a sample affordcalc function for illustration
@@ -319,7 +336,7 @@ affordcalc <- function(annual_wage, type) {
 }
 
 # Calculate 2023 affordability for top occupations
-affordability <- occupation_data %>%
+affordability <- top_occupations %>%
   mutate(
     affordable_rent = affordcalc(a_median_2023, "rent"),
     affordable_sale = affordcalc(a_median_2023, "sale")
@@ -340,6 +357,10 @@ text_chart <- affordability %>%
 
 # Print the text chart
 cat(text_chart)
+
+```
+
+```{r}
 
 ```
 
