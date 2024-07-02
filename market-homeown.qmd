@@ -25,6 +25,8 @@ library(hdatools)
 # Read in the selected monthly housing cost data for homeowners.
 owner_supply <- read_rds("data/b25094_region.rds") 
 
+# sum(owner_supply$adj_estimate)
+
 # The data visualization below shows the distribution of owner-occupied housing
 # based on monthly housing costs in 2022. This viz is focused on the entire region. It 
 # accounts for vacant housing units by applying an equal distribution of vacant 
@@ -150,7 +152,7 @@ ggplot(bps,
 
 ```{r}
 #| label: sales-map
-#| fig-cap: "Map of total homes sales from 2020 through April 2024"
+#| fig-cap: "Map of total new construction home sales from 2020 through April 2024"
 
 # Create a hex grid map showing home sale concentrations in FAAR region.
 
@@ -185,7 +187,110 @@ library(htmlwidgets)
 
 sales <- read_rds("data/faar_mls_check.rds") |> 
   filter(county != "Orange, VA") |> 
-  filter(structure_type != "Garage/Parking Space")
+  filter(structure_type != "Garage/Parking Space") |> 
+  filter(new_construction_yn == "Yes")
+
+# leaflet(sales) |> 
+#   addProviderTiles(providers$CartoDB.Positron) |> 
+#   addCircleMarkers()
+
+hex_grid <- st_make_grid(sales, n = c(50,50),
+                         what = "polygons", square = FALSE)
+
+hex_grid_sf <- st_sf(hex_grid) %>% 
+  mutate(grid_id = 1:length(lengths(hex_grid)))
+
+hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
+
+hex_count <- filter(hex_grid_sf, n_pts > 0)
+
+# Define the base color
+base_color <- "#445ca9"
+
+# Create a color palette function based on the base color
+color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
+
+# Number of bins (adjust as needed)
+bins <- 9
+
+# Generate the color palette for the bins
+palette_colors <- color_palette(bins)
+
+# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
+
+
+# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
+
+quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
+palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
+
+
+leaflet(hex_count) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addPolygons(
+    fillColor = ~palette_quantiles(n_pts),
+    fillOpacity = 0.7,
+    opacity = 1,
+    weight = 1,
+    color='white',
+    label = ~as.character(n_pts),  # Show n_pts value when hovered over
+    highlightOptions = highlightOptions(
+      weight = 3,
+      color = '#666',
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
+  ) |> 
+  addLegend(
+    pal = palette_quantiles,
+    values = ~n_pts,
+    title = "Number of Sales",
+    position = "bottomleft"
+  )
+
+
+```
+
+```{r}
+#| label: sales-map
+#| fig-cap: "Map of total homes resales from 2020 through April 2024"
+
+# Create a hex grid map showing home sale concentrations in FAAR region.
+
+library(leaflet)
+library(sf)
+library(geojsonio)
+library(classInt)
+library(htmltools)
+library(htmlwidgets)
+
+# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
+#   mutate(longitude = case_when(
+#     mls_number == "630778" ~ -78.329369,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "630778" ~ 38.214775,
+#     TRUE ~ latitude)) |>
+#   mutate(longitude = case_when(
+#     mls_number == "VAOR2002600" ~ -78.181042,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "VAOR2002600" ~ 38.137717,
+#     TRUE ~ latitude)) |>
+#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
+#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+# 
+# 
+# write_rds(sales, "data/faar_mls_check.rds")
+# geojson_write(sales, file = "data/mls.geojson")
+# 
+
+
+sales <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  filter(new_construction_yn != "Yes")
 
 # leaflet(sales) |> 
 #   addProviderTiles(providers$CartoDB.Positron) |> 
@@ -245,50 +350,6 @@ m <- leaflet(hex_count) |>
     title = "Number of Sales",
     position = "bottomleft"
   )
-
-saveWidget(
-  m, 
-  file = "leaflet_map_with_download.html", 
-  selfcontained = TRUE,
-  libdir = NULL,
-  knitrOptions = list(
-    'self_contained' = TRUE
-  )
-)
-
-# Custom JavaScript for the download button
-js <- '
-function addDownloadButton(map) {
-  var downloadButton = L.control({position: "topright"});
-  downloadButton.onAdd = function(map) {
-    var div = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
-    div.innerHTML = "<a href=\'#\' id=\'download-map\' title=\'Download Map\'><i class=\'fa fa-download\'></i></a>";
-    div.style.backgroundColor = "white";     
-    div.style.width = "30px";
-    div.style.height = "30px";
-    return div;
-  };
-  downloadButton.addTo(map);
-
-  document.getElementById("download-map").onclick = function(e) {
-    e.preventDefault();
-    html2canvas(map.getContainer(), {
-      useCORS: true
-    }).then(function(canvas) {
-      var link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = "leaflet_map.png";
-      link.click();
-    });
-  };
-}
-'
-
-# Use htmlwidgets to add custom JavaScript to the map
-onRender(m, js)
-
-# Save the final map with the download button
-saveWidget(m, "leaflet_map_with_download_button.html", selfcontained = TRUE)
 
 
 ```
@@ -515,7 +576,6 @@ sales_lot <- read_rds("data/faar_mls_check.rds") |>
   filter(lot_size_acres < 10)
 
 title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
-
 
 ggplot(sales_lot, 
        aes(x = lot_size_acres,

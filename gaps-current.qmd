@@ -32,7 +32,6 @@ tenure <- read_rds("data/b25003.rds") |>
   mutate(cum_chg = estimate - first(estimate)) |> 
   filter(estimate > 0 )
 
-title_text <- 
 
 ggplot(tenure,
        aes(x = year,
@@ -46,10 +45,6 @@ ggplot(tenure,
        subtitle = "Cumulative change since 2010",
        caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, Table B25003.") +
   theme_hda(base_size = 10)
-  
-  
-
-
 
 ```
 

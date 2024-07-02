@@ -29,6 +29,8 @@ renter_supply <- read_rds("data/b25063_region.rds")
 custom_order <- factor(renter_supply$rent, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
                                                          "$1,500 to $1,999", "More than $2,000"))
 
+sum(renter_supply$adj_estmate)
+
 ggplot(renter_supply,
        aes(x = custom_order,
            y = estimate)) +
