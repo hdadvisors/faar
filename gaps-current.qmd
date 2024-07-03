@@ -654,6 +654,70 @@ styled_table
 ```
 
 ```{r}
+#ACS B25009 Household Size of Occupied Housing Units by Tenure
+
+## Are renter households increasing in size? What does this mean for rental housing demand? Are homeowner households increasing or decreasing? Create a bar chart that compares average household size by tenure. 
+
+library(dplyr)
+library(tidyr)
+
+#| label: fig-hhsize
+#| fig-cap: "Change in households by size and tenure"
+
+# Read the data
+b25009_data <- read_rds("data/b25009_region.rds")
+
+# Inspect the data structure
+str(b25009_data)
+
+faar_hhsize <- b25009_data |> 
+  group_by(year, tenure, size) |> 
+  summarise(estimate = sum(estimate)) |> 
+  pivot_wider(names_from = year,
+              values_from = estimate) |> 
+  select(tenure, size, `2010`, `2021`) |> 
+  transform(change = `2021` - `2010`) 
+
+## need help getting tenure type in here -- when I try to run code for this data set, tenure type is lost somehow. 
+
+subtitle_text <- "Change in <span style = 'color:#011E41'><b>homeowners</b></span> and <span style = 'color:#40C0C0'><b>renters</b></span> from 2010 to 2021"
+
+cv_hhsize_plot <- ggplot(cv_hhsize,
+       aes(x = tenure,
+           y = change,
+           fill = tenure,
+           data_id = change,
+           tooltip = label_number(big.mark = ",", style_positive = "plus", style_negative = "minus")(change))) +
+  geom_col() +
+  geom_col_interactive(size = 2) +
+  facet_wrap(~size, nrow = 1) +
+  theme_hfv() +
+  add_zero_line("y") +
+  scale_fill_hfv() +
+  labs(title = "Change in households by size",
+       subtitle = subtitle_text,
+       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25009.") +
+  theme(axis.text.x = element_blank()) +
+  scale_y_continuous(labels = label_number(big.mark = ",", style_positive = "plus", style_negative = "minus")) +
+  plot_annotation(
+    theme = theme(
+    plot.subtitle = element_markdown(
+       margin = margin(b = 0.4, unit = 'cm'),
+        size = 11.5
+    )))
+  
+publish_plot(cv_hhsize_plot)
+
+
+
+
+
+
+
+
+
+
+
 
 ```
 
