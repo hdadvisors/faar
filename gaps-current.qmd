@@ -785,25 +785,27 @@ age_table <- b25007_data |>
 
 # Create a new data frame to calculate the changes
 age_table_changes <- age_table |>
-  group_by(tenure, age) |>
-  arrange(year) |>
-  mutate(change = total_estimate - lag(total_estimate, n = 1, default = first(total_estimate))) |>
+ filter(year >= 2018 & year <= 2022) %>%
+  group_by(tenure, age) %>%
+  mutate(change = total_estimate - lag(total_estimate, default = first(total_estimate))) %>%
   ungroup()
 
+print(age_table_changes)
 
-# Define custom colors for tenure
-tenure_colors <- c("Homeowner" = "#445ca9", "Renter" = "#8baeaa")
+
 
 # Plot the bar chart
-ggplot(age_table_changes, aes(x = factor(year), y = change, fill = tenure)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~ age) +
-  scale_fill_manual(values = tenure_colors) +
-  labs(title = "Change in Households by Age and Tenure (2019-2022)",
-       x = "Year",
+ggplot(age_table_changes, aes(x = age, y = change, fill = tenure)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.6) +
+  labs(title = "Change in Households by Age",
+       subtitle = "Change in <span style='color:#445ca9'><b>homeowners</b></span> and <span style='color:#8baeaa'><b>renters</b></span> from 2018 to 2022",
+       x = "Age Group",
        y = "Change in Number of Households",
        fill = "Tenure") +
-  theme_minimal()
+  theme_hda() +
+  scale_y_continuous(limits = c(-1000, 2000)) +
+  scale_fill_manual(values = c("#445ca9", "#8baeaa"), name = "Tenure", labels = c("Homeowner", "Renter"))
+
 
 ```
 
