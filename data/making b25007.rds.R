@@ -6,7 +6,7 @@ install.packages('tidyverse')
 
 cv <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
-years <- c(2019:2022)
+years <- c(2018:2022)
 
 b25007_vars <- load_variables(2021, "acs5") |>
   filter(str_sub(name, end = 6) %in% "B25007")
