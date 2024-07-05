@@ -762,11 +762,11 @@ faar_hhsize_plot
 ## Create a bar chart showing the change in households by tenure and age of household from 2019 to 2022. Group by Under 25 years, 25 to 44 years, 45 to 64 years, and 65 years and over. Aggregate to the regional level. This should help to show household formation trends among renters and homeowners.
 
 
-library(dplyr)
-library(tidyr)
-
 #| label: fig-hhsize
 #| fig-cap: "Change in households by age and tenure"
+
+library(dplyr)
+library(tidyr)
 
 # Read the data
 b25007_data <- read_rds("data/b25007_region.rds")
@@ -787,6 +787,11 @@ age_table_changes <- age_table |>
   mutate(change = total_estimate - lag(total_estimate, default = first(total_estimate))) |>
   ungroup()
 
+subtitle_text <- "Change in households by age and tenure <span style = 'color:#445ca9'><b>homeowners</b></span> and <span style = 'color:#8baeaa'><b>renters</b></span> from 2019 to 2022"
+
+# Define custom colors for tenure
+tenure_colors <- c("Homeowner" = "#445ca9", "Renter" = "#8baeaa")
+
 # Plot the bar chart
 ggplot(age_table_changes, aes(x = factor(year), y = change, fill = tenure)) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -795,5 +800,10 @@ ggplot(age_table_changes, aes(x = factor(year), y = change, fill = tenure)) +
        x = "Year",
        y = "Change in Number of Households",
        fill = "Tenure") +
-  theme_hda()
+  theme_minimal()
+
+```
+
+
+
 
