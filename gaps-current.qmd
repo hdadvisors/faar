@@ -774,6 +774,26 @@ b25007_data <- read_rds("data/b25007_region.rds")
 # Inspect the data structure
 str(b25007_data)
 
+# Summarize regional data 
+age_table <- b25007_data |>
+  group_by(year, tenure, age) |>
+  summarise(total_estimate = sum(estimate, na.rm = TRUE)) |>
+  ungroup()
 
-```
+# Create a new data frame to calculate the changes
+age_table_changes <- age_table |>
+  group_by(tenure, age) |>
+  arrange(year) |>
+  mutate(change = total_estimate - lag(total_estimate, default = first(total_estimate))) |>
+  ungroup()
+
+# Plot the bar chart
+ggplot(age_table_changes, aes(x = factor(year), y = change, fill = tenure)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ age) +
+  labs(title = "Change in Households by Age and Tenure (2019-2022)",
+       x = "Year",
+       y = "Change in Number of Households",
+       fill = "Tenure") +
+  theme_hda()
 
