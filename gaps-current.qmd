@@ -767,6 +767,8 @@ faar_hhsize_plot
 
 library(dplyr)
 library(tidyr)
+install.packages("ggiraphExtra")
+library(ggiraphExtra)
 
 # Read the data
 b25007_data <- read_rds("data/b25007_region.rds")
@@ -780,14 +782,14 @@ age_table <- b25007_data |>
   summarise(total_estimate = sum(estimate, na.rm = TRUE)) |>
   ungroup()
 
+
 # Create a new data frame to calculate the changes
 age_table_changes <- age_table |>
   group_by(tenure, age) |>
   arrange(year) |>
-  mutate(change = total_estimate - lag(total_estimate, default = first(total_estimate))) |>
+  mutate(change = total_estimate - lag(total_estimate, n = 1, default = first(total_estimate))) |>
   ungroup()
 
-subtitle_text <- "Change in households by age and tenure <span style = 'color:#445ca9'><b>homeowners</b></span> and <span style = 'color:#8baeaa'><b>renters</b></span> from 2019 to 2022"
 
 # Define custom colors for tenure
 tenure_colors <- c("Homeowner" = "#445ca9", "Renter" = "#8baeaa")
@@ -796,6 +798,7 @@ tenure_colors <- c("Homeowner" = "#445ca9", "Renter" = "#8baeaa")
 ggplot(age_table_changes, aes(x = factor(year), y = change, fill = tenure)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~ age) +
+  scale_fill_manual(values = tenure_colors) +
   labs(title = "Change in Households by Age and Tenure (2019-2022)",
        x = "Year",
        y = "Change in Number of Households",
