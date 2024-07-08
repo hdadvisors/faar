@@ -843,7 +843,7 @@ faar_cb_plot <- ggplot(faar_cb,
   geom_col() +
   geom_col_interactive() +
   facet_grid(~tenure) +
-  theme_hfv() +
+  theme_hda() +
   add_zero_line("y") +
   scale_fill_hda() +
   scale_y_continuous(labels = label_number(big.mark = ",")) + 
@@ -863,4 +863,78 @@ print(faar_cb_plot)
 
 ```
 
+```{r}
+
+#Cost Burden by Income Group 
+
+
+systemfonts::register_font("Lato")
+gdtools::register_gfont("Lato")
+gdtools::register_gfont("Roboto Slab")
+
+
+#| label: fig-cb-income
+#| fig-cap: "Cost-burdened households by income"
+
+
+faar_cb <- b25106
+
+str(faar_cb)
+
+# Create income groups based on the specified ranges
+
+faar_cb <- faar_cb %>%
+  mutate(faar_cb = case_when(
+    income <= 19999 ~ "$20,000 or less",
+    income >= 20000 & income <= 34999 ~ "$20,000 to $34,999",
+    income >= 35000 & income <= 49999 ~ "$35,000 to $49,999",
+    income >= 50000 & income <= 74999 ~ "$50,000 to $74,999",
+    income >= 75000 ~ "$75,000 or more",
+    TRUE ~ "Other"  # Optional catch-all for values not matching any range
+  ))
+
+# Convert income_group to factor to maintain categorical nature
+faar_cb_income_group<- factor(faar_cb,
+                                      levels = c("$20,000 or less", "$20,000 to $34,999", 
+                                                 "$35,000 to $49,999", "$50,000 to $74,999", 
+                                                 "$75,000 or more"))
+
+# Now faar_cb will have an income_group column categorized as specified
+
+faar_cb_income <- faar_cb |> 
+  group_by(year, tenure, income, cb) |> 
+  summarise(estimate = sum(estimate)) |> 
+  filter(cb == "Cost-burdened") |> 
+  mutate(year = as.character(year))
+
+#visualization 
+
+faar_cb_income_plot <- ggplot(faar_cb_income,
+                              aes(x = income,
+                                  y = estimate,
+                                  fill = tenure,
+                                  tooltip = paste("Estimate: ", format(estimate, big.mark = ",")))) +
+  geom_col(position = "dodge") + # Use position = "dodge" to place bars side by side
+  facet_grid(~tenure) + 
+  theme_hda() +  
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +  # add_zero_line("y") replaced with geom_hline()
+  scale_fill_hda() +  
+  scale_y_continuous(labels = label_number(big.mark = ",")) +  
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2)) +
+  labs(title = "Cost-burdened households by income",
+       subtitle = "From 2010 to 2021",
+       x = "Income Group",
+       y = "Number of Cost-Burdened Households",
+       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25106.")
+
+# Display the plot
+print(faar_cb_income_plot)
+
+# Add interactive features with ggiraph
+ggiraph_plot <- girafe(ggobj = faar_cb_income_plot)
+
+# Display the plot
+print(ggiraph_plot) #I could use help on thinking through how to better visualize this - perhaps in shiny it works?
+
+```
 
