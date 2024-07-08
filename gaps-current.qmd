@@ -854,10 +854,11 @@ faar_cb_plot <- ggplot(faar_cb,
 
 publish_plot(faar_cb_plot)
 
+print(faar_cb_plot)
+
 # pdf(file = "faar_cb_plot.pdf", height = 3, width = 5)
 # print(faar_cb_plot)
 # dev.off()
-
 
 
 ```
