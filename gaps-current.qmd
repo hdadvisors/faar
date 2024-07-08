@@ -810,5 +810,56 @@ ggplot(age_table_changes, aes(x = age, y = change, fill = tenure)) +
 ```
 
 
+```{r}
+
+## Cost Burden by Tenure 
+
+library(ggplot2)
+library(ggiraph)
+library(ggiraphExtra)
+install.packages("scales")
+library(scales)
+
+
+#| label: fig-cb-tenure
+#| fig-cap: "Cost-burdened households by tenure"
+
+faar_cb <- b25106
+
+str(faar_cb)
+
+faar_cb <- faar_cb |> 
+  group_by(year, tenure, cb) |> 
+  summarise(estimate = sum(estimate)) |> 
+  filter(cb == "Cost-burdened") |> 
+  mutate(year_label = as.character(year))
+
+faar_cb_plot <- ggplot(faar_cb,
+                     aes(x = year_label,
+                         y = estimate,
+                         fill = tenure,
+                         data_id = estimate,
+                         tooltip = label_number(big.mark = ",")(estimate))) +
+  geom_col() +
+  geom_col_interactive() +
+  facet_grid(~tenure) +
+  theme_hfv() +
+  add_zero_line("y") +
+  scale_fill_hda() +
+  scale_y_continuous(labels = label_number(big.mark = ",")) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = .2)) +
+  labs(title = "Cost-burdened households by tenure",
+       subtitle = "From 2010 to 2021",
+       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25106.")
+
+publish_plot(faar_cb_plot)
+
+# pdf(file = "faar_cb_plot.pdf", height = 3, width = 5)
+# print(faar_cb_plot)
+# dev.off()
+
+
+
+```
 
 
