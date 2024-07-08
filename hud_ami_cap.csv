@@ -1,0 +1,73 @@
+area,cap,hh_size,level,income
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,1-person,ami30,32500
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,2-person,ami30,37150
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,3-person,ami30,41800
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,4-person,ami30,46400
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,5-person,ami30,50150
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,6-person,ami30,53850
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,7-person,ami30,57550
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,8-person,ami30,61250
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,1-person,ami50,54150
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,2-person,ami50,61900
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,3-person,ami50,69650
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,4-person,ami50,77350
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,5-person,ami50,83550
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,6-person,ami50,89750
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,7-person,ami50,95950
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Uncapped,8-person,ami50,102150
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,1-person,ami80,68500
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,2-person,ami80,78250
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,3-person,ami80,88050
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,4-person,ami80,97800
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,5-person,ami80,105650
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,6-person,ami80,113450
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,7-person,ami80,121300
+"Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",Capped,8-person,ami80,129100
+"Caroline County, VA",Uncapped,1-person,ami30,20950
+"Caroline County, VA",Uncapped,2-person,ami30,23950
+"Caroline County, VA",Uncapped,3-person,ami30,26950
+"Caroline County, VA",Uncapped,4-person,ami30,31200
+"Caroline County, VA",Uncapped,5-person,ami30,36580
+"Caroline County, VA",Uncapped,6-person,ami30,41960
+"Caroline County, VA",Uncapped,7-person,ami30,47340
+"Caroline County, VA",Uncapped,8-person,ami30,52720
+"Caroline County, VA",Uncapped,1-person,ami50,34900
+"Caroline County, VA",Uncapped,2-person,ami50,39850
+"Caroline County, VA",Uncapped,3-person,ami50,44850
+"Caroline County, VA",Uncapped,4-person,ami50,49800
+"Caroline County, VA",Uncapped,5-person,ami50,53800
+"Caroline County, VA",Uncapped,6-person,ami50,57800
+"Caroline County, VA",Uncapped,7-person,ami50,61800
+"Caroline County, VA",Uncapped,8-person,ami50,65750
+"Caroline County, VA",Uncapped,1-person,ami80,55800
+"Caroline County, VA",Uncapped,2-person,ami80,63800
+"Caroline County, VA",Uncapped,3-person,ami80,71750
+"Caroline County, VA",Uncapped,4-person,ami80,79700
+"Caroline County, VA",Uncapped,5-person,ami80,86100
+"Caroline County, VA",Uncapped,6-person,ami80,92500
+"Caroline County, VA",Uncapped,7-person,ami80,98850
+"Caroline County, VA",Uncapped,8-person,ami80,105250
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,1-person,ami30,23200
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,2-person,ami30,26500
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,3-person,ami30,29800
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,4-person,ami30,33100
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,5-person,ami30,36580
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,6-person,ami30,41960
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,7-person,ami30,47340
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,8-person,ami30,52720
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,1-person,ami50,38650
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,2-person,ami50,44200
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,3-person,ami50,49700
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,4-person,ami50,55200
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,5-person,ami50,59650
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,6-person,ami50,64050
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,7-person,ami50,68450
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,8-person,ami50,72900
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,1-person,ami80,61850
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,2-person,ami80,70650
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,3-person,ami80,79500
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,4-person,ami80,88300
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,5-person,ami80,95400
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,6-person,ami80,102450
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,7-person,ami80,109500
+"Culpeper County, VA HUD Metro FMR Area",Uncapped,8-person,ami80,116600
