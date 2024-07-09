@@ -81,6 +81,7 @@ make_pums_vars <- function() {
 
 vars_spectrum <- make_pums_vars()
 
+# write_rds(vars_spectrum, "data/pums/pums_vars.rds")
 
 # 3. Collect PUMS variables -------------------------------
 
@@ -90,8 +91,9 @@ pums_raw <- get_pums(
   year = 2022,
   state = "VA",
   survey = "acs5"
-) |> 
-  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020)
+  ) |> 
+  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020) |> 
+  mutate(pums_join = paste0(SERIALNO, SPORDER), .before = 1)
 
 # Save or load as needed
 # write_rds(pums_raw, "data/pums/pums_raw.rds")
@@ -107,8 +109,9 @@ pums_wgt <- get_pums(
   state = "VA",
   survey = "acs5",
   rep_weights = "both"
-) |> 
-  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020)
+  ) |> 
+  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020) |> 
+  mutate(pums_join = paste0(SERIALNO, SPORDER), .before = 1)
 
 # Save or load as needed
 # write_rds(pums_wgt, "data/pums/pums_wgt.rds")

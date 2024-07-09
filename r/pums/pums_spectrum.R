@@ -4,11 +4,13 @@
 # 1. Setup ------------------------------------------------
 
 library(tidyverse)
+library(tidycensus)
 library(srvyr)
 library(survey)
 
 pums_raw <- read_rds("data/pums/pums_raw.rds")
 pums_wgt <- read_rds("data/pums/pums_wgt.rds")
+pums_labels <- read_rds("data/pums/pums_labels.rds")
 faar_ami <- read_rds("data/pums/faar_ami_pums.rds")
 
 
@@ -52,15 +54,8 @@ faar_pums_earners <- faar_pums_ami |>
 
 # 4. Add place of work labels -----------------------------
 
-pow_lookup <- read_rds("data/pums/puma_pow_lookup.rds")
-
-pow_lookup_2010 <- pow_lookup |> 
-  filter(version == "PUMACE10") |> 
-  select(-1, POWPUMA10 = puma)
-
-pow_lookup_2020 <- pow_lookup |> 
-  filter(version == "PUMACE20") |> 
-  select(-1, POWPUMA20 = puma)
+powpuma_lookup <- read_rds("data/pums/powpuma_lookup.rds") |> 
+  select(5:6)
 
 faar_pums_pow <- faar_pums_earners |> 
   mutate(
@@ -69,40 +64,71 @@ faar_pums_pow <- faar_pums_earners |>
       str_starts(POWSP, "0") ~ str_sub(POWSP, start = 2, end = 3),
       .default = POWSP
     )
-  )
-
-
-pums_fuse_pumas <- function(data, lookup) {
-  
-  pow_lookup_2010 <- lookup |> 
-    filter(version == "PUMACE10") |> 
-    
-  
-  data_pow <- data |> 
-    left_join()
-  
-  data |> 
-    mutate(
-      puma = case_when(
-        PUMA10 == "-0009" ~ PUMA20,
-        PUMA20 == "-0009" ~ PUMA10
-      ),
-      puma_pow = case_when(
-        POWPUMA10 == "-0009" ~ PUMA20,
-        POWPUMA20 == "-0009" ~ PUMA10,
-        
-      )
+  ) |> 
+  mutate(
+    pow_geoid = case_when(
+      is.na(POWSP) ~ NA,
+      POWPUMA10 != "-0009" ~ paste0(POWSP, POWPUMA10),
+      POWPUMA20 != "-0009" ~ paste0(POWSP, POWPUMA20)
       
     )
+  ) |> 
+  left_join(powpuma_lookup, relationship = "many-to-many") |> 
+  mutate(
+    pow_label = case_when(
+      POWSP == "51" ~ pow_label,
+      POWSP == "11" ~ "Washington, DC",
+      POWSP == "24" ~ "Maryland",
+      .default = NA
+    )
+  )
+  
+# Test survey weights  
+# 
+# faar_pums_pow |> 
+#   left_join(pums_wgt) |> 
+#   to_survey(type = "person", design = "rep_weights") |> 
+#   filter(!is.na(pow_label)) |> 
+#   group_by(pow_label) |> 
+#   summarise(
+#     pct = survey_prop(vartype = "cv")
+#   ) |> 
+#   arrange(desc(pct))
+
+
+# 5. Recode PUMS data as needed ---------------------------
+
+# Use custom function from pums_labels.R
+pums_recode <- function(data, vars) {
+  
+  recoded_data <- data
+  
+  for (var_name in vars) {
+    recoded_data <- recoded_data %>%
+      left_join(
+        pums_labels %>% 
+          filter(var_code == var_name) %>% 
+          select(val, val_label),
+        by = setNames("val", var_name)
+      ) %>%
+      mutate(!!var_name := coalesce(val_label, as.character(.data[[var_name]]))) %>%
+      select(-val_label)
+  }
+  
+  return(recoded_data)
   
 }
 
-faar_pums_fuse <- faar_pums_earners |> 
-  left_join(pow_lookup_2010) |> 
-  left_join(pow_lookup_2020, by = "POWPUMA20")
+# Create list of variables to recode
+vars_recode <- c(
+  "BLD", "FS", "TEN", "YRBLT", "HHLDRHISP", "HHLDRRAC1P", "HHT2", "MV",
+  "WIF", "COW", "HINS3", "HINS4", "DIS", "NAICSP", "SOCP"
+)
 
-  
-# 3. Rename PUMS variables as needed
+faar_pums_recode <- pums_recode(faar_pums_pow, vars_recode)
+
+
+# 6. Rename PUMS variables as needed ----------------------
 
 pums_rename <- function(data) {
   
@@ -124,7 +150,7 @@ pums_rename <- function(data) {
       tenure = TEN,
       str_yrblt = YRBLT,
       ethnicity = HHLDRHISP,
-      race = HHLDRRAC,
+      race = HHLDRRAC1P,
       hh_type = HHT2,
       moved = MV,
       workers = WIF,
@@ -134,257 +160,170 @@ pums_rename <- function(data) {
       disability = DIS,
       naics = NAICSP,
       soc = SOCP
-    ) |> 
-    
-    select(-ST, )
-    rename_with(to_lower)
+    ) 
   
 }
 
-faar_pums_recode <- pums_rename(faar_pums_earners)
-
-  # 3. Recode PUMS data as needed
-  
-
-# 4. ---------------------------------
+faar_pums_rename <- pums_rename(faar_pums_recode)
 
 
-# 5.  ------------------
+# 7. Clean up and reorder columns -------------------------
 
-
-
- 
-  
-
-  
-  
-# 7. Verify number of earners in household ----------------
-
-pums_earners <- pums_ami |> 
-  group_by(SERIALNO) |> 
+faar_pums_clean <- faar_pums_rename |> 
   mutate(
-    earner = PINCP > 1000,
-    hh_earners = sum(earner),
-    .after = 1
+    puma = case_when(
+      PUMA10 == "-0009" ~ PUMA20,
+      .default = PUMA10
+    )
+  ) |> 
+  select(
+    1:5,
+    # Household info
+    "puma",
+    "hh_size",
+    "hh_type",
+    "age",
+    "children",
+    "race",
+    "ethnicity",
+    # Income and wages
+    "ami_faar",
+    "hh_income",
+    "fam_income",
+    "wages",
+    # Housing
+    "tenure",
+    "str_type",
+    "bedrooms",
+    "str_yrblt",
+    "moved",
+    "cost_own",
+    "cost_rent",
+    # Disability and assistance
+    "disability",
+    "ssi",
+    "ss",
+    "snap",
+    "medicare",
+    "medicaid",
+    # Economic
+    "workers",
+    "hh_earners",
+    "wkr_class",
+    "pow_label",
+    "naics",
+    "soc"
   )
-  
-  
-  
-  select(-ST, -ADJINC, -NAICSP, -OCCP, -ST_label, -ADJINC_label) |> 
-  rename(
-    hh_size = NP,
-    hh_age = HHLDRAGEP,
-    hh_income = HINCP,
-    fam_income = FINCP,
-    children = NOC,
-    cost_own = SMOCP,
-    cost_rent = GRNTP,
-    bedrooms = BDSP,
-    structure = BLD_label,
-    workers = WIF_label
-    ) |> 
+
+
+# 8. Simplify variable labels -----------------------------
+
+faar_pums_simple <- faar_pums_clean |> 
   mutate(
-    tenure = case_when(
-      str_detect(TEN_label, "(?i)rent") ~ "Renter",
-      str_detect(TEN_label, "Owned") ~ "Homeowner"
-    ),
-    tenure_detail = case_when(
-      TEN_label == "Rented" ~ "Renter",
-      TEN_label == "Owned with mortgage or loan (include home equity loans)" ~ "Homeowner",
-      TEN_label == "Owned free and clear" ~ "Homeowner (no mortgage)",
-      TEN_label == "Occupied without payment of rent" ~ "Renter (no rent)"
+    hh_type = case_when(
+      str_detect(hh_type, "Married|Cohabiting") ~ "Couple",
+      str_detect(hh_type, "no spouse/partner present, with children") ~ "Single parent",
+      str_detect(hh_type, "living alone") ~ "Individual",
+      str_detect(hh_type, "with relatives") ~ "Relatives",
+      str_detect(hh_type, "nonrelatives") ~ "Roommates",
+      .default = hh_type
+    )
+  ) |> 
+  mutate(
+    race = case_when(
+      ethnicity != "Not Spanish/Hispanic/Latino" ~ "Hispanic or Latino",
+      ethnicity == "Not Spanish/Hispanic/Latino" ~ race
     ),
     race = case_when(
-      HHLDRHISP_label != "Not Spanish/Hispanic/Latino" ~ "Hispanic or Latino",
-      HHLDRHISP_label == "Not Spanish/Hispanic/Latino" ~ HHLDRRAC1P_label
-    ),
-    hh_type = case_when(
-      HHT2_label 
+      race == "Black or African American alone" ~ "Black",
+      race == "Two or More Races" ~ "Multiracial",
+      race == "Some Other Race" ~ "Another race",
+      str_detect(race, "American Indian") ~ "American Indian",
+      .default = str_remove_all(race, " alone")
     )
-    .after = 4
   ) |> 
   mutate(
-    workers = case_when(
-      hh_size == 1 & OCCP_label != "NA" ~ "1 worker",
-      .default = workers
-    ),
-    .after = bedrooms
+    tenure_detail = case_when(
+      tenure == "Rented" ~ "Renter",
+      tenure == "Owned with mortgage or loan (include home equity loans)" ~ "Homeowner",
+      tenure == "Owned free and clear" ~ "Homeowner (no mortgage)",
+      tenure == "Occupied without payment of rent" ~ "Renter (no rent)"
+    ), .after = tenure
   ) |> 
-  select(-TEN_label, -HHLDRHISP_label, -HHLDRRAC1P_label, -HHT2_label)
-
-
-
-
-# 8. Survey
-
-# Convert to survey object
-pums_svy_h <- pums_ami |> 
-  to_survey(type = "housing", design = "rep_weights")
-
-pums_ami <- pums_svy_h |> 
-  group_by(ami_category) |> 
-  summarise(
-    estimate = survey_total()
+  mutate(
+    tenure = case_when(
+      str_detect(tenure, "(?i)rent") ~ "Renter",
+      str_detect(tenure, "Owned") ~ "Homeowner"
+    )
+  ) |> 
+  mutate(
+    str_type = case_when(
+      str_type == "One-family house detached" ~ "Single-family detached",
+      str_type == "One-family house attached" ~ "Townhome",
+      str_type == "2 Apartments" ~ "Small multifamily (2-9 units)",
+      str_type == "3-4 Apartments" ~ "Small multifamily (2-9 units)",
+      str_type == "5-9 Apartments" ~ "Small multifamily (2-9 units)",
+      str_type == "10-19 Apartments" ~ "Medium multifamily (10-19 units)",
+      str_type == "20-49 Apartments" ~ "Large multifamily (20+ units)",
+      str_type == "50 or more apartments" ~ "Large multifamily (20+ units)",
+      .default = "Mobile home"
+    )
+  ) |> 
+  mutate(
+    str_yrblt = case_when(
+      str_detect(str_yrblt, "202") ~ "2020 or after",
+      str_detect(str_yrblt, "195|196") ~ "1950-1969",
+      str_detect(str_yrblt, "193|194") ~ "1949 or earlier",
+      .default = str_yrblt
+    )
+  ) |> 
+  mutate(
+    moved = case_when(
+      moved == "12 months or less" ~ "Within last year",
+      moved == "13 to 23 months" ~ "1-4 years ago",
+      moved == "2 to 4 years" ~ "1-4 years ago",
+      moved == "5 to 9 years" ~ "5-9 years ago",
+      moved == "10 to 19 years" ~ "10-19 years ago",
+      moved == "20 to 29 years" ~ "20-29 years ago",
+      moved == "30 years or more" ~ "30+ years ago"
+    )
+  ) |> 
+  mutate(
+    wkr_class = case_when(
+      str_detect(wkr_class, "last worked") ~ "Non-earner",
+      str_detect(wkr_class, "without pay") ~ "Non-earner",
+      str_detect(wkr_class, "private for-profit") ~ "For-profit",
+      str_detect(wkr_class, "not-for-profit") ~ "Non-profit",
+      str_detect(wkr_class, "Local|State") ~ "Local or state government",
+      str_detect(wkr_class, "Federal") ~ "Federal government",
+      str_detect(wkr_class, "Self-employed") ~ "Self-employed"
+    )
   )
-
-  
   
 
-  
-fxburg_units <- pums_join |> 
-  filter(SPORDER == 1) |> 
-  group_by(ami_unit, tenure) |> 
-  summarise(estimate = sum(WGTP)) |> 
-  select(ami = ami_unit, tenure, estimate)
-
-fxburg_hh <- pums_join |> 
-  filter(SPORDER == 1) |> 
-  group_by(ami, tenure) |> 
-  summarise(estimate = sum(WGTP)) 
-
-pums_race <- pums_join |> 
-  filter(SPORDER == 1) |> 
-  group_by(ami, race) |> 
-  summarise(estimate = sum(WGTP)) |> 
-  ungroup() |> 
-  group_by(ami) |> 
-  mutate(pct = estimate/(sum(estimate)))
-
-fxburg_supply <- fxburg_units |> 
-  full_join(fxburg_hh, by = c("ami", "tenure")) |> 
-  select(ami, tenure, hh = estimate.y, units = estimate.x) |> 
-  pivot_longer(cols = 3:4,
-               names_to = "value",
-               values_to = "estimate") |> 
-  mutate(value = case_when(
-    value == "hh" ~ "Demand",
-    value == "units" ~ "Supply"
-  ))
-
-ggplot(pums_race,
-       aes(x = ami,
-           y = pct,
-           fill = race)) +
-  geom_col(position = "stack") +
-  coord_flip()
-
-
-ami_order <- factor(fxburg_supply$ami, levels = c("30% AMI or less", "31 to 50% AMI",
-                                                  "51 to 80% AMI", "81 to 100% AMI", "101 to 120% AMI",
-                                                  "121% AMI or more"))
-
-
-ggplot(fxburg_supply,
-       aes(x = ami_order,
-           y = estimate,
-           fill = value)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~tenure) +
-  theme_hda(base_size = 10) +
-  scale_fill_hda() +
-  theme(legend.position = "right")
-
-# Top Household Type
-
-top_hht <- pums_join |> 
-  group_by(ami, tenure, HHT2_label) |> 
-  summarise(count = sum(WGTP)) |> 
-  group_by(ami, tenure) |> 
-  arrange(ami, tenure, desc(count)) %>%
-  slice_head(n = 1) %>%
-  ungroup() |> 
-  select(ami, tenure, HHT2_label)
-
-
-# TOP INDUSTRIES BY AMI
-
-top_occ <- pums_join |> 
-  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> # Nesting based on top household type
-  mutate(OCCP_label = as.character(OCCP_label)) |> 
-  filter(OCCP_label != "NA") |> 
-  group_by(ami, tenure, OCCP_label) |> 
-  summarise(count = sum(PWGTP), .groups = 'drop') |> 
-  group_by(ami, tenure) |> 
-  arrange(ami, tenure, desc(count)) %>%
-  slice_head(n = 1) %>%
-  ungroup()
-
-top_jobs <- pums_join |> 
-  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> 
-  filter(NAICSP != "N") |> 
-  group_by(ami, tenure, NAICSP_label) |> 
-  summarise(count = sum(PWGTP), .groups = 'drop') |> 
-  group_by(ami, tenure) |> 
-  arrange(ami, tenure, desc(count)) %>%
-  slice_head(n = 1) %>%
-  ungroup()
-
-top_bld <- pums_join |> 
-  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> 
-  group_by(ami, tenure, BLD_label) |> 
-  summarise(count = sum(PWGTP), .groups = 'drop') |> 
-  group_by(ami, tenure) |> 
-  arrange(ami, tenure, desc(count)) %>%
-  slice_head(n = 1) %>%
-  ungroup()
-
-
-# Summary Stats
-# Average household age
-# Median Household Income
-# Average number of workers
-# Average number of children
-
-stat <- pums_join |> 
-  right_join(top_hht, by = c("ami", "tenure", "HHT2_label")) |> # Nesting based on top household type
-  mutate(WIF = as.numeric(WIF)) |> 
-  mutate(NOC = as.numeric(NOC)) |>
-  mutate(BDSP = as.numeric(BDSP)) |> 
-  group_by(tenure, ami) |> 
+faar_pums_simple |>
+  left_join(pums_wgt) |>
+  filter(
+    #SPORDER == 1
+    #ami_faar == "Below 30% AMI"
+    wages > 5000
+  ) |>
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(wkr_class) |>
   summarise(
-    mean_hhage = weighted.mean(HHLDRAGEP, WGTP),
-    med_inc = weighted.median(HINCP, WGTP, na.rm = TRUE),
-    mean_wif = weighted.mean(WIF, WGTP, na.rm = TRUE),
-    mean_noc = round(weighted.mean(NOC, WGTP, na.rm = TRUE), 1),
-    mean_bed = weighted.mean(BDSP, WGTP, na.rm = TRUE))
-
-# Top Household Type by AMI
+    n = survey_prop(vartype = "cv")
+  ) |>
+  arrange(desc(n))
 
 
-
-# Create a data frame that breaks out
-# 
-
-new_order <- c("30% AMI or less", "31 to 50% AMI", "51 to 80% AMI", "81 to 100% AMI",
-               "101 to 120% AMI", "121% AMI or more")
-
-profile <- top_jobs |> 
-  left_join(stat, by = c("ami", "tenure")) |> 
-  left_join(top_hht, by = c("ami", "tenure")) |> 
-  left_join(top_occ, by = c("ami", "tenure")) |> 
-  left_join(top_bld, by = c("ami", "tenure")) |> 
-  mutate(Industry = str_replace(NAICSP_label, ".*-", "")) |> 
-  mutate(Industry = str_replace_all(Industry, "\\s*\\([^\\)]+\\)", "")) |> 
-  mutate(Occupation = str_replace(OCCP_label, ".*-", "")) 
-
-|> 
-  mutate(hht = case_when(
-    HHT2_label == "Married couple household with children of the householder less than 18" ~ "Married couple with children",
-    HHT2_label == "Married couple household, no children of the householder less than 18" ~ "Married couple",
-    HHT2_label == "Female householder, no spouse/partner present, living alone" ~ "Single female",
-    HHT2_label == "Male householder, no spouse/partner present, living alone" ~ "Single male"
-  )) |> 
-  mutate(structure = case_when(
-    BLD_label == "One-family house detached" ~ "Single-family detached home",
-    BLD_label == "10-19 Apartments" ~ "Small-sized multifamily (10-19 units)",
-    BLD_label == "20-49 Apartments" ~ "Medium-sized multifamily (20 to 49 units)" 
-  )) |> 
-  select(ami, tenure, Industry, hht, structure, mean_hhage, mean_wif, med_inc, mean_noc)
+# Working family
+# Single working parent
+# DINK
+# Active retirees
+# Seniors
+# Roommates
 
 
-profile$ami <- factor(profile$ami, levels = new_order) 
   
 
-profile_table <- profile |> 
-  arrange(ami) 
 

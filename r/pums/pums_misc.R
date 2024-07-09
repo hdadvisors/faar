@@ -2,38 +2,6 @@
 
 
 
-mutate(
-  tenure = case_when(
-    str_detect(TEN_label, "(?i)rent") ~ "Renter",
-    str_detect(TEN_label, "Owned") ~ "Homeowner"
-  ),
-  tenure_detail = case_when(
-    TEN_label == "Rented" ~ "Renter",
-    TEN_label == "Owned with mortgage or loan (include home equity loans)" ~ "Homeowner",
-    TEN_label == "Owned free and clear" ~ "Homeowner (no mortgage)",
-    TEN_label == "Occupied without payment of rent" ~ "Renter (no rent)"
-  ),
-  race = case_when(
-    HHLDRHISP_label != "Not Spanish/Hispanic/Latino" ~ "Hispanic or Latino",
-    HHLDRHISP_label == "Not Spanish/Hispanic/Latino" ~ HHLDRRAC1P_label
-  ),
-  hh_type = case_when(
-    HHT2_label 
-  )
-  .after = 4
-) |> 
-  mutate(
-    workers = case_when(
-      hh_size == 1 & OCCP_label != "NA" ~ "1 worker",
-      .default = workers
-    ),
-    .after = bedrooms
-  ) |> 
-  select(-TEN_label, -HHLDRHISP_label, -HHLDRRAC1P_label, -HHT2_label)
-
-
-
-
 # 8. Survey
 
 # Convert to survey object
