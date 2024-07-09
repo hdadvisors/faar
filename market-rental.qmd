@@ -257,18 +257,27 @@ fill_values <- c("A" = "#445ca9", "B" = "#e9ab3f", "C" = "#8baeaa", "F" = "#5078
 
 type_class <- props |> 
   group_by(building_class, county_name, style) |> 
-  summarise(count = n())
+  summarise(count = n(),
+            units = sum(number_of_units)) |> 
+  ungroup() |> 
+  filter(!is.na(units)) |> 
+  group_by(style) |> 
+  mutate(sum = sum(units)) |> 
+  filter(!is.na(style))
+
+
 
 ggplot(type_class,
-       aes(x = style,
-           y = count, 
+       aes(x = reorder(style,-sum),
+           y = units, 
            fill = building_class)) +
   geom_col(stat = "identity", position = "stack") +
   # facet_wrap(~county_name, nrow = 1) +
   scale_fill_manual(values = fill_values) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
   theme_hda(base_size = 10) +
   theme(legend.position = "right") +
-  labs(title = "Rental properties by building class",
+  labs(title = "Rental units by building class",
        caption = "Source: CoStar Group, Inc.")
 
 
