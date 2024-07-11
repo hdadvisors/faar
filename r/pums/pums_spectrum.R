@@ -1,329 +1,88 @@
-## Prepare PUMS Data for Housing Spectrum -----------------
+## Use PUMS Data for Housing Spectrum Analysis
 
-
-# 1. Setup ------------------------------------------------
+## 1. Setup -----------------------------------------------
 
 library(tidyverse)
 library(tidycensus)
 library(srvyr)
 library(survey)
 
-pums_raw <- read_rds("data/pums/pums_raw.rds")
-pums_wgt <- read_rds("data/pums/pums_wgt.rds")
-pums_labels <- read_rds("data/pums/pums_labels.rds")
-faar_ami <- read_rds("data/pums/faar_ami_pums.rds")
+# Load clean, labels PUMS data with variables and weights
+pums_faar <- read_rds("data/pums/pums_faar.rds")
 
 
-# 2. Join AMI limits to PUMS data -------------------------
+## TEST fct_case_when() -----------------------------------
 
-# Prepare AMI limits to join
-faar_ami_join <- faar_ami |> 
-  mutate(NP = as.numeric(str_sub(hh_size, end = 1))) |> 
-  select(6, 4, 5) |> 
-  pivot_wider(names_from = level, values_from = income)
+# https://stackoverflow.com/questions/49572416/r-convert-to-factor-with-order-of-levels-same-with-case-when
 
-# Join AMI limits and categorize
-faar_pums_ami <- pums_raw |>
-  filter(!TEN == "b") |> 
-  mutate(NP = pmin(NP, 8)) |> 
-  left_join(faar_ami_join, by = "NP") |>
+fct_case_when <- function(...) {
+  args <- as.list(match.call())
+  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
+  levels <- levels[!is.na(levels)]
+  factor(dplyr::case_when(...), levels=levels)
+}
+
+pums_faar_fct <- pums_faar |> 
   mutate(
-    ami_faar = case_when(
-      HINCP < 1 ~ "Zero or negative income",
-      HINCP <= ami30 ~ "Below 30% AMI",
-      HINCP <= ami50 ~ "30-50% AMI",
-      HINCP <= ami80 ~ "50-80% AMI",
-      HINCP <= ami100 ~ "80-100% AMI",
-      HINCP <= ami120 ~ "100-120% AMI",
-      TRUE ~ "Above 120% AMI"
-    )
-  ) |> 
-  select(-ami30, -ami50, -ami80, -ami100, -ami120)
-
-
-# 3. Calculate number of earners in household -------------
-
-# Identify persons with wages or salary at least $5000 in last 12 months
-faar_pums_earners <- faar_pums_ami |> 
-  group_by(SERIALNO) |> 
-  mutate(
-    hh_earners = sum(WAGP >= 5000)
-  ) |> 
-  ungroup()
-
-
-# 4. Add place of work labels -----------------------------
-
-powpuma_lookup <- read_rds("data/pums/powpuma_lookup.rds") |> 
-  select(5:6)
-
-faar_pums_pow <- faar_pums_earners |> 
-  mutate(
-    POWSP = case_when(
-      POWSP == "00N" ~ NA,
-      str_starts(POWSP, "0") ~ str_sub(POWSP, start = 2, end = 3),
-      .default = POWSP
-    )
+    cost_hsg = case_when(
+      cost_own > cost_rent ~ cost_own,
+      cost_rent > cost_own ~ cost_rent
+    ), .after = cost_rent
   ) |> 
   mutate(
-    pow_geoid = case_when(
-      is.na(POWSP) ~ NA,
-      POWPUMA10 != "-0009" ~ paste0(POWSP, POWPUMA10),
-      POWPUMA20 != "-0009" ~ paste0(POWSP, POWPUMA20)
-      
-    )
+    cost_hsg_pct = cost_hsg/(hh_income/12),
+    .after = cost_hsg
   ) |> 
-  left_join(powpuma_lookup, relationship = "many-to-many") |> 
   mutate(
-    pow_label = case_when(
-      POWSP == "51" ~ pow_label,
-      POWSP == "11" ~ "Washington, DC",
-      POWSP == "24" ~ "Maryland",
-      .default = NA
-    )
+    cb = fct_case_when(
+      cost_hsg_pct < 0.30 ~ "Not cost-burdened",
+      cost_hsg_pct < 0.50 ~ "Cost-burdened",
+      cost_hsg_pct >= 0.50 ~ "Severely cost-burdened"
+    ), .after = cost_hsg_pct
   )
-  
-# Test survey weights  
-# 
-# faar_pums_pow |> 
-#   left_join(pums_wgt) |> 
-#   to_survey(type = "person", design = "rep_weights") |> 
-#   filter(!is.na(pow_label)) |> 
-#   group_by(pow_label) |> 
-#   summarise(
-#     pct = survey_prop(vartype = "cv")
-#   ) |> 
-#   arrange(desc(pct))
 
+## 2. Function to label reliability of estimates ----------
 
-# 5. Recode PUMS data as needed ---------------------------
-
-# Use custom function from pums_labels.R
-pums_recode <- function(data, vars) {
+add_reliability <- function(data) {
   
-  recoded_data <- data
+  # Find the column name ending with "_cv"
+  cv_col <- names(data)[grep("_cv$", names(data))]
   
-  for (var_name in vars) {
-    recoded_data <- recoded_data %>%
-      left_join(
-        pums_labels %>% 
-          filter(var_code == var_name) %>% 
-          select(val, val_label),
-        by = setNames("val", var_name)
-      ) %>%
-      mutate(!!var_name := coalesce(val_label, as.character(.data[[var_name]]))) %>%
-      select(-val_label)
+  # Check if a CV column was found
+  if (length(cv_col) == 0) {
+    stop("No column ending with '_cv' found in the data.")
+  } else if (length(cv_col) > 1) {
+    warning("Multiple columns ending with '_cv' found. Using the first one.")
+    cv_col <- cv_col[1]
   }
   
-  return(recoded_data)
+  # Add the reliability column based on the CV values
+  data %>%
+    mutate(reliability = case_when(
+      .data[[cv_col]] < 0.15 ~ "High",
+      .data[[cv_col]] >= 0.15 & .data[[cv_col]] < 0.30 ~ "Medium",
+      .data[[cv_col]] >= 0.30 ~ "Low",
+      TRUE ~ NA_character_  # For any other case (e.g., NA values)
+    ))
   
 }
 
-# Create list of variables to recode
-vars_recode <- c(
-  "BLD", "FS", "TEN", "YRBLT", "HHLDRHISP", "HHLDRRAC1P", "HHT2", "MV",
-  "WIF", "COW", "HINS3", "HINS4", "DIS", "NAICSP", "SOCP"
-)
+## 3. Stats for all households ----------------------------
 
-faar_pums_recode <- pums_recode(faar_pums_pow, vars_recode)
-
-
-# 6. Rename PUMS variables as needed ----------------------
-
-pums_rename <- function(data) {
-  
-  data |> 
-    rename(
-      hh_size = NP,
-      bedrooms = BDSP,
-      fam_income = FINCP,
-      cost_rent = GRNTP,
-      hh_income = HINCP,
-      children = NOC,
-      cost_own = SMOCP,
-      age = AGEP,
-      ssi = SSIP,
-      ss = SSP,
-      wages = WAGP,
-      str_type = BLD,
-      snap = FS,
-      tenure = TEN,
-      str_yrblt = YRBLT,
-      ethnicity = HHLDRHISP,
-      race = HHLDRRAC1P,
-      hh_type = HHT2,
-      moved = MV,
-      workers = WIF,
-      wkr_class = COW,
-      medicare = HINS3,
-      medicaid = HINS4,
-      disability = DIS,
-      naics = NAICSP,
-      soc = SOCP
-    ) 
-  
-}
-
-faar_pums_rename <- pums_rename(faar_pums_recode)
-
-
-# 7. Clean up and reorder columns -------------------------
-
-faar_pums_clean <- faar_pums_rename |> 
-  mutate(
-    puma = case_when(
-      PUMA10 == "-0009" ~ PUMA20,
-      .default = PUMA10
-    )
-  ) |> 
-  select(
-    1:5,
-    # Household info
-    "puma",
-    "hh_size",
-    "hh_type",
-    "age",
-    "children",
-    "race",
-    "ethnicity",
-    # Income and wages
-    "ami_faar",
-    "hh_income",
-    "fam_income",
-    "wages",
-    # Housing
-    "tenure",
-    "str_type",
-    "bedrooms",
-    "str_yrblt",
-    "moved",
-    "cost_own",
-    "cost_rent",
-    # Disability and assistance
-    "disability",
-    "ssi",
-    "ss",
-    "snap",
-    "medicare",
-    "medicaid",
-    # Economic
-    "workers",
-    "hh_earners",
-    "wkr_class",
-    "pow_label",
-    "naics",
-    "soc"
-  )
-
-
-# 8. Simplify variable labels -----------------------------
-
-faar_pums_simple <- faar_pums_clean |> 
-  mutate(
-    hh_type = case_when(
-      str_detect(hh_type, "Married|Cohabiting") ~ "Couple",
-      str_detect(hh_type, "no spouse/partner present, with children") ~ "Single parent",
-      str_detect(hh_type, "living alone") ~ "Individual",
-      str_detect(hh_type, "with relatives") ~ "Relatives",
-      str_detect(hh_type, "nonrelatives") ~ "Roommates",
-      .default = hh_type
-    )
-  ) |> 
-  mutate(
-    race = case_when(
-      ethnicity != "Not Spanish/Hispanic/Latino" ~ "Hispanic or Latino",
-      ethnicity == "Not Spanish/Hispanic/Latino" ~ race
-    ),
-    race = case_when(
-      race == "Black or African American alone" ~ "Black",
-      race == "Two or More Races" ~ "Multiracial",
-      race == "Some Other Race" ~ "Another race",
-      str_detect(race, "American Indian") ~ "American Indian",
-      .default = str_remove_all(race, " alone")
-    )
-  ) |> 
-  mutate(
-    tenure_detail = case_when(
-      tenure == "Rented" ~ "Renter",
-      tenure == "Owned with mortgage or loan (include home equity loans)" ~ "Homeowner",
-      tenure == "Owned free and clear" ~ "Homeowner (no mortgage)",
-      tenure == "Occupied without payment of rent" ~ "Renter (no rent)"
-    ), .after = tenure
-  ) |> 
-  mutate(
-    tenure = case_when(
-      str_detect(tenure, "(?i)rent") ~ "Renter",
-      str_detect(tenure, "Owned") ~ "Homeowner"
-    )
-  ) |> 
-  mutate(
-    str_type = case_when(
-      str_type == "One-family house detached" ~ "Single-family detached",
-      str_type == "One-family house attached" ~ "Townhome",
-      str_type == "2 Apartments" ~ "Small multifamily (2-9 units)",
-      str_type == "3-4 Apartments" ~ "Small multifamily (2-9 units)",
-      str_type == "5-9 Apartments" ~ "Small multifamily (2-9 units)",
-      str_type == "10-19 Apartments" ~ "Medium multifamily (10-19 units)",
-      str_type == "20-49 Apartments" ~ "Large multifamily (20+ units)",
-      str_type == "50 or more apartments" ~ "Large multifamily (20+ units)",
-      .default = "Mobile home"
-    )
-  ) |> 
-  mutate(
-    str_yrblt = case_when(
-      str_detect(str_yrblt, "202") ~ "2020 or after",
-      str_detect(str_yrblt, "195|196") ~ "1950-1969",
-      str_detect(str_yrblt, "193|194") ~ "1949 or earlier",
-      .default = str_yrblt
-    )
-  ) |> 
-  mutate(
-    moved = case_when(
-      moved == "12 months or less" ~ "Within last year",
-      moved == "13 to 23 months" ~ "1-4 years ago",
-      moved == "2 to 4 years" ~ "1-4 years ago",
-      moved == "5 to 9 years" ~ "5-9 years ago",
-      moved == "10 to 19 years" ~ "10-19 years ago",
-      moved == "20 to 29 years" ~ "20-29 years ago",
-      moved == "30 years or more" ~ "30+ years ago"
-    )
-  ) |> 
-  mutate(
-    wkr_class = case_when(
-      str_detect(wkr_class, "last worked") ~ "Non-earner",
-      str_detect(wkr_class, "without pay") ~ "Non-earner",
-      str_detect(wkr_class, "private for-profit") ~ "For-profit",
-      str_detect(wkr_class, "not-for-profit") ~ "Non-profit",
-      str_detect(wkr_class, "Local|State") ~ "Local or state government",
-      str_detect(wkr_class, "Federal") ~ "Federal government",
-      str_detect(wkr_class, "Self-employed") ~ "Self-employed"
-    )
-  )
-  
-
-faar_pums_simple |>
-  left_join(pums_wgt) |>
-  filter(
-    #SPORDER == 1
-    #ami_faar == "Below 30% AMI"
-    wages > 5000
-  ) |>
-  to_survey(type = "person", design = "rep_weights") |>
-  group_by(wkr_class) |>
+# AMI by tenure
+pums_faar_fct |> 
+  filter(SPORDER == 1, cost_hsg_pct > 0 & cost_hsg_pct < 1) |> 
+  mutate(cb_bin = cut(cost_hsg_pct, breaks = 50)) |> 
+  #select(cost_hsg_pct, cb_bin)
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(tenure, cb_bin) |> 
   summarise(
     n = survey_prop(vartype = "cv")
-  ) |>
-  arrange(desc(n))
+  ) |> 
+  mutate(bin_midpoint = as.numeric(str_extract(cb_bin, "(?<=,).*(?=\\])"))) |> 
+  #add_reliability()
+  ggplot(aes(x = bin_midpoint, y = n, fill = tenure)) +
+    geom_col(position = "dodge")
 
 
-# Working family
-# Single working parent
-# DINK
-# Active retirees
-# Seniors
-# Roommates
-
-
-  
-
-
+## 4. Stats for households with at least 
