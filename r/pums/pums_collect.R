@@ -44,6 +44,7 @@ make_pums_vars <- function() {
     "HHLDRRAC1P",  # Race
     "HHT2",        # Household/family type (includes cohabiting)
     "HINCP",       # Household income
+    "MULTG",       # Multigenerational household
     "MV",          # When moved into home
     "NOC",         # Number of own children
     "SMOCP",       # Selected monthly owner costs
@@ -56,6 +57,14 @@ make_pums_vars <- function() {
     "COW",         # Class of worker
     "HINS3",       # Medicare
     "HINS4",       # Medicaid 
+    "INTP",        # Interest, dividends, and net rental income
+    "OIP",         # All other income
+    "PAP",         # Public assistance income
+    "RELSHIPP",    # Relationship (to householder)
+    "RETP",        # Retirement income
+    "SCHL",        # Educational attainment
+    "SEMP",        # Self-employment income
+    "SEX",         # Sex
     "SSIP",        # Supplemental Security Income amount
     "SSP",         # Social Security amount
     "WAGP"         # Wages or salary income
@@ -64,6 +73,7 @@ make_pums_vars <- function() {
   # PERSON RECORD - RECODED PERSON VARIABLES
   vars_pr_rcp <- c(
     "DIS",         # Disability
+    "ESR",         # Employment status recode
     "NAICSP",      # NAICS recode (based on 2017 NAICS codes)
     "POWPUMA10",   # Place of work PUMA (2010 definition)
     "POWPUMA20",   # Place of work PUMA (2020 definition)
@@ -92,12 +102,11 @@ pums_raw <- get_pums(
   state = "VA",
   survey = "acs5"
   ) |> 
-  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020) |> 
-  mutate(pums_join = paste0(SERIALNO, SPORDER), .before = 1)
+  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020)
 
 # Save or load as needed
 # write_rds(pums_raw, "data/pums/pums_raw.rds")
-pums_raw <- read_rds("data/pums/pums_raw.rds")
+# pums_raw <- read_rds("data/pums/pums_raw.rds")
 
 
 # 4. Collect PUMS weights ---------------------------------
@@ -110,10 +119,9 @@ pums_wgt <- get_pums(
   survey = "acs5",
   rep_weights = "both"
   ) |> 
-  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020) |> 
-  mutate(pums_join = paste0(SERIALNO, SPORDER), .before = 1)
+  filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020)
 
 # Save or load as needed
 # write_rds(pums_wgt, "data/pums/pums_wgt.rds")
-pums_wgt <- read_rds("data/pums/pums_wgt.rds")
+# pums_wgt <- read_rds("data/pums/pums_wgt.rds")
 

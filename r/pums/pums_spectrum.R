@@ -1,71 +1,45 @@
 ## Use PUMS Data for Housing Spectrum Analysis
 
-## 1. Setup -----------------------------------------------
+## Setup -----------------------------------------------
 
 library(tidyverse)
 library(tidycensus)
 library(srvyr)
-library(survey)
+library(hdatools)
 
 # Load clean, labels PUMS data with variables and weights
 pums_faar <- read_rds("data/pums/pums_faar.rds")
 
 
-## TEST fct_case_when() -----------------------------------
+## Household typologies
 
-# https://stackoverflow.com/questions/49572416/r-convert-to-factor-with-order-of-levels-same-with-case-when
-
-fct_case_when <- function(...) {
-  args <- as.list(match.call())
-  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
-  levels <- levels[!is.na(levels)]
-  factor(dplyr::case_when(...), levels=levels)
-}
-
-pums_faar_fct <- pums_faar |> 
+faar_hh_typologies <- pums_faar |> 
+  group_by(SERIALNO) |> 
   mutate(
-    cost_hsg = case_when(
-      cost_own > cost_rent ~ cost_own,
-      cost_rent > cost_own ~ cost_rent
-    ), .after = cost_rent
+    hh_age = case_when(
+      # Calculate mean adult age and immediately use it for categorization
+      mean(age[age >= 18], na.rm = TRUE) < 35 ~ "Young",
+      mean(age[age >= 18], na.rm = TRUE) < 55 ~ "Middle-age",
+      mean(age[age >= 18], na.rm = TRUE) < 75 ~ "Senior",
+      TRUE ~ "Elderly"
+    ), .after = age
   ) |> 
   mutate(
-    cost_hsg_pct = cost_hsg/(hh_income/12),
-    .after = cost_hsg
+    hh_disability = if_else(
+      SPORDER == 1,
+      any(disability == "With a disability", na.rm = TRUE),
+      NA
+    ), .after = disability
   ) |> 
-  mutate(
-    cb = fct_case_when(
-      cost_hsg_pct < 0.30 ~ "Not cost-burdened",
-      cost_hsg_pct < 0.50 ~ "Cost-burdened",
-      cost_hsg_pct >= 0.50 ~ "Severely cost-burdened"
-    ), .after = cost_hsg_pct
-  )
+  ungroup() |> 
+  filter(SPORDER == 1) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(tenure, cb_bin) |>
 
-## 2. Function to label reliability of estimates ----------
+## Regional housing spectrum ------------------------------
 
-add_reliability <- function(data) {
-  
-  # Find the column name ending with "_cv"
-  cv_col <- names(data)[grep("_cv$", names(data))]
-  
-  # Check if a CV column was found
-  if (length(cv_col) == 0) {
-    stop("No column ending with '_cv' found in the data.")
-  } else if (length(cv_col) > 1) {
-    warning("Multiple columns ending with '_cv' found. Using the first one.")
-    cv_col <- cv_col[1]
-  }
-  
-  # Add the reliability column based on the CV values
-  data %>%
-    mutate(reliability = case_when(
-      .data[[cv_col]] < 0.15 ~ "High",
-      .data[[cv_col]] >= 0.15 & .data[[cv_col]] < 0.30 ~ "Medium",
-      .data[[cv_col]] >= 0.30 ~ "Low",
-      TRUE ~ NA_character_  # For any other case (e.g., NA values)
-    ))
-  
-}
+
+
 
 ## 3. Stats for all households ----------------------------
 
@@ -85,4 +59,6 @@ pums_faar_fct |>
     geom_col(position = "dodge")
 
 
+
 ## 4. Stats for households with at least 
+
