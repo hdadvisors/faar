@@ -14,27 +14,29 @@ pums_faar <- read_rds("data/pums/pums_faar.rds")
 ## Household typologies
 
 faar_hh_typologies <- pums_faar |> 
-  group_by(SERIALNO) |> 
   mutate(
-    hh_age = case_when(
-      # Calculate mean adult age and immediately use it for categorization
-      mean(age[age >= 18], na.rm = TRUE) < 35 ~ "Young",
-      mean(age[age >= 18], na.rm = TRUE) < 55 ~ "Middle-age",
-      mean(age[age >= 18], na.rm = TRUE) < 75 ~ "Senior",
-      TRUE ~ "Elderly"
-    ), .after = age
+    children = case_when(
+      children == 0 ~ "No",
+      children > 0 ~ "Yes"
+    )
   ) |> 
   mutate(
-    hh_disability = if_else(
-      SPORDER == 1,
-      any(disability == "With a disability", na.rm = TRUE),
-      NA
-    ), .after = disability
+    hh_earners = case_when(
+      hh_earners == 0 ~ "No",
+      hh_earners > 0 ~ "Yes"
+    )
   ) |> 
-  ungroup() |> 
-  filter(SPORDER == 1) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(tenure, cb_bin) |>
+  group_by(hh_type, hh_age, children, hh_earners) |>
+  summarise(
+    n = survey_total(vartype = "cv")
+  )
+
+# 1. Working family (middle-age): Couple > Middle-age > Children > Working
+# 2. SINKs/DINKs: Couple > Middle-age > No children > Working
+# 3. Working family (young): Couple > Young > Children > Working
+# 4. Working single-parent: Single parent > Middle-age > Working
+# 5. 
 
 ## Regional housing spectrum ------------------------------
 

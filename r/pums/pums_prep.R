@@ -138,8 +138,8 @@ faar_pums_agedis <- faar_pums_cb |>
   mutate(
     hh_age = fct_case_when(
       mean(AGEP[RELSHIPP %in% c("20", "21", "22", "23", "24", "34")], na.rm = TRUE) < 35 ~ "Young",
-      mean(AGEP[RELSHIPP %in% c("20", "21", "22", "23", "24", "34")], na.rm = TRUE) < 55 ~ "Middle-age",
-      mean(AGEP[RELSHIPP %in% c("20", "21", "22", "23", "24", "34")], na.rm = TRUE) < 75 ~ "Senior",
+      mean(AGEP[RELSHIPP %in% c("20", "21", "22", "23", "24", "34")], na.rm = TRUE) < 65 ~ "Middle-age",
+      mean(AGEP[RELSHIPP %in% c("20", "21", "22", "23", "24", "34")], na.rm = TRUE) < 80 ~ "Senior",
       TRUE ~ "Elderly"
     ),
   ) |>  
@@ -186,7 +186,7 @@ vars_recode <- c(
 faar_pums_recode <- pums_recode(faar_pums_agedis, vars_recode)
 
 
-## 6. Rename PUMS variables as needed ---------------------
+## 8. Rename PUMS variables as needed ---------------------
 
 pums_rename <- function(data) {
   
@@ -235,9 +235,19 @@ pums_rename <- function(data) {
 faar_pums_rename <- pums_rename(faar_pums_recode)
 
 
-## 7. Clean up and reorder columns ------------------------
+## 8. Group NAICS and SOC codes into categories -----------
 
-faar_pums_clean <- faar_pums_rename |> 
+# Load lookup tables created in naics_soc_lookup.rds
+naics_recode <- read_rds("data/pums/naics_recode.rds")
+soc_recode <- read_rds("data/pums/soc_recode.rds")
+
+faar_pums_occ <- faar_pums_rename |> 
+  left_join(naics_recode) |> 
+  left_join(soc_recode)
+
+## 9. Clean up and reorder columns ------------------------
+
+faar_pums_clean <- faar_pums_occ |> 
   mutate(
     puma = case_when(
       PUMA10 == "-0009" ~ PUMA20,
@@ -296,11 +306,13 @@ faar_pums_clean <- faar_pums_rename |>
     "pow_label",
     "core_workforce",
     "naics",
-    "soc"
+    "soc",
+    "naics_group",
+    "soc_group"
   )
 
 
-## 8. Simplify variable labels ----------------------------
+## 10. Simplify variable labels ---------------------------
 
 faar_pums_simple <- faar_pums_clean |> 
   mutate(
@@ -427,13 +439,16 @@ faar_pums_simple <- faar_pums_clean |>
   ) |> 
   mutate(
     across(c(naics, soc), ~ replace(., . %in% c("N", "00000N"), NA))
-  )
-
-
+  ) |> 
+  mutate(
+    across(
+      fam_income:inc_other, ~ replace(., . %in% c(-1, -10001), NA)
+    )
+  ) |> 
   select(-ethnicity)
   
 
-## 9. Save final PUMS data --------------------------------
+## 11. Save final PUMS data -------------------------------
 
 # Join with replicate weights
 pums_faar <- faar_pums_simple |> 

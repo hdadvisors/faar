@@ -1,823 +1,179 @@
 ## Setup --------------------------------------------------
 
 library(tidyverse)
+library(tidycensus)
+
+## Get NAICSP and SOCP variable codes and labels ---------
+
+pums_vars_naics <- pums_variables |>  
+  filter(year == 2022, survey == "acs5") |> 
+  filter(
+    var_code == "NAICSP"
+  ) |> 
+  select(3, 7, val = val_min, 9)
+
+pums_vars_soc <- pums_variables |>  
+  filter(year == 2022, survey == "acs5") |> 
+  filter(
+    var_code == "SOCP"
+  ) |> 
+  select(3, 7, val = val_min, 9)
 
 ## NAICS code groupings -----------------------------------
 
-naics_ret <- c(
-  "RET-Miscellaneous Retail Stores", 
-  "RET-General Merchandise Stores", 
-  "RET-Convenience Stores", 
-  "RET-Building Material And Supplies Dealers", 
-  "RET-Used Merchandise Stores", 
-  "RET-Automotive Parts, Accessories, And Tire Stores", 
-  "RET-Lawn And Garden Equipment And Supplies Stores", 
-  "RET-Florists", 
-  "RET-Furniture And Home Furnishings Stores", 
-  "RET-Automobile Dealers", 
-  "RET-Electronic Shopping And Mail-Order Houses", 
-  "RET-Fuel Dealers", 
-  "RET-Clothing Stores", 
-  "RET-Shoe Stores", 
-  "RET-Pharmacies And Drug Stores", 
-  "RET-Health And Personal Care Stores", 
-  "RET-Electronics Stores", 
-  "RET-Supermarkets And Other Grocery Stores", 
-  "RET-Book Stores And News Dealers", 
-  "RET-Jewelry, Luggage, And Leather Goods Stores", 
-  "RET-Sporting Goods, And Hobby And Toy Stores", 
-  "RET-Department Stores", 
-  "RET-Other Motor Vehicle Dealers", 
-  "RET-Office Supplies And Stationery Stores", 
-  "RET-Gasoline Stations", 
-  "RET-Hardware Stores", 
-  "RET-Beer, Wine, And Liquor Stores", 
-  "RET-Other Direct Selling Establishments", 
-  "RET-Household Appliance Stores", 
-  "RET-Gift, Novelty, And Souvenir Shops", 
-  "RET-Vending Machine Operators", 
-  "RET-Musical Instrument And Supplies Stores", 
-  "RET-Sewing, Needlework, And Piece Goods Stores", 
-  "RET-Specialty Food Stores", 
-  "WHL-Drugs, Sundries, And Chemical And Allied Products Merchant Wholesalers", 
-  "WHL-Machinery, Equipment, And Supplies Merchant Wholesalers", 
-  "WHL-Household Appliances And Electrical And Electronic Goods Merchant Wholesalers", 
-  "WHL-Grocery And Related Product Merchant Wholesalers", 
-  "WHL-Alcoholic Beverages Merchant Wholesalers", 
-  "WHL-Petroleum And Petroleum Products Merchant Wholesalers", 
-  "WHL-Recyclable Material Merchant Wholesalers", 
-  "WHL-Miscellaneous Durable Goods Merchant Wholesalers", 
-  "WHL-Motor Vehicle And Motor Vehicle Parts And Supplies Merchant Wholesalers", 
-  "WHL-Lumber And Other Construction Materials Merchant Wholesalers", 
-  "WHL-Wholesale Electronic Markets And Agents And Brokers", 
-  "WHL-Professional And Commercial Equipment And Supplies Merchant Wholesalers", 
-  "WHL-Hardware, And Plumbing And Heating Equipment, And Supplies Merchant Wholesalers", 
-  "WHL-Furniture And Home Furnishing Merchant Wholesalers", 
-  "WHL-Miscellaneous Nondurable Goods Merchant Wholesalers", 
-  "WHL-Paper And Paper Products Merchant Wholesalers", 
-  "WHL-Farm Product Raw Material Merchant Wholesalers"
+naics_recode <- pums_vars_naics |> 
+  mutate(
+    naics_group = case_when(
+      str_detect(val, "^42|^44|^45|4MS") ~ "Retail and Wholesale",
+      str_detect(val, "^31|^32|^33|3MS") ~ "Manufacturing",
+      str_detect(val, "^54|^55|^56") ~ "Professional Services",
+      str_detect(val, "^62") ~ "Healthcare and Social Assistance",
+      str_detect(val, "^61") ~ "Education",
+      str_detect(val, "^52|^53") ~ "Finance and Insurance",
+      str_detect(val, "^51") ~ "Information and Communication",
+      str_detect(val, "^48|^49") ~ "Transportation and Warehousing",
+      str_detect(val, "^92") ~ "Public Administration and Military",
+      str_detect(val, "^71|^72") ~ "Entertainment and Accommodation",
+      str_detect(val, "^81") ~ "Other Services",
+      str_detect(val, "^11|^21|^22|23") ~ "Construction, Utilities, and Natural Resources",
+      .default = NA
+    )
   )
-
-naics_mfg <-  c(
-  "MFG-Miscellaneous Manufacturing, N.E.C.", 
-  "MFG-Dairy Product", 
-  "MFG-Pulp, Paper, And Paperboard Mills", 
-  "MFG-Seafood And Other Miscellaneous Foods, N.E.C.", 
-  "MFG-Furniture And Related Product", 
-  "MFG-Aircraft And Parts", 
-  "MFG-Communications, Audio, And Video Equipment", 
-  "MFG-Miscellaneous Fabricated Metal Products", 
-  "MFG-Medical Equipment And Supplies", 
-  "MFG-Industrial And Miscellaneous Chemicals", 
-  "MFG-Machine Shops",
-"Turned Product",
-"Screw, Nut, And Bolt", 
-  "MFG-Machinery, N.E.C. Or Not Specified", 
-  "MFG-Animal Food, Grain And Oilseed Milling", 
-  "MFG-Structural Metals, And Boiler, Tank, And Shipping Container", 
-  "MFG-Beverage", 
-  "MFG-Printing And Related Support Activities", 
-  "MFG-Motor Vehicles And Motor Vehicle Equipment", 
-  "MFG-Plastics Product", 
-  "MFG-Miscellaneous Wood Products", 
-  "MFG-Bakeries And Tortilla, Except Retail Bakeries", 
-  "MFG-Pharmaceutical And Medicine", 
-  "MFG-Aerospace Products And Parts", 
-  "MFG-Retail Bakeries", 
-  "MFG-Agricultural Chemical", 
-  "MFG-Resin, Synthetic Rubber, And Fibers And Filaments", 
-  "MFG-Cement, Concrete, Lime, And Gypsum Product", 
-  "MFG-Ship And Boat Building", 
-  "MFG-Aluminum Production And Processing", 
-  "MFG-Textile Product Mills, Except Carpet And Rug", 
-  "MFG-Glass And Glass Product", 
-  "MFG-Soap, Cleaning Compound, And Cosmetics", 
-  "MFG-Tire", 
-  "MFG-Miscellaneous Paper And Pulp Products", 
-  "MFG-Electronic Component And Product, N.E.C.", 
-  "MFG-Cut And Sew, And Apparel Accessories And Other Apparel", 
-  "MFG-Sawmills And Wood Preservation", 
-  "MFG-Navigational, Measuring, Electromedical, And Control Instruments", 
-  "MFG-Fabric Mills, Except Knitting Mills", 
-  "MFG-Ordnance", 
-  "MFG-Animal Slaughtering And Processing", 
-  "MFG-Metalworking Machinery", 
-  "MFG-Veneer, Plywood, And Engineered Wood Products", 
-  "MFG-Fruit And Vegetable Preserving And Specialty Food", 
-  "MFG-Rubber Products, Except Tires", 
-  "MFG-Miscellaneous Petroleum And Coal Products", 
-  "MFG-Iron And Steel Mills And Steel Product", 
-  "MFG-Sporting And Athletic Goods, And Doll, Toy And Game", 
-  "MFG-Foundries", 
-  "MFG-Electric Lighting And Electrical Equipment, And Other Electrical Component, N.E.C.", 
-  "MFG-Household Appliance", 
-  "MFG-Prefabricated Wood Buildings And Mobile Homes", 
-  "MFG-Miscellaneous Nonmetallic Mineral Product", 
-  "MFG-Tobacco", 
-  "MFG-Other Transportation Equipment", 
-  "MFG-Pottery, Ceramics, And Plumbing Fixture", 
-  "MFG-Fiber, Yarn, And Thread Mills", 
-  "MFG-Cutlery And Hand Tool", 
-  "MFG-Coating, Engraving, Heat Treating, And Allied Activities", 
-  "MFG-Computer And Peripheral Equipment", 
-  "MFG-Construction, And Mining And Oil And Gas Field Machinery", 
-  "MFG-Paint, Coating, And Adhesive"
-  )
-
-naics_prf <- c(
-  "PRF-Computer Systems Design And Related Services",
-  "PRF-Landscaping Services",
-  "PRF-Legal Services",
-  "PRF-Services To Buildings And Dwellings",
-  "PRF-Other Administrative And Other Support Services",
-  "PRF-Architectural, Engineering, And Related Services",
-  "PRF-Waste Management And Remediation Services",
-  "PRF-Employment Services",
-  "PRF-Investigation And Security Services",
-  "PRF-Advertising, Public Relations, And Related Services",
-  "PRF-Management, Scientific, And Technical Consulting Services",
-  "PRF-Business Support Services",
-  "PRF-Scientific Research And Development Services",
-  "PRF-Travel Arrangements And Reservation Services",
-  "PRF-Management Of Companies And Enterprises",
-  "PRF-Accounting, Tax Preparation, Bookkeeping, And Payroll Services",
-  "PRF-Veterinary Services",
-  "PRF-Other Professional, Scientific, And Technical Services",
-  "PRF-Specialized Design Services"
-  )
-
-naics_medsca <- c(
-  "MED-Offices Of Dentists",
-  "MED-General Medical And Surgical Hospitals, And Specialty Hospitals",
-  "MED-Home Health Care Services",
-  "MED-Residential Care Facilities, Except Skilled Nursing Facilities",
-  "MED-Other Health Care Services",
-  "MED-Offices Of Other Health Practitioners",
-  "MED-Offices Of Physicians",
-  "MED-Offices Of Optometrists",
-  "MED-Outpatient Care Centers",
-  "MED-Offices Of Chiropractors",
-  "MED-Nursing Care Facilities (Skilled Nursing Facilities)",
-  "MED-Psychiatric And Substance Abuse Hospitals",
-  "SCA-Child Day Care Services",
-  "SCA-Individual And Family Services",
-  "SCA-Community Food And Housing, And Emergency Services",
-  "SCA-Vocational Rehabilitation Services"
-)
-
-naics_edu <- c(
-  "EDU-Other Schools And Instruction, And Educational Support Services",
-  "EDU-Elementary And Secondary Schools",
-  "EDU-Colleges, Universities, And Professional Schools, Including Junior Colleges",
-  "EDU-Business, Technical, And Trade Schools And Training"
-)
-
-naics_fin <- c(
-  "FIN-Banking And Related Activities",
-  "FIN-Securities, Commodities, Funds, Trusts, And Other Financial Investments",
-  "FIN-Insurance Carriers",
-  "FIN-Nondepository Credit And Related Activities",
-  "FIN-Lessors Of Real Estate, And Offices Of Real Estate Agents And Brokers",
-  "FIN-Commercial, Industrial, And Other Intangible Assets Rental And Leasing",
-  "FIN-Real Estate Property Managers, Offices of Real Estate Appraisers, And Other Activities Related to Real Estate",
-  "FIN-Automotive Equipment Rental And Leasing",
-  "FIN-Agencies, Brokerages, And Other Insurance Related Activities",
-  "FIN-Savings Institutions, Including Credit Unions",
-  "FIN-Other Consumer Goods Rental"
-)
-
-naics_inf <- c(
-  "INF-Newspaper Publishers",
-  "INF-Telecommunications, Except Wired Telecommunications Carriers",
-  "INF-Software Publishers",
-  "INF-Wired Telecommunications Carriers",
-  "INF-Internet Publishing And Broadcasting And Web Search Portals",
-  "INF-Periodical, Book, And Directory Publishers",
-  "INF-Broadcasting (Except Internet)",
-  "INF-Libraries And Archives",
-  "INF-Data Processing, Hosting, And Related Services",
-  "INF-Motion Pictures And Video Industries",
-  "INF-Other Information Services, Except Libraries And Archives, And Internet Publishing And Broadcasting And Web Search Portals"
-)
-
-naics_trn <- c(
-  "TRN-Postal Service",
-  "TRN-Truck Transportation",
-  "TRN-Couriers And Messengers",
-  "TRN-Services Incidental To Transportation",
-  "TRN-Rail Transportation",
-  "TRN-Air Transportation",
-  "TRN-Bus Service And Urban Transit",
-  "TRN-Warehousing And Storage",
-  "TRN-Scenic And Sightseeing Transportation",
-  "TRN-Taxi And Limousine Service",
-  "TRN-Pipeline Transportation"
-)
-
-naics_admmil <- c(
-  "ADM-Executive Offices And Legislative Bodies",
-  "ADM-National Security And International Affairs",
-  "ADM-Justice, Public Order, And Safety Activities",
-  "ADM-Administration Of Economic Programs And Space Research",
-  "ADM-Public Finance Activities",
-  "ADM-Other General Government And Support",
-  "ADM-Administration Of Human Resource Programs",
-  "ADM-Administration Of Environmental Quality And Housing Programs",
-  "MIL-U.S. Navy",
-  "MIL-U.S. Marines",
-  "MIL-U.S. Army",
-  "MIL-U.S. Air Force",
-  "MIL-Armed Forces, Branch Not Specified",
-  "MIL-U.S. Coast Guard",
-  "MIL-Military Reserves Or National Guard"
-)
-
-naics_ent <- c(
-  "ENT-Other Amusement, Gambling, And Recreation Industries",
-  "ENT-Restaurants And Other Food Services",
-  "ENT-Recreational Vehicle Parks And Camps, And Rooming And Boarding Houses, Dormitories, And Workers' Camps",
-  "ENT-Traveler Accommodation",
-  "ENT-Independent Artists, Writers, And Performers",
-  "ENT-Museums, Art Galleries, Historical Sites, And Similar Institutions",
-  "ENT-Performing Arts Companies",
-  "ENT-Spectator Sports",
-  "ENT-Drinking Places, Alcoholic Beverages",
-  "ENT-Promoters Of Performing Arts, Sports, And Similar Events, Agents And Managers For Artists, Athletes, Entertainers, And Other Public Figures"
-)
-
-naics_srv <- c(
-  "SRV-Religious Organizations",
-  "SRV-Beauty Salons",
-  "SRV-Business, Professional, Political, And Similar Organizations",
-  "SRV-Automotive Repair And Maintenance",
-  "SRV-Other Personal Services",
-  "SRV-Nail Salons And Other Personal Care Services",
-  "SRV-Commercial And Industrial Machinery And Equipment Repair And Maintenance",
-  "SRV-Personal And Household Goods Repair And Maintenance",
-  "SRV-Car Washes",
-  "SRV-Barber Shops",
-  "SRV-Private Households",
-  "SRV-Electronic And Precision Equipment Repair And Maintenance",
-  "SRV-Labor Unions",
-  "SRV-Drycleaning And Laundry Services",
-  "SRV-Funeral Homes, And Cemeteries And Crematories"
-)
-
-naics_utlagrextcon <- c(
-  "UTL-Electric Power Generation, Transmission And Distribution",
-  "UTL-Not Specified Utilities",
-  "UTL-Sewage Treatment Facilities",
-  "UTL-Natural Gas Distribution",
-  "UTL-Electric And Gas, And Other Combinations",
-  "UTL-Water, Steam, Air-Conditioning, And Irrigation Systems",
-  "AGR-Support Activities For Agriculture And Forestry",
-  "AGR-Crop Production",
-  "AGR-Logging",
-  "AGR-Animal Production And Aquaculture",
-  "AGR-Fishing, Hunting And Trapping",
-  "EXT-Nonmetallic Mineral Mining And Quarrying",
-  "EXT-Coal Mining",
-  "CON-Construction"
-)
-
-naics_groups <- c(
-  "Retail and Wholesale",
-  "Manufacturing",
-  "Professional Services",
-  "Healthcare and Social Assistance",
-  "Education",
-  "Finance and Insurance",
-  "Information and Communication",
-  "Transportation and Warehousing",
-  "Public Administration and Military",
-  "Entertainment and Accommodation",
-  "Other Services",
-  "Utilities, Agriculture, and Resource Extraction"
-)
-
-naics_list <- list(
-  naics_ret, naics_mfg, naics_prf, naics_medsca, naics_edu,
-  naics_fin, naics_inf, naics_trn, naics_admmil, naics_ent,
-  naics_srv, naics_utlagrextcon
-)
-
-named_list <- setNames(naics_list, naics_groups)
-
-naics_recode <- named_list |> 
-  stack() |> 
-  rename(naics = values, naics_groups = ind)
 
 write_rds(naics_recode, "data/pums/naics_recode.rds")
 
 
 ## SOC code regroupings -----------------------------------
 
-soc_all <- c(
-  "OFF-Customer Service Representatives",
-  "EDU-Other Teachers And Instructors",
-  "SAL-Cashiers",
-  "TRN-Driver/Sales Workers And Truck Drivers",
-  "MGR-General And Operations Managers",
-  "TRN-Industrial Truck And Tractor Operators",
-  "CMM-Computer Network Architects",
-  "PRS-Other Entertainment Attendants And Related Workers",
-  "FIN-Financial And Investment Analysts",
-  "CLN-Janitors And Building Cleaners",
-  "ENT-Editors",
-  "PRT-Police Officers",
-  "CMM-Network And Computer Systems Administrators",
-  "EDU-Elementary And Middle School Teachers",
-  "CLN-Landscaping And Groundskeeping Workers",
-  "MGR-Other Managers",
-  "CMM-Software Developers",
-  "CON-Carpenters",
-  "OFF-Postal Service Mail Carriers",
-  "MIL-Military, Rank Not Specified",
-  "RPR-Radio And Telecommunications Equipment Installers And Repairers",
-  "OFF-Other Financial Clerks",
-  "PRS-Childcare Workers",
-  "MED-Dentists",
-  "OFF-File Clerks",
-  "RPR-Avionics Technicians",
-  "MGR-Chief Executives And Legislators",
-  "OFF-Office Clerks, General",
-  "CON-Construction Laborers",
-  "BUS-Meeting, Convention, And Event Planners",
-  "ENG-Civil Engineers",
-  "CMM-Computer Support Specialists",
-  "ENT-Photographers",
-  "OFF-Secretaries And Administrative Assistants, Except Legal, Medical, And Executive",
-  "EAT-Waiters And Waitresses",
-  "FIN-Budget Analysts",
-  "CON-First-Line Supervisors Of Construction Trades And Extraction Workers",
-  "CMS-Directors, Religious Activities And Education",
-  "EDU-Preschool And Kindergarten Teachers",
-  "MED-Respiratory Therapists",
-  "SAL-Parts Salespersons",
-  "PRD-First-Line Supervisors Of Production And Operating Workers",
-  "MGR-Transportation, Storage, And Distribution Managers",
-  "RPR-Heavy Vehicle And Mobile Equipment Service Technicians And Mechanics",
-  "MGR-Financial Managers",
-  "MGR-Sales Managers",
-  "EAT-Cooks",
-  "MGR-Medical And Health Services Managers",
-  "SAL-First-Line Supervisors Of Non-Retail Sales Workers",
-  "FIN-Insurance Underwriters",
-  "PRT-Security Guards And Gambling Surveillance Officers",
-  "SAL-Retail Salespersons",
-  "CMS-Social And Human Service Assistants",
-  "HLS-Nursing Assistants",
-  "ENG-Environmental Engineers",
-  "PRS-Animal Trainers",
-  "PRT-Firefighters",
-  "SAL-Sales Representatives, Wholesale And Manufacturing",
-  "SAL-Insurance Sales Agents",
-  "Unemployed, With No Work Experience In The Last 5 Years Or Earlier Or Never Worked",
-  "EDU-Postsecondary Teachers",
-  "ENG-Other Engineering Technologists And Technicians, Except Drafters",
-  "MED-Licensed Practical And Licensed Vocational Nurses",
-  "MED-Registered Nurses",
-  "FFF-Other Agricultural Workers",
-  "TRN-Laborers And Freight, Stock, And Material Movers, Hand",
-  "OFF-Executive Secretaries And Executive Administrative Assistants",
-  "PRS-Hairdressers, Hairstylists, And Cosmetologists",
-  "ENT-Writers And Authors",
-  "BUS-Human Resources Workers",
-  "TRN-Bus Drivers, School",
-  "RPR-Small Engine Mechanics",
-  "SCI-Other Social Scientists",
-  "CMM-Computer Programmers",
-  "SAL-Door-To-Door Sales Workers, News And Street Vendors, And Related Workers",
-  "OFF-Court, Municipal, And License Clerks",
-  "TRN-Stockers And Order Fillers",
-  "MED-Dental Hygienists",
-  "FFF-Logging Workers",
-  "MED-Physicians",
-  "EAT-Food Servers, Nonrestaurant",
-  "MGR-Education And Childcare Administrators",
-  "SAL-First-Line Supervisors Of Retail Sales Workers",
-  "FIN-Accountants And Auditors",
-  "MGR-Construction Managers",
-  "MGR-Social And Community Service Managers",
-  "PRD-Miscellaneous Plant And System Operators",
-  "PRD-Inspectors, Testers, Sorters, Samplers, And Weighers",
-  "EDU-Secondary School Teachers",
-  "PRT-School Bus Monitors",
-  "CLN-Maids And Housekeeping Cleaners",
-  "RPR-Heating, Air Conditioning, And Refrigeration Mechanics And Installers",
-  "BUS-Business Operations Specialists, All Other",
-  "BUS-Management Analysts",
-  "CON-Electricians",
-  "PRT-Detectives And Criminal Investigators",
-  "ENT-Floral Designers",
-  "OFF-Couriers And Messengers",
-  "LGL-Title Examiners, Abstractors, And Searchers",
-  "ENG-Other Engineers",
-  "OFF-Legal Secretaries And Administrative Assistants",
-  "MED-Occupational Therapists",
-  "EDU-Teaching Assistants",
-  "RPR-Other Installation, Maintenance, And Repair Workers",
-  "OFF-Tellers",
-  "OFF-Bill And Account Collectors",
-  "CMM-Operations Research Analysts",
-  "CON-Plumbers, Pipefitters, And Steamfitters",
-  "HLS-Dental Assistants",
-  "PRT-Other Protective Service Workers",
-  "LGL-Lawyers, And Judges, Magistrates, And Other Judicial Workers",
-  "EAT-Fast Food And Counter Workers",
-  "TRN-Passenger Attendants",
-  "BUS-Cost Estimators",
-  "PRS-Exercise Trainers And Group Fitness Instructors",
-  "CMS-Social Workers, All Other",
-  "PRD-Packaging And Filling Machine Operators And Tenders",
-  "SAL-Counter And Rental Clerks",
-  "PRT-Miscellaneous First-Line Supervisors, Protective Service Workers",
-  "OFF-Interviewers, Except Eligibility And Loan",
-  "OFF-Loan Interviewers And Clerks",
-  "PRD-Sewing Machine Operators",
-  "PRD-Miscellaneous Production Workers, Including Equipment Operators and Tenders",
-  "CMM-Information Security Analysts",
-  "RPR-Maintenance And Repair Workers, General",
-  "RPR-First-Line Supervisors Of Mechanics, Installers, And Repairers",
-  "EAT-Chefs And Head Cooks",
-  "TRN-Cleaners Of Vehicles And Equipment",
-  "SAL-Real Estate Brokers And Sales Agents",
-  "RPR-Bus And Truck Mechanics And Diesel Engine Specialists",
-  "ENT-Other Designers",
-  "OFF-Bookkeeping, Accounting, And Auditing Clerks",
-  "MGR-Food Service Managers",
-  "SAL-Sales Representatives Of Services, Except Advertising, Insurance, Financial Services, And Travel",
-  "SAL-Travel Agents",
-  "LGL-Paralegals And Legal Assistants",
-  "OFF-Other Office And Administrative Support Workers",
-  "OFF-First-Line Supervisors Of Office And Administrative Support Workers",
-  "MGR-Architectural And Engineering Managers",
-  "BUS-Purchasing Agents, Except Wholesale, Retail, And Farm Products",
-  "MED-Medical Records Specialists",
-  "HLS-Personal Care Aides",
-  "RPR-Automotive Service Technicians And Mechanics",
-  "CMM-Web Developers",
-  "MGR-Computer And Information Systems Managers",
-  "MED-Veterinary Technologists And Technicians",
-  "OFF-Word Processors And Typists",
-  "BUS-Compensation, Benefits, And Job Analysis Specialists",
-  "PRD-Structural Metal Fabricators And Fitters",
-  "LGL-Legal Support Workers, All Other",
-  "MIL-First-Line Enlisted Military Supervisors",
-  "EDU-Tutors",
-  "CMM-Computer Occupations, All Other",
-  "MIL-Military Enlisted Tactical Operations And Air/Weapons Specialists And Crew Members",
-  "PRD-Machinists",
-  "ENT-Musicians And Singers",
-  "MGR-Farmers, Ranchers, And Other Agricultural Managers",
-  "HLS-Medical Transcriptionists",
-  "OFF-Eligibility Interviewers, Government Programs",
-  "PRT-Correctional Officers And Jailers",
-  "EAT-Food Preparation Workers",
-  "ENG-Electrical And Electronics Engineers",
-  "CON-Glaziers",
-  "RPR-Aircraft Mechanics And Service Technicians",
-  "MED-Emergency Medical Technicians",
-  "SAL-Models, Demonstrators, And Product Promoters",
-  "ENT-Technical Writers",
-  "PRS-Supervisors of Personal Care And Service Workers",
-  "ENG-Mechanical Engineers",
-  "PRD-Bakers",
-  "CMS-Religious Workers, All Other",
-  "OFF-Receptionists And Information Clerks",
-  "ENG-Other Drafters",
-  "CMS-Counselors, All Other",
-  "BUS-Wholesale And Retail Buyers, Except Farm Products",
-  "PRD-Other Assemblers and Fabricators",
-  "PRS-Manicurists and Pedicurists",
-  "ENT-Artists And Related Workers",
-  "CMM-Web And Digital Interface Designers",
-  "RPR-Computer, Automated Teller, And Office Machine Repairers",
-  "CMM-Computer Systems Analysts",
-  "SAL-Sales And Related Workers, All Other",
-  "PRS-Recreation Workers",
-  "BUS-Logisticians",
-  "PRD-Stationary Engineers And Boiler Operators",
-  "ENT-Public Relations Specialists",
-  "TRN-Supervisors Of Transportation And Material Moving Workers",
-  "BUS-Training And Development Specialists",
-  "MED-Speech-Language Pathologists",
-  "BUS-Project Management Specialists",
-  "HLS-Massage Therapists",
-  "TRN-Bus Drivers, Transit And Intercity",
-  "MGR-Property, Real Estate, And Community Association Managers",
-  "TRN-Aircraft Pilots And Flight Engineers",
-  "MED-Physical Therapists",
-  "MGR-Human Resources Managers",
-  "EDU-Archivists, Curators, And Museum Technicians",
-  "SCI-Other Life, Physical, And Social Science Technicians",
-  "PRT-First-Line Supervisors Of Police And Detectives",
-  "EAT-First-Line Supervisors Of Food Preparation And Serving Workers",
-  "CLN-Pest Control Workers",
-  "SCI-Physical Scientists, All Other",
-  "OFF-Other Information And Records Clerks",
-  "CLN-First-Line Supervisors Of Housekeeping And Janitorial Workers",
-  "MGR-Purchasing Managers",
-  "RPR-Telecommunications Line Installers And Repairers",
-  "MED-Pharmacists",
-  "MED-Cardiovascular Technologists And Technicians",
-  "EDU-Special Education Teachers",
-  "TRN-Parking Attendants",
-  "EAT-Dining Room And Cafeteria Attendants And Bartender Helpers",
-  "ENT-Coaches And Scouts",
-  "MED-Clinical Laboratory Technologists And Technicians",
-  "OFF-Shipping, Receiving, And Inventory Clerks",
-  "CMM-Other Mathematical Science Occupations",
-  "OFF-Payroll And Timekeeping Clerks",
-  "OFF-Billing And Posting Clerks",
-  "PRS-Animal Caretakers",
-  "EAT-Food Preparation And Serving Related Workers, All Other",
-  "PRT-Private Detectives And Investigators",
-  "CON-Construction Equipment Operators",
-  "BUS-Compliance Officers",
-  "SCI-Biological Scientists",
-  "FIN-Credit Counselors And Loan Officers",
-  "PRD-Welding, Soldering, And Brazing Workers",
-  "EDU-Librarians And Media Collections Specialists",
-  "PRS-Tour And Travel Guides",
-  "PRD-Print Binding And Finishing Workers",
-  "MED-Paramedics",
-  "TRN-Railroad Conductors And Yardmasters",
-  "PRS-Other Personal Appearance Workers",
-  "ENG-Industrial Engineers, Including Health And Safety",
-  "TRN-Motor Vehicle Operators, All Other",
-  "EAT-Hosts And Hostesses, Restaurant, Lounge, And Coffee Shop",
-  "MED-Other Therapists",
-  "RPR-Automotive Body And Related Repairers",
-  "CMS-Probation Officers And Correctional Treatment Specialists",
-  "OFF-Correspondence Clerks And Order Clerks",
-  "OFF-Credit Authorizers, Checkers, And Clerks",
-  "OFF-Reservation And Transportation Ticket Agents And Travel Clerks",
-  "OFF-Insurance Claims And Policy Processing Clerks",
-  "FIN-Property Appraisers And Assessors",
-  "PRT-First-Line Supervisors Of Correctional Officers",
-  "CMS-Clergy",
-  "CMM-Computer And Information Research Scientists",
-  "CLN-First-Line Supervisors Of Landscaping, Lawn Service, And Groundskeeping Workers",
-  "CON-Painters And Paperhangers",
-  "PRD-Painting Workers",
-  "RPR-Security And Fire Alarm Systems Installers",
-  "CON-Carpet, Floor, And Tile Installers And Finishers",
-  "CMS-Educational, Guidance, And Career Counselors And Advisors",
-  "OFF-Library Assistants, Clerical",
-  "FIN-Other Financial Specialists",
-  "OFF-Data Entry Keyers",
-  "RPR-Audiovisual Equipment Installers And Repairers",
-  "MGR-Entertainment And Recreation Managers",
-  "MIL-Military Officer Special And Tactical Operations Leaders",
-  "CON-Structural Iron And Steel Workers",
-  "EAT-Dishwashers",
-  "CON-Roofers",
-  "PRD-Helpers--Production Workers",
-  "BUS-Claims Adjusters, Appraisers, Examiners, And Investigators",
-  "PRT-Fire Inspectors",
-  "MED-Pharmacy Technicians",
-  "PRS-Skincare Specialists",
-  "TRN-Pumping Station Operators",
-  "OFF-Dispatchers, Except Police, Fire, And Ambulance",
-  "ENG-Surveying And Mapping Technicians",
-  "MED-Opticians, Dispensing",
-  "MED-Physician Assistants",
-  "MGR-Administrative Services Managers",
-  "HLS-Medical Assistants",
-  "TRN-Other Material Moving Workers",
-  "SAL-Advertising Sales Agents",
-  "CON-Highway Maintenance Workers",
-  "PRD-Prepress Technicians And Workers",
-  "HLS-Veterinary Assistants And Laboratory Animal Caretakers",
-  "MGR-Marketing Managers",
-  "MED-Radiologic Technologists And Technicians",
-  "MGR-Public Relations And Fundraising Managers",
-  "CMS-Mental Health Counselors",
-  "PRS-Residential Advisors",
-  "PRS-Barbers",
-  "RPR-Locksmiths And Safe Repairers",
-  "CON-Construction And Building Inspectors",
-  "BUS-Fundraisers",
-  "CMM-Software Quality Assurance Analysts And Testers",
-  "HLS-Physical Therapist Assistants And Aides",
-  "OFF-Human Resources Assistants, Except Payroll And Timekeeping",
-  "OFF-Switchboard Operators, Including Answering Service",
-  "MGR-Lodging Managers",
-  "HLS-Home Health Aides",
-  "SCI-Atmospheric And Space Scientists",
-  "PRD-Butchers And Other Meat, Poultry, And Fish Processing Workers",
-  "RPR-Other Electrical And Electronic Equipment Mechanics, Installers, and Repairers",
-  "ENT-Entertainers And Performers, Sports And Related Workers, All Other",
-  "PRD-Crushing, Grinding, Polishing, Mixing, And Blending Workers",
-  "MED-Optometrists",
-  "CMM-Database Administrators And Architects",
-  "SCI-Chemical Technicians",
-  "OFF-Production, Planning, And Expediting Clerks",
-  "SAL-Securities, Commodities, And Financial Services Sales Agents",
-  "PRD-Furnace, Kiln, Oven, Drier, And Kettle Operators And Tenders",
-  "TRN-Sailors And Marine Oilers, And Ship Engineers",
-  "PRT-First-Line Supervisors Of Firefighting And Prevention Workers",
-  "RPR-Industrial And Refractory Machinery Mechanics",
-  "PRD-Power Plant Operators, Distributors, And Dispatchers",
-  "PRS-Personal Care And Service Workers, All Other",
-  "MED-Dietitians And Nutritionists",
-  "ENG-Aerospace Engineers",
-  "ENT-Broadcast Announcers And Radio Disc Jockeys",
-  "MGR-Industrial Production Managers",
-  "CON-Boilermakers",
-  "ENG-Architectural And Civil Drafters",
-  "PRT-Crossing Guards And Flaggers",
-  "MGR-Emergency Management Directors",
-  "SCI-Geoscientists And Hydrologists, Except Geographers",
-  "ENG-Marine Engineers And Naval Architects",
-  "OFF-Hotel, Motel, And Resort Desk Clerks",
-  "TRN-Transportation Service Attendants",
-  "MED-Nuclear Medicine Technologists And Medical Dosimetrists",
-  "CON-Helpers, Construction Trades",
-  "RPR-Maintenance Workers, Machinery",
-  "SAL-Telemarketers",
-  "CON-Brickmasons, Blockmasons, Stonemasons, And Reinforcing Iron And Rebar Workers",
-  "OFF-Postal Service Clerks",
-  "PRD-Printing Press Operators",
-  "PRD-Upholsterers",
-  "MED-Other Healthcare Practitioners And Technical Occupations",
-  "ENT-Umpires, Referees, And Other Sports Officials",
-  "TRN-Flight Attendants",
-  "OFF-Public Safety Telecommunicators",
-  "MED-Nurse Practitioners, And Nurse Midwives",
-  "EDU-Library Technicians",
-  "FIN-Tax Preparers",
-  "BUS-Market Research Analysts And Marketing Specialists",
-  "TRN-Other Transportation Workers",
-  "FFF-First-Line Supervisors Of Farming, Fishing, And Forestry Workers",
-  "SCI-Chemists And Materials Scientists",
-  "PRD-Food Batchmakers",
-  "TRN-Taxi Drivers",
-  "MED-Miscellaneous Health Technologists And Technicians",
-  "EDU-Other Educational Instruction and Library Workers",
-  "CMS-Marriage And Family Therapists",
-  "OFF-Medical Secretaries And Administrative Assistants",
-  "HLS-Other Healthcare Support Workers",
-  "MGR-Facilities Managers",
-  "RPR-Electric Motor, Power Tool, And Related Repairers",
-  "EXT-Explosives Workers, Ordnance Handling Experts, And Blasters",
-  "TRN-Crane And Tower Operators",
-  "OFF-Statistical Assistants",
-  "RPR-Millwrights",
-  "ENT-Music Directors And Composers",
-  "ENT-Media And Communication Workers, All Other",
-  "RPR-Miscellaneous Vehicle And Mobile Equipment Mechanics, Installers, And Repairers",
-  "ENG-Architects, Except Landscape And Naval",
-  "ENT-Interpreters And Translators",
-  "EAT-Bartenders",
-  "OFF-Mail Clerks And Mail Machine Operators, Except Postal Service",
-  "RPR-Electrical Power-Line Installers And Repairers",
-  "ENT-Court Reporters And Simultaneous Captioners",
-  "ENG-Chemical Engineers",
-  "ENT-Interior Designers",
-  "ENT-News Analysts, Reporters, And Journalists",
-  "PRD-Other Woodworkers",
-  "PRD-Water And Wastewater Treatment Plant And System Operators",
-  "FIN-Personal Financial Advisors",
-  "FIN-Credit Analysts",
-  "MED-Surgical Technologists",
-  "TRN-Refuse And Recyclable Material Collectors",
-  "PRD-Tailors, Dressmakers, And Sewers",
-  "PRT-Transportation Security Screeners",
-  "ENT-Graphic Designers",
-  "PRD-Other Textile, Apparel, And Furnishings Workers",
-  "TRN-Air Traffic Controllers And Airfield Operations Specialists",
-  "CON-Sheet Metal Workers",
-  "ENG-Electrical and Electronic Engineering Technologists And Technicians",
-  "CMM-Actuaries",
-  "PRD-Laundry And Dry-Cleaning Workers",
-  "OFF-Procurement Clerks",
-  "MED-Nurse Anesthetists",
-  "CON-Cement Masons, Concrete Finishers, And Terrazzo Workers",
-  "CON-Fence Erectors",
-  "SCI-Other Psychologists",
-  "FIN-Tax Examiners And Collectors, And Revenue Agents",
-  "PRD-Forming Machine Setters, Operators, And Tenders, Metal And Plastic",
-  "SCI-Astronomers And Physicists",
-  "OFF-Postal Service Mail Sorters, Processors, And Processing Machine Operators",
-  "CLN-Other Grounds Maintenance Workers",
-  "TRN-Packers And Packagers, Hand",
-  "PRS-Morticians, Undertakers, And Funeral Arrangers",
-  "MGR-Training And Development Managers",
-  "PRD-Jewelers And Precious Stone And Metal Workers",
-  "ENG-Computer Hardware Engineers",
-  "RPR-Automotive Glass Installers And Repairers",
-  "OFF-Weighers, Measurers, Checkers, And Samplers, Recordkeeping",
-  "CMS-Child, Family, And School Social Workers",
-  "ENT-Athletes And Sports Competitors",
-  "PRD-Photographic Process Workers And Processing Machine Operators",
-  "PRD-Tool And Die Makers",
-  "OFF-Communications Equipment Operators, All Other",
-  "MED-Veterinarians",
-  "MED-Audiologists",
-  "ENT-Producers And Directors",
-  "TRN-Transportation Inspectors",
-  "MGR-Advertising And Promotions Managers",
-  "CON-Elevator And Escalator Installers And Repairers",
-  "PRD-Textile Machine Setters, Operators, And Tenders",
-  "MED-Psychiatric Technicians",
-  "PRD-Dental And Ophthalmic Laboratory Technicians And Medical Appliance Technicians",
-  "PRD-Chemical Processing Machine Setters, Operators, And Tenders",
-  "RPR-Riggers",
-  "RPR-Precision Instrument And Equipment Repairers",
-  "ENT-Other Media And Communication Equipment Workers",
-  "ENT-Commercial And Industrial Designers",
-  "CON-Drywall Installers, Ceiling Tile Installers, And Tapers",
-  "SCI-Occupational Health And Safety Specialists And Technicians",
-  "HLS-Pharmacy Aides",
-  "BUS-Agents And Business Managers Of Artists, Performers, And Athletes",
-  "CON-Pipelayers",
-  "MED-Podiatrists",
-  "PRS-Embalmers, Crematory Operators And Funeral Attendants",
-  "OFF-Meter Readers, Utilities",
-  "EXT-Underground Mining Machine Operators",
-  "HLS-Phlebotomists",
-  "MED-Dietetic Technicians And Ophthalmic Medical Technicians",
-  "TRN-Locomotive Engineers And Operators",
-  "SCI-School Psychologists",
-  "ENT-Fashion Designers",
-  "RPR-Home Appliance Repairers",
-  "CMS-Mental Health And Substance Abuse Social Workers",
-  "PRD-Molders, Shapers, And Casters, Except Metal And Plastic",
-  "CMS-Other Community And Social Service Specialists",
-  "PRS-Baggage Porters, Bellhops, And Concierges",
-  "HLS-Orderlies And Psychiatric Aides",
-  "ENT-Actors",
-  "MGR-Compensation And Benefits Managers",
-  "SCI-Economists",
-  "SCI-Other Life Scientists",
-  "FFF-Fishing And Hunting Workers",
-  "CMS-Rehabilitation Counselors",
-  "CMS-Substance Abuse And Behavioral Disorder Counselors",
-  "PRT-Bailiffs",
-  "PRD-Electrical, Electronics, And Electromechanical Assemblers",
-  "TRN-Shuttle Drivers and Chauffeurs",
-  "SCI-Environmental Scientists And Specialists, Including Health",
-  "PRD-Other Metal Workers And Plastic Workers",
-  "CMS-Healthcare Social Workers",
-  "RPR-Helpers--Installation, Maintenance, And Repair Workers",
-  "ENT-Television, Video, And Film Camera Operators And Editors",
-  "FIN-Financial Examiners",
-  "MED-Radiation Therapists",
-  "ENT-Merchandise Displayers And Window Trimmers",
-  "SCI-Environmental Science And Geoscience Technicians, And Nuclear Technicians",
-  "ENG-Landscape Architects",
-  "EXT-Surface Mining Machine Operators And Earth Drillers",
-  "MED-Diagnostic Medical Sonographers",
-  "PRD-Extruding, Forming, Pressing, And Compacting Machine Setters, Operators, And Tenders",
-  "CON-Hazardous Materials Removal Workers",
-  "TRN-Conveyor, Dredge, And Hoist And Winch Operators",
-  "FFF-Forest And Conservation Workers",
-  "MED-Magnetic Resonance Imaging Technologists",
-  "PRD-Paper Goods Machine Setters, Operators, And Tenders",
-  "CON-Other Construction And Related Workers",
-  "HLS-Occupational Therapy Assistants And Aides",
-  "OFF-Telephone Operators",
-  "MED-Healthcare Diagnosing Or Treating Practitioners, All Other",
-  "CON-Insulation Workers",
-  "OFF-Proofreaders And Copy Markers",
-  "PRS-Ushers, Lobby Attendants, And Ticket Takers",
-  "PRD-Food Processing Workers, All Other",
-  "SCI-Biological Technicians"
-)
-
-soc_recode <- tibble(
-  soc = soc_all
-  ) |> 
-  mutate(soc_group = case_when(
-    str_detect(soc_all, "^MGR-") ~ "Leadership and Management",
-    str_detect(soc_all, "^BUS-|^FIN-") ~ "Analysis, Strategy, and Planning",
-    str_detect(soc_all, "^CMM-") ~ "Information Technology and Software Development",
-    str_detect(soc_all, "^ENG-") ~ "Engineering and Technical Design",
-    str_detect(soc_all, "^SCI-") ~ "Scientific Research and Development",
-    str_detect(soc_all, "^EDU-") ~ "Education and Training",
-    str_detect(soc_all, "^MED-|^HLS-") ~ "Healthcare and Medical Services",
-    str_detect(soc_all, "^PRT-|^FIR-") ~ "Protective and Emergency Services",
-    str_detect(soc_all, "^EAT-|^HOS-") ~ "Food and Hospitality Services",
-    str_detect(soc_all, "^CLN-|^RPR-") ~ "Maintenance, Cleaning, and Repair",
-    str_detect(soc_all, "^PRS-") ~ "Personal Care and Services",
-    str_detect(soc_all, "^SAL-|^MKT-") ~ "Sales, Marketing, and Customer Service",
-    str_detect(soc_all, "^OFF-|^ADM-") ~ "Administrative and Clerical Support",
-    str_detect(soc_all, "^FIN-|^ACC-") ~ "Financial Services and Accounting",
-    str_detect(soc_all, "^ART-|^ENT-") ~ "Creative and Artistic Production",
-    str_detect(soc_all, "^PRD-|^MFG-") ~ "Manufacturing and Production",
-    str_detect(soc_all, "^TRN-|^LOG-") ~ "Transportation and Logistics",
-    str_detect(soc_all, "^CON-|^TRD-") ~ "Construction and Skilled Trades",
-    str_detect(soc_all, "^AGR-|^ENV-") ~ "Agriculture and Environmental Services",
-    str_detect(soc_all, "^LGL-") ~ "Legal and Compliance Services",
-    str_detect(soc_all, "^HRM-") ~ "Human Resources and Talent Management",
-    str_detect(soc_all, "^CMS-|^SOC-") ~ "Social and Community Services",
-    str_detect(soc_all, "^COM-|^MED-") ~ "Media and Communications",
-    str_detect(soc_all, "^INS-|^OPR-") ~ "Installation and Equipment Operation",
-    str_detect(soc_all, "^MIL-") ~ "Military and Defense Operations",
-    TRUE ~ "Other"  # Catch-all for any codes that don't match the above
-  ))
+soc_recode <- pums_vars_soc |> 
+  mutate(
+    soc_group = case_when(
+      str_detect(val_label, "^MGR-") ~ "Leadership and Management",
+      str_detect(val_label, "^BUS-|^FIN-") ~ "Analysis, Strategy, and Planning",
+      str_detect(val_label, "^CMM-") ~ "Information Technology and Software Development",
+      str_detect(val_label, "^ENG-") ~ "Engineering and Technical Design",
+      str_detect(val_label, "^SCI-") ~ "Scientific Research and Development",
+      str_detect(val_label, "^EDU-") ~ "Education and Training",
+      str_detect(val_label, "^MED-|^HLS-") ~ "Healthcare and Medical Services",
+      str_detect(val_label, "^PRT-|^FIR-") ~ "Protective and Emergency Services",
+      str_detect(val_label, "^EAT-|^HOS-") ~ "Food and Hospitality Services",
+      str_detect(val_label, "^CLN-|^RPR-") ~ "Maintenance, Cleaning, and Repair",
+      str_detect(val_label, "^PRS-") ~ "Personal Care and Services",
+      str_detect(val_label, "^SAL-|^MKT-") ~ "Sales, Marketing, and Customer Service",
+      str_detect(val_label, "^OFF-|^ADM-") ~ "Administrative and Clerical Support",
+      str_detect(val_label, "^FIN-|^ACC-") ~ "Financial Services and Accounting",
+      str_detect(val_label, "^ART-|^ENT-") ~ "Creative and Artistic Production",
+      str_detect(val_label, "^PRD-|^MFG-") ~ "Manufacturing and Production",
+      str_detect(val_label, "^TRN-|^LOG-") ~ "Transportation and Logistics",
+      str_detect(val_label, "^CON-|^TRD-|^EXT-") ~ "Construction and Skilled Trades",
+      str_detect(val_label, "^AGR-|^FFF-|^ENV-") ~ "Agriculture and Environmental Services",
+      str_detect(val_label, "^LGL-") ~ "Legal and Compliance Services",
+      str_detect(val_label, "^HRM-") ~ "Human Resources and Talent Management",
+      str_detect(val_label, "^CMS-|^SOC-") ~ "Social and Community Services",
+      str_detect(val_label, "^COM-|^MED-") ~ "Media and Communications",
+      str_detect(val_label, "^INS-|^OPR-") ~ "Installation and Equipment Operation",
+      str_detect(val_label, "^MIL-") ~ "Military and Defense Operations",
+      .default = NA
+    )
+  )
 
 write_rds(soc_recode, "data/pums/soc_recode.rds")
 
+
+## GO Virginia Region 6 Priority Industry Clusters --------
+
+# Distribution/Logistics
+#
+# NAICS 42383 Industrial Machinery and Equipment Merchant Wholesalers ==> 4238 Machinery, equipment, and supplies merchant wholesalers     
+#   Includes: 42381 Construction and Mining (except Oil Well) Machinery and Equipment Merchant Wholesalers 
+#             42382 Farm and Garden Machinery and Equipment Merchant Wholesalers 
+#             42384 Industrial Supplies Merchant Wholesalers 
+#             42385 Service Establishment Equipment and Supplies Merchant Wholesalers 
+#             42386 Transportation Equipment and Supplies (except Motor Vehicle) Merchant Wholesalers 
+# NAICS 42512 Wholesale Trade Agents and Brokers ==> 4251 Wholesale electronic markets and agents and brokers 
+#   Includes: 42511 Business to Business Electronic Markets 
+# NAICS 48411 General Freight Trucking, Local ==> 484 Truck transportation 
+# NAICS 484121 General Freight Trucking, Long-Distance, Truckload ==> 484 Truck transportation
+# NAICS 48422 Specialized Freight (except Used Goods) Trucking, Local ==> 484 Truck transportation
+#   Includes: 484122 General Freight Trucking, Long-Distance, Less Than Truckload
+#             48421 Used Household and Office Goods Moving
+#             48423	Specialized Freight (except Used Goods) Trucking, Long-Distance
+# NAICS 49311 General Warehousing and Storage ==> 493 Warehousing and storage 
+#   Includes: 49312	Refrigerated Warehousing and Storage
+#             49313	Farm Product Warehousing and Storage
+#             49319	Other Warehousing and Storage
+
+gova6_dist <- tibble(
+  priority_cluster = "Distribution/Logistics",
+  naics = c("4238", "4251", "484", "493")
+)
+
+# Forestry/Wood Products
+#
+# NAICS 111421 Nursery and Tree Production ==> 111 Crop production
+#   Includes: 1111 Oilseed and Grain Farming
+#             1112 Vegetable and Melon Farming
+#             1113 Fruit and Tree Nut Farming
+#             11141	Food Crops Grown Under Cover
+#             111422 Floriculture Production 
+#             1119 Other Crop Farming
+# NAICS 11331 Logging ==> 1133 Logging
+# NAICS 321113 Sawmills ==> 3211 Sawmills and wood preservation
+#   Includes: 321114 Wood Preservation       
+# NAICS 322121 Paper (except Newsprint) Mills ==> 3221 Pulp, paper, and paperboard mills 
+#   Includes: 32211	Pulp Mills
+#             322122 Newsprint Mills 
+#             32213	Paperboard Mills
+
+gova6_forest <- tibble(
+  priority_cluster = "Forestry/Wood Products",
+  naics = c("111", "1133", "3211", "3221")
+)
+
+# Manufacturing
+#
+# NAICS 31-33 Manufacturing ==> Starts with 31, 32, or 33
+
+mfg_vars <- pums_vars_naics |> 
+  filter(str_starts(val_label, "MFG")) |> 
+  pull(2)
+
+gova6_mfg <- tibble(
+  priority_cluster = "Manufacturing",
+  naics = mfg_vars
+)
+
+# Professional, Technical, and Scientific Services
+#
+# NAICS 54133 Engineering Services ==> 5413 Architectural, engineering, and related services
+#   Includes: 54131	Architectural Services
+#             54132	Landscape Architectural Services
+#             54134	Drafting Services
+#             54135	Building Inspection Services
+#             54136	Geophysical Surveying and Mapping Services
+#             54137	Surveying and Mapping (except Geophysical) Services
+#             54138	Testing Laboratories
+# NAICS 541512 Computer Systems Design Services ==> 5415 Computer systems design and related services 
+# NAICS 541519 Other Computer Related Services ==> 5415 Computer systems design and related services 
+#   Includes: 541511	Custom Computer Programming Services 
+#             541513	Computer Facilities Management Services              
+
+gova6_srv <- tibble(
+  priority_cluster = "Professional, Technical, and Scientific Services",
+  naics = c("5413", "5415")
+)
+
+# Information/Data Centers
+#
+# NAICS 51821 Data Processing, Hosting, and Related Services ==> 5182 Data processing, hosting, and related services
+
+gova6_info <- tibble(
+  priority_cluster = "Information/Data Centers",
+  naics = "5182"
+)
+
+# Combine all priority clusters into lookup table
+
+gova6_lookup <- bind_rows(
+  gova6_dist, gova6_forest, gova6_mfg, gova6_srv, gova6_info
+)

@@ -5,7 +5,6 @@
 library(tidyverse)
 library(tidycensus)
 library(srvyr)
-library(survey)
 
 # Load PUMS variables to explore
 pums_vars_2022 <- pums_variables |>  
@@ -58,6 +57,9 @@ make_pums_vars <- function() {
     "HINS3",       # Medicare
     "HINS4",       # Medicaid 
     "INTP",        # Interest, dividends, and net rental income
+    "JWMNP",       # Travel time to work
+    "JWRIP",       # Carpool status
+    "JWTRNS",      # Means of transportation to work
     "OIP",         # All other income
     "PAP",         # Public assistance income
     "RELSHIPP",    # Relationship (to householder)
@@ -105,7 +107,7 @@ pums_raw <- get_pums(
   filter(PUMA10 %in% faar_2010 | PUMA20 %in% faar_2020)
 
 # Save or load as needed
-# write_rds(pums_raw, "data/pums/pums_raw.rds")
+write_rds(pums_raw, "data/pums/pums_raw.rds")
 # pums_raw <- read_rds("data/pums/pums_raw.rds")
 
 
