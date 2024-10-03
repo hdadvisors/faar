@@ -262,7 +262,7 @@ faar_pums_clean <- faar_pums_occ |>
     "hh_type",
     "hh_age",
     "multigen",
-    "children",
+    " ",
     "race",
     "ethnicity",
     # Person info
