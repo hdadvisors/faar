@@ -1,6 +1,6 @@
 # Regional spectrum {#sec-spectrum-reg}
 
-This report outlines the “housing spectrum” concept and its utility for understanding housing market dynamics. It includes assessments of households in the region by various demographic and socioeconomic characteristics, primarily by wages/income. Special analysis is included for the region's core workforce, i.e. persons both living and working within the region.
+This report outlines the *housing spectrum* concept and its utility for understanding housing market dynamics. It includes assessments of households in the region by various demographic and socioeconomic characteristics, primarily by wages/income. Special analysis is included for the region's core workforce, i.e. persons both living and working within the region.
 
 ```{r}
 #| label: setup
@@ -16,9 +16,19 @@ source("_common.R")
 
 ```
 
-. . .
+## Area Median Income
+
+With few exceptions, housing opportunities are primarily limited by how much money a household has available to buy or rent a home. To build a regional housing spectrum, we'll therefore start by grouping households according to their incomes. The most common approach uses a region's *Area Median Income* (AMI) as a reference point.
+
+To calculate AMI, all households are arranged from lowest to highest gross income. The household exactly in the middle has the *median* income for that given area. We can then refer to any other income value relative to that AMI. For example, if the AMI is \$80,000, a household with an income of \$40,000 is at 50% AMI.
+
+The U.S. Department of Housing and Urban Development (HUD) calculates AMIs each year using household income estimates from the Census Bureau. Many housing programs managed by HUD, other public agencies, and nonprofit providers use AMIs to limit eligibility to households with low or moderate incomes. Because wages and living costs vary by market, AMIs help ensure housing assistance reaches those with the most needs.
+
+HUD calculates AMIs for every locality 
 
 ```{r}
+
+faar_ami_all <- read_rds("data/faar_ami_all.rds")
 
 ```
 

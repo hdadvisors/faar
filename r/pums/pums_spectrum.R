@@ -5,11 +5,27 @@
 library(tidyverse)
 library(tidycensus)
 library(srvyr)
+library(scales)
 library(hdatools)
 library(waffle)
 
 # Load clean, labels PUMS data with variables and weights
 pums_faar <- read_rds("data/pums/pums_faar.rds")
+
+pums_faar |> 
+  filter(SPORDER == 1, tenure_detail == "Renter", hh_income > 0) |> 
+  ggplot(aes(x = cost_rent, group = ami_faar, fill = ami_faar)) +
+  geom_density(aes(weight = WGTP)) +
+  facet_wrap(~ami_faar) +
+  scale_x_continuous(
+    #limits = c(0, 500000),
+    labels = label_currency()
+    ) +
+  scale_fill_hda() +
+  theme_hda() +
+  theme(
+    legend.position = "right"
+  )
 
 
 ## Household typologies
