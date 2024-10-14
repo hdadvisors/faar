@@ -11,7 +11,7 @@ source("_common.R")
 source("r/affordcalc.R")
 
 # Load packages other than tidyverse and hdatools
-# 
+ 
 library(scales)
 library(ggtext)
 
@@ -79,6 +79,7 @@ ggplot(income,
 ```
 
 ```{r}
+#| eval: false
 
 pums_join <- read_rds("data/faar_pums_join.rds")
 
@@ -117,6 +118,7 @@ ggplot(pums_med_inc,
 ```
 
 ```{r}
+#| eval: false
 
 pums_join <- read_rds("data/faar_pums_join.rds")
 
@@ -250,9 +252,9 @@ afford_df |>
 ```
 
 ```{r}
+#| eval: false
 
 # What can the average household in the region afford?
-
 
 pums_join <- read_rds("data/faar_pums_join.rds")
 
@@ -302,7 +304,9 @@ ggplot(pums_afford_df,
 
 
 ```
+
 ```{r}
+#| eval: false
 
 # What can the average household in the region afford?
 
@@ -358,6 +362,7 @@ ggplot(pums_afford_df,
 
 
 ```
+
 ```{r}
 
 wages <- read_csv("data/faar_locality_wages.csv") |> 
@@ -478,14 +483,15 @@ ggplot(tenure_percent_change, aes(x = year, y = percent_change, fill = tenure)) 
 ```
 
 ```{r}
+#| label: fig-age-tenure
+#| fig-cap: "Change in households by age and tenure"
+
 ##B25007: Tenure by Age of Householder - 
 
 ##Create a bar chart showing the change in households by tenure and age of household from 2019 to 2022. Group by Under 25 years, 25 to 44 years, 45 to 64 years, and 65 years and over. Aggregate to the regional level. This should help to show household formation trends among renters and homeowners.
 
 ## First make an RDS file for b25007
 
-#| label: fig-age
-#| fig-cap: "Change in households by age and tenure"
 
 b25007_data <- read_rds("data/b25007_data.rds")
 
@@ -533,6 +539,8 @@ FAAR_age_plot <- ggplot(cv_age,
 
 
 ```{r}
+#| eval: false
+
 ##BLS: Top 5 Occupations and Annual Wage
 
 ## Create a text chart that shows the top five occupations in the region with their respective annual wage.
@@ -654,6 +662,9 @@ styled_table
 ```
 
 ```{r}
+#| label: fig-hhsize
+#| fig-cap: "Change in households by size and tenure"
+
 #ACS B25010 Household Size of Occupied Housing Units by Tenure
 
 ## Are renter households increasing in size? What does this mean for rental housing demand? Are homeowner households increasing or decreasing? Create a bar chart that compares average household size by tenure. 
@@ -661,8 +672,6 @@ styled_table
 library(dplyr)
 library(tidyr)
 
-#| label: fig-hhsize
-#| fig-cap: "Change in households by size and tenure"
 
 # Read the data
 b25010_data <- read_rds("data/b25010_decade_region.rds")

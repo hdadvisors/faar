@@ -13,27 +13,38 @@ knitr::opts_chunk$set(
 # Load core packages
 
 library(tidyverse)
+library(scales)
+library(kableExtra)
+library(formattable)
 library(hdatools)
+library(ggtext)
+
+# Color palettes
+
+hda_pal <- c(
+  "#445ca9", # Blue
+  "#8baeaa", # Green
+  "#e9ab3f", # Yellow
+  "#e76f52", # Coral
+  "#a97a92", # Lavender
+  "#8abc8e"  # Sea Green
+)
+
+# List of FAAR region locality FIPS codes
+
+faar_fips <- c("51033", "51047", "51099", "51177", "51179", "51630")
 
 # Set plot rendering options
 
 if (knitr::is_html_output()) {
   
-  knitr::opts_chunk$set(
-    out.width = "100%"
-  )
+  knitr::opts_chunk$set(out.width = "100%")
   
-  ggplot2::theme_set(
-    hdatools::theme_hda(base_size = 11)
-  )
-
-  } else {
-    
-    knitr::opts_chunk$set(
-      dpi = 150
-    )
+} else {
   
-    ggplot2::theme_set(
-      hdatools::theme_hda(base_size = 7)
-    )
+  knitr::opts_chunk$set(dpi = 150)
+  
 }
+
+
+

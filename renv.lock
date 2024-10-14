@@ -406,10 +406,10 @@
     },
     "commonmark": {
       "Package": "commonmark",
-      "Version": "1.9.1",
+      "Version": "1.9.2",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "5d8225445acb167abf7797de48b2ee3c"
+      "Repository": "RSPM",
+      "Hash": "14eb0596f987c71535d07c3aff814742"
     },
     "conflicted": {
       "Package": "conflicted",
@@ -607,13 +607,13 @@
     },
     "evaluate": {
       "Package": "evaluate",
-      "Version": "1.0.0",
+      "Version": "1.0.1",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "RSPM",
       "Requirements": [
         "R"
       ],
-      "Hash": "6b567375113ceb7d9f800de4dd42218e"
+      "Hash": "3fd29944b231036ad67c3edb32e02201"
     },
     "extrafont": {
       "Package": "extrafont",
@@ -724,6 +724,21 @@
         "tibble"
       ],
       "Hash": "1a0a9a3d5083d0d573c4214576f1e690"
+    },
+    "formattable": {
+      "Package": "formattable",
+      "Version": "0.2.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "htmltools",
+        "htmlwidgets",
+        "knitr",
+        "methods",
+        "rmarkdown"
+      ],
+      "Hash": "870d6d5d39b23923d0c816f904075b4c"
     },
     "fredr": {
       "Package": "fredr",
@@ -1114,15 +1129,15 @@
     },
     "hdatools": {
       "Package": "hdatools",
-      "Version": "0.1.5",
+      "Version": "0.1.6",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "hdadvisors",
       "RemoteRepo": "hdatools",
-      "RemoteRef": "main",
-      "RemoteSha": "b3f4f51649931118cdfc1bda25ca9c632b41008d",
+      "RemoteUsername": "hdadvisors",
+      "RemoteSha": "e0f8e72ce7aa24af4eb07e1a1a2458a1e2d55f32",
       "Requirements": [
+        "dplyr",
         "ggiraph",
         "ggplot2",
         "ggtext",
@@ -1130,9 +1145,10 @@
         "knitr",
         "scales",
         "showtext",
+        "stringr",
         "sysfonts"
       ],
-      "Hash": "d860eb8cf75125db2b6a697640283ddf"
+      "Hash": "a0b0d8028d150102d74d17e6a1c73b1c"
     },
     "highr": {
       "Package": "highr",
@@ -1580,6 +1596,28 @@
         "R"
       ],
       "Hash": "7ce2733a9826b3aeb1775d56fd305472"
+    },
+    "mapgl": {
+      "Package": "mapgl",
+      "Version": "0.1.4",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "mapgl",
+      "RemoteUsername": "walkerke",
+      "RemoteSha": "17eb315461153d0b5de5aac30c078884e6f30216",
+      "Requirements": [
+        "base64enc",
+        "classInt",
+        "geojsonsf",
+        "grDevices",
+        "htmltools",
+        "htmlwidgets",
+        "rlang",
+        "sf",
+        "terra"
+      ],
+      "Hash": "507c3edf892130fcbd9cf57df61f0ef3"
     },
     "mapview": {
       "Package": "mapview",
@@ -2946,16 +2984,16 @@
     },
     "xfun": {
       "Package": "xfun",
-      "Version": "0.47",
+      "Version": "0.48",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "RSPM",
       "Requirements": [
         "R",
         "grDevices",
         "stats",
         "tools"
       ],
-      "Hash": "36ab21660e2d095fef0d83f689e0477c"
+      "Hash": "89e455b87c84e227eb7f60a1b4e5fe1f"
     },
     "xml2": {
       "Package": "xml2",

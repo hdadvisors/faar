@@ -4,6 +4,7 @@
 
 library(tidyverse)
 library(readxl)
+library(tigris)
 
 # Load HUD FY 2024 Income Limits and filter to 3 FMR areas in FAAR region
 
@@ -12,8 +13,20 @@ hud_ami <- read_excel("data/raw/hud_ami_fy24.xlsx", sheet = "Section8-FY24") |>
     hud_area_name %in% c(
       "Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",
       "Caroline County, VA",
-      "Culpeper County, VA HUD Metro FMR Area")
+      "Culpeper County, VA HUD Metro FMR Area",
+      "King George County, VA")
   )
+
+# Save AMI area assignments
+
+hud_ami_areas <- hud_ami |> 
+  mutate(
+    geoid = str_c(state, county),
+    .before = 1
+  ) |> 
+  select(GEOID = geoid, state, county, County_Name, hud_area_name)
+
+write_rds(hud_ami_areas, "data/hud_ami_areas.rds")
 
 # 2. Recode income limits ---------------------------------
 
@@ -33,6 +46,7 @@ hud_ami_cap <- hud_ami |>
   mutate(
     cap = case_when(
       area == "Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area" & level == "ami80" ~ "Capped",
+      area == "King George County, VA" & level == "ami80" ~ "Capped",
       .default = "Uncapped"
     )
   ) |> 
@@ -48,7 +62,8 @@ hud_ami_cap <- hud_ami |>
     x |>
       filter(cap == "Capped") |>
       mutate(level = "ami120")
-  ))()
+  ))() |> 
+  distinct()
 
 write_csv(hud_ami_cap, "hud_ami_cap.csv")
 
@@ -119,14 +134,45 @@ caro_ami <- calc_ami(
   mutate(cap = "Uncapped", .after = 1)
 
 
-# 7. Combine all AMI values -------------------------------
+# 7. Calculate "uncapped" King George income limits -------
+
+kg_ami <- calc_ami(
+  124000,
+  "King George County, VA",
+  c(80, 100, 120)
+) |> 
+  mutate(cap = "Uncapped", .after = 1)
+
+
+# 8. Combine all AMI values -------------------------------
 
 faar_ami_pums <- read_rds("data/pums/faar_ami_pums.rds")
 
 faar_ami_all <- hud_ami_cap |> 
-  bind_rows(dc_ami, culp_ami, caro_ami, faar_ami_pums)
+  bind_rows(dc_ami, culp_ami, caro_ami, kg_ami, faar_ami_pums)
 
-write_rds(faar_ami_all, "data/faar_ami_all.rds")
+write_rds(faar_ami_all, "data/ami/faar_ami_all.rds")
 
 
+# 9. Get geographies for mapping AMI areas ----------------
 
+hud_ami_counties <- counties(state = c("DC", "MD", "VA"), year = 2021, progress_bar = FALSE) |> 
+  select(GEOID, geometry) |> 
+  filter(GEOID %in% hud_ami_areas$GEOID) |> 
+  left_join(hud_ami_areas) |> 
+  mutate(
+    faar = case_when(
+      GEOID %in% faar_fips ~ "Y",
+      .default = "N"
+    ), .before = 5
+  ) |> 
+  st_transform("EPSG:4326")
+
+write_rds(hud_ami_counties, "data/ami/hud_ami_counties.rds")
+
+dc_msa <- core_based_statistical_areas(year = 2021, , progress_bar = FALSE) |> 
+  filter(GEOID == "47900") |> 
+  st_cast("MULTILINESTRING") |> 
+  st_transform("EPSG:4326")
+
+write_rds(dc_msa, "data/ami/dc_msa.rds")

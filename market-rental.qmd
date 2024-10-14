@@ -92,7 +92,7 @@ ggplot(renter_type,
 ```
 
 ```{r}
-#| label: bps-chart
+#| label: fig-bps-chart-mf
 #| fig-cap: "Building Permits"
 
 bps <- read_rds("data/faar_cbps.rds") |> 
@@ -122,7 +122,7 @@ ggplot(bps,
 
 
 ```{r}
-#| label: rent-line
+#| label: fig-rent-line
 #| fig-cap: "Average asking rent"
 
 rent <- read_rds("data/faar_costar.rds") |> 
@@ -150,7 +150,7 @@ ggplot(rent,
 
 
 ```{r}
-#| label: growth-bar
+#| label: fig-growth-bar
 #| fig-cap: "Asking versus effective rent growth"
 
 growth <- read_rds("data/faar_costar.rds") |> 
@@ -179,7 +179,7 @@ ggplot(growth,
 ```
 
 ```{r}
-#| label: vac-line
+#| label: fig-vac-line
 #| fig-cap: "Rental vacancy"
 
 vac <- read_rds("data/faar_costar.rds") |> 
@@ -209,7 +209,7 @@ ggplot(vac,
 ```
 
 ```{r}
-#| label: prop-type
+#| label: fig-prop-class
 #| fig-cap: "Rental property by class"
 
 
@@ -241,7 +241,7 @@ leaflet(props_sf) |>
 ```
 
 ```{r}
-#| label: prop-type-bar
+#| label: fig-prop-class-str
 #| fig-cap: "Rental property by class"
 
 # The below data visualization shows distribution of rental properties via CoStar in the FAAR region by property class and structure type.
@@ -284,7 +284,7 @@ ggplot(type_class,
 ```
 
 ```{r}
-#| label: prop-type
+#| label: fig-ask-rent
 #| fig-cap: "Rental property by asking rent"
 
 # The below data visualization shows a map of rental properties via CoStar by asking rent.
@@ -315,7 +315,7 @@ leaflet(props_sf) |>
 ```
 
 ```{r}
-#| label: subsidy-type
+#| label: fig-subsidy-type
 #| fig-cap: "Assisted rental units by subsidy"
 
 
@@ -340,7 +340,7 @@ ggplot(subsidy,
 ```
 
 ```{r}
-#| label: subsidy-risk
+#| label: fig-subsidy-risk
 #| fig-cap: "Rental subsidy duration"
 
 subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
@@ -367,7 +367,7 @@ ggplot(subsidy,
 
 
 ```{r}
-#| label: nhpd-map
+#| label: fig-nhpd-map
 #| fig-cap: "Assisted rental propeties"
 
 prop <- read_rds("data/nhpd_properties.rds") |> 

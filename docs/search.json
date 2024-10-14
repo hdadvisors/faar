@@ -57,7 +57,18 @@
     "href": "spectrum-reg.html",
     "title": "5  Regional spectrum",
     "section": "",
-    "text": ". . .",
+    "text": "5.1 Area Median Income\nWith few exceptions, housing opportunities are primarily limited by how much money a household has available to buy or rent a home. To build a regional housing spectrum, we’ll therefore start by grouping households according to their incomes. The most common approach uses a region’s Area Median Income (AMI) as a reference point.\nThe U.S. Department of Housing and Urban Development (HUD) calculates AMIs each year using income estimates from the Census Bureau. Many housing programs managed by HUD, other public agencies, and nonprofit providers use AMIs to limit eligibility to households with low or moderate incomes. Because wages and living costs vary by market, AMIs help ensure housing assistance reaches those with the most needs.",
+    "crumbs": [
+      "Housing spectrum",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Regional spectrum</span>"
+    ]
+  },
+  {
+    "objectID": "spectrum-reg.html#area-median-income",
+    "href": "spectrum-reg.html#area-median-income",
+    "title": "5  Regional spectrum",
+    "section": "",
+    "text": "How AMIs are calculated\nTo calculate AMI, all households1 are arranged from lowest to highest gross income. The household exactly in the middle has the median income for that given area. We can then refer to any other income value relative to that AMI. For example, if the AMI is $80,000, a household with an income of $40,000 is at 50% AMI.\n1 As described further below, HUD’s official income limits are actually derived from estimates of family incomes.HUD’s process to calculate AMIs for each area across the nation has two major parts:\n\nEstimate the current Median Family Income (MFI)\nUse MFI to generate Very Low-Income, Extremely Low-Income, and Low-Income limits\n\n\n\n\n\n\n\n“Family” versus “Household”\n\n\n\nHUD bases its AMIs on the median incomes of families rather than households. The Census Bureau definition for a family refers to a householder living with at least one other person related by birth, marriage, or adoption. Single persons living alone and households with no related individuals are excluded from MFI calculations.\n\n\n\nMedian Family Income\nMFIs are calculated as follows:\n\nData source: HUD uses median family income data from the most recent version of the American Community Survey (ACS), an annual Census Bureau survey completed by 1% of the population. For FY 2024, the latest ACS estimates were from 2022.\nReliability: Because the ACS is based on a sample, HUD tests each the income estimates for each area to determine whether the margin of error is within an acceptable range.\nInflation adjustment: To account for the two-year lag from the ACS sample, HUD adjusts each value according to an inflation factor based on Consumer Price Index (CPI) projections published by the Congressional Budget Office (CBO).\nRound final value: HUD rounds the adjusted median income value to the nearest $100. This result is the official MFI for a given area.\n\n\n\nIncome limit categories\nTo translate the MFI into income values that can be used to determine program eligibility, HUD follows a standard methodology to create new limits for three different income levels:\n\nExtremely Low-Income: Households whose incomes are not above 30% of the MFI\nVery Low-Income: Households whose incomes are not above 50% of the MFI\nLow Income: Households whose incomes are not above 80% of the MFI\n\nFor each of these, HUD generates specific values for household sizes between 1-person and 8-persons.\nVery Low-Income Limits\n\nSet 50% of the MFI as the preliminary 4-person Very Low-Income Limit (VLIL)\nAdjustment VLIL up if:\n\nArea has unusually high housing costs (35% of VLIL is no greater than 85% of annualized 2-bedroom FMR)\nArea has unusually low incomes (VLIL is less than 50% of state’s MFI for non-metro areas)\n\nAdjust VLIL down if:\n\nArea has unusually high incomes (VLIL is greater than 80% of U.S. MFI, and the annualized 2-bedroom FMR is no greater than 30% of VLIL)\n\nCompare change with previous year and apply “ceiling or floor” rules:\n\nMaximum annual increase: 10%\nMinimum annual decrease: 5%\n\nAdjust final VLIL by family size and round up to nearest $50\n\n\n\n\n\nTable 5.1: Family size adjustments for number of persons in family\n\n\n\n\n \n  \n    1 \n    2 \n    3 \n    4 \n    5 \n    6 \n    7 \n    8 \n  \n \n\n  \n    70% \n    80% \n    90% \n    — \n    108% \n    116% \n    124% \n    132% \n  \n\n\n\n\n\n\n\n\nLow-Income Limits\n\nMultiply the VLIL by 1.6 (80% divided by 50%) to get preliminary 4-person Low-Income Limit\nRound to the nearest $50\nAdjust down if preliminary value is greater than U.S. MFI (“capped”)\nAdjust up if 85% of annualized 2-bedroom FMR (multiplied by 1.6) is greater than 35% of preliminary value\nApply same “ceiling or floor” rules and family size adjustments used for Very Low-Income Limits\n\nExtremely Low-Income Limits\n\nMultiply the VLIL by 0.6 (30% divided by 50%) to get preliminary 4-person Extremely Low-Income Limit\nRound to the nearest $50\nAdjust by family size\nReplace any values with federal poverty guidelines2 if guideline is higher\n\n2 As published by the Department of Health and Human Services (HHS): U.S. Federal Poverty Guidelines (aspe.hhs.gov)\n\n\nIncome limit areas\nHUD calculates AMIs for “income limit areas” that usually align with the Metropolitan Statistical Area (MSA) definitions published and occasionally revised by the U.S. Office of Management and Budget (OMB).3 For FY 2024 AMIs, HUD based its geographies on the delineations provided in OMB Bulletin No. 18-04 from September 2018.\n3 Additional details on OMB definitions can be found here: About Metropolitan and Micropolitan Areas (census.gov)4 Fair Market Rents (FMRs) are also calculated by HUD at the same geographies it provides AMIs. FMRs are used to set payment standards for federal housing assistance programs. For more, see: Fair Market Rents (huduser.gov)However, HUD further subdivides many MSAs into “HUD Metro Fair Market Rent Areas” (HMFAs) that can sometimes be a single county.4 HFMAs can more accurately reflect income and market trends in a community, especially when they are part of very large metro areas like the Washington, D.C. region. If a county is not located in an MSA, HUD will calculate its unique AMI if reliable estimates are available.\nAs of FY 2024, HUD uses four different income limit areas across the six localities included in this study. The table below shows which OMB and HUD designations correspond to each locality.\n\n\n\n\nTable 5.2: OMB and HUD area designations by locality\n\n\n\n\n \n  \n    OMB Designation \n    HUD Income Limit Area \n    Locality \n  \n \n\n  \n    Washington-Arlington-Alexandria, DC-VA-MD-WV Metro Area \n    Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area \n    Spotsylvania County \n  \n  \n   \n   \n    Stafford County \n  \n  \n   \n   \n    Fredericksburg city \n  \n  \n   \n    Culpeper County, VA HUD Metro FMR Area \n    Culpeper County \n  \n  \n    Non-metro \n    King George County, VA \n    King George County \n  \n  \n   \n    Caroline County, VA \n    Caroline County \n  \n\n\n\n\n\n\n\n\nThis map shows HUD income limit areas by color for localities in the Fredericksburg and Washington, D.C. regions. The Washington, D.C. MSA is outlined in black.\n\n\n\n\n\n\n\n\n\n\n\nFigure 5.1: HUD FY 2024 Income Limit Areas in Fredericksburg and Washington, D.C. regions\n\n\n\n\nThe Washington-Arlington-Alexandria, DC-VA-MD-WV Metro Area (“Washington, D.C. MSA”) is a large MSA encompassing the capital and localities in three other states. HUD assigns much of this region to its Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area — including the City of Fredericksburg, Spotsylvania County, and Stafford County.\nAlthough Culpeper County is part of the Washington, D.C. MSA, HUD considers it distinct enough to calculate its own AMI under the Culpeper County, VA HUD Metro FMR Area.\nBecause Caroline5 and King George counties are not part of any MSA (i.e., non-metropolitan), HUD calculates their AMIs separately.\n5 Caroline County was part of the Richmond, VA MSA until OMB Bulletin No. 18-04. HUD incorporated this change beginning with income limits published for FY 2022.\n\nAMIs in the Fredericksburg region\nMedian family incomes\n\n\n\n\n\n\n\n\nFigure 5.2: Median family incomes for HUD income limit areas\n\n\n\n\n\nAMIs by family size\n\n\n\n\n\n\n\n\nFigure 5.3: Area Median Incomes by family size for HUD income limit areas",
     "crumbs": [
       "Housing spectrum",
       "<span class='chapter-number'>5</span>  <span class='chapter-title'>Regional spectrum</span>"
@@ -72,116 +83,6 @@
     "crumbs": [
       "Housing spectrum",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Core workforce spectrum</span>"
-    ]
-  },
-  {
-    "objectID": "market-homeown.html",
-    "href": "market-homeown.html",
-    "title": "7  Homeownership market",
-    "section": "",
-    "text": ". . .",
-    "crumbs": [
-      "Housing market",
-      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Homeownership market</span>"
-    ]
-  },
-  {
-    "objectID": "market-rental.html",
-    "href": "market-rental.html",
-    "title": "8  Rental market",
-    "section": "",
-    "text": ". . .",
-    "crumbs": [
-      "Housing market",
-      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Rental market</span>"
-    ]
-  },
-  {
-    "objectID": "gaps-current.html",
-    "href": "gaps-current.html",
-    "title": "9  Current gaps",
-    "section": "",
-    "text": ". . .",
-    "crumbs": [
-      "Housing gaps",
-      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Current gaps</span>"
-    ]
-  },
-  {
-    "objectID": "gaps-proj.html",
-    "href": "gaps-proj.html",
-    "title": "10  Projected gaps",
-    "section": "",
-    "text": ". . .",
-    "crumbs": [
-      "Housing gaps",
-      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Projected gaps</span>"
-    ]
-  },
-  {
-    "objectID": "local-fred.html",
-    "href": "local-fred.html",
-    "title": "11  Fredericksburg fact sheet",
-    "section": "",
-    "text": "…",
-    "crumbs": [
-      "Local fact sheets",
-      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Fredericksburg fact sheet</span>"
-    ]
-  },
-  {
-    "objectID": "local-caro.html",
-    "href": "local-caro.html",
-    "title": "12  Caroline fact sheet",
-    "section": "",
-    "text": "…",
-    "crumbs": [
-      "Local fact sheets",
-      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Caroline fact sheet</span>"
-    ]
-  },
-  {
-    "objectID": "local-kg.html",
-    "href": "local-kg.html",
-    "title": "13  King George fact sheet",
-    "section": "",
-    "text": "…",
-    "crumbs": [
-      "Local fact sheets",
-      "<span class='chapter-number'>13</span>  <span class='chapter-title'>King George fact sheet</span>"
-    ]
-  },
-  {
-    "objectID": "local-orng.html",
-    "href": "local-orng.html",
-    "title": "14  Orange fact sheet",
-    "section": "",
-    "text": "…",
-    "crumbs": [
-      "Local fact sheets",
-      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Orange fact sheet</span>"
-    ]
-  },
-  {
-    "objectID": "local-spot.html",
-    "href": "local-spot.html",
-    "title": "15  Spotsylvania fact sheet",
-    "section": "",
-    "text": "…",
-    "crumbs": [
-      "Local fact sheets",
-      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Spotsylvania fact sheet</span>"
-    ]
-  },
-  {
-    "objectID": "local-staf.html",
-    "href": "local-staf.html",
-    "title": "16  Stafford fact sheet",
-    "section": "",
-    "text": "…",
-    "crumbs": [
-      "Local fact sheets",
-      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Stafford fact sheet</span>"
     ]
   }
 ]

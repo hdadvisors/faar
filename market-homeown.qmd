@@ -18,7 +18,7 @@ library(hdatools)
 ```
 
 ```{r}
-#| label: owner-supply
+#| label: fig-owner-supply
 #| fig-cap: "Existing homeowner supply by monthly housing costs"
 
 
@@ -49,7 +49,7 @@ ggplot(owner_supply,
 
 
 ```{r}
-#| label: owner-bedroom
+#| label: fig-owner-bedroom
 #| fig-cap: "Existing homeowner supply by bedrooms"
 
 # The data visualization below shows the distribution of homeowner occupied housing
@@ -78,7 +78,7 @@ ggplot(owner_bedroom,
 
 
 ```{r}
-#| label: owner-type
+#| label: fig-owner-type
 #| fig-cap: "Existing homeowner supply by type and year built"
 
 # The data visualization below shows the distribution of homeowner occupied housing
@@ -115,7 +115,7 @@ ggplot(owner_type,
 ```
 
 ```{r}
-#| label: bps-chart
+#| label: fig-bps-chart
 #| fig-cap: "Building Permits"
 
 # The data visualization below shows building trends broken out by type of housing in the FAAR region.
@@ -151,7 +151,7 @@ ggplot(bps,
 
 
 ```{r}
-#| label: sales-map
+#| label: fig-sales-map-nc
 #| fig-cap: "Map of total new construction home sales from 2020 through April 2024"
 
 # Create a hex grid map showing home sale concentrations in FAAR region.
@@ -253,7 +253,7 @@ leaflet(hex_count) |>
 ```
 
 ```{r}
-#| label: sales-map
+#| label: fig-sales-map-resale
 #| fig-cap: "Map of total homes resales from 2020 through April 2024"
 
 # Create a hex grid map showing home sale concentrations in FAAR region.
@@ -356,7 +356,7 @@ m <- leaflet(hex_count) |>
 
 
 ```{r}
-#| label: price-line
+#| label: fig-price-line
 #| fig-cap: "Median sales price"
 
 # The data visualization below shows median home sales price for new construction and resale
