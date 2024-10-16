@@ -1,3 +1,56 @@
 # Engagement {#sec-engagement}
 
-. . .
+::: {.callout-note}
+### Who and why we engaged
+The first phase of this study included interviews with several local economic development officials and housing providers. These conversations provided important context to inform the the methods and focus of the subsequent housing gap analysis.
+:::
+
+## Emerging Themes 
+
+### Success in the Housing Market
+
+Respondents reported that individuals finding the most success in the Fredericksburg region---for both rental and homeownership---appear to be Virginians migrating in from elsewhere in the state. Fairfax, Loudoun, and other Northern Virginia communities are common origins for these households.
+
+Representatives in Caroline and Stafford also reported that many households seem to be migrating from Richmond or Henrico (for Caroline), and Fredericksburg (for Stafford). Fredericksburg also seems to attract work-from-home households from Northern Virginia.
+
+Households unchallenged by the housing market---regardless of their origin---also very often have high education levels, according to respondents. The greater incomes for these households usually mean they seek homeownership as their first choice.
+
+Those lacking success in the housing markets in the region appear to be larger family households (including intergenerational households), and individuals that are working as teachers, social workers, or EMTs. These households struggle to find both rental and homeownership opportunities without being cost-burdened. 
+
+Respondents indicated that starter homes or rental options seem to be limited in today’s market, even for those with the ability to afford such housing. A severe supply shortage prevents these households with more modest incomes from securing housing that meets their needs and preferences.
+
+### Affordable Housing 
+
+The lack of rental housing affordable to lower-income workers is felt throughout the region, with the area especially lacking multifamily and senior-focused housing opportunities. Respondents outlined that the housing cost burden for workforce populations continues to increase, which in turn pushes households--—especially renters--—further from their home communities. This exacerbates their already high travel and transportation costs.
+
+Pricing for homeownership options in the region are also on the higher end, inaccessible to those entering the workforce or those looking to downsize. Significant barriers for renters are felt in the landlord requirements for tenants, including large security deposits and credit checks that exclude many of the poorest residents. This has resulted in many families overcrowding units or living in temporary housing solutions like motels for long periods of time. 
+
+### Regional Housing Focus 
+
+Based on the three respondents, it is clear that each community in the region is unique and holds different goals related to housing and workforce development. Loisann’s Hope House serves the whole planning district and finds households that are at risk of homelessness and need support in both rural and urban areas.
+
+Just as other populations are being pushed farther from home, they report that finding housing to serve their clients (the majority being 30-50% AMI) becomes more challenging and requires casting a wider net. The population and housing market dynamics among localities varies, but so do the goals of each locality as they relate to housing and economic development.
+
+Nonetheless, each locality plays a significant role in serving the housing spectrum of the entire region. While localities may act alone, their local decisions have far reaching impacts outside their local boundaries and will always have consequences for their neighboring communities.
+
+## Gap Analysis Implications
+
+### Diverse Stakeholder Recruitment
+
+Due to the limited scope of engagement conducted thus far, we recommended that any ongoing or future stakeholder recruitment—--in the rollout of this work and beyond--—include diverse professional expertise and experiences. This comprises real estate professionals, employers, and those that work within traditional workforce occupations.
+
+It may be valuable to review housing outcomes with stakeholders that live and work in the communities FAAR serves. Additionally, including a diversity of geography to broaden feedback from urban, suburban, and rural communities will be important to more effectively understand the variety of needs across the region and determine how housing challenges cascade across landscapes. 
+
+### Educational Awareness
+
+Using data and findings from the housing gap analysis, FAAR could help orchestrate an educational campaign about the opportunities for workforce and economic development to collaborate in the housing field. One example to potentially emulate is [Workforce Housing Now](https://workforcehousingnow.org/), an initiative led by the Community Foundation of Loudoun and Northern Fauquier Counties. They describe the it as
+
+> *“...a public awareness campaign amplifying Loudoun’s voice for workforce housing as the missing ingredient to our community’s prosperity.” *
+
+Respondents reported that the forthcoming housing gap analysis resources could serve as a way to “empower and equip” their communities with greater knowledge. Regionalism could also be a focus of such a campaign to expand awareness and partnerships across fields, like those who are tied to homelessness and economic development. Often these fields work independently of each other and have limited understandings of the challenges facing their respective target populations. 
+
+### Approaches to Regionalism
+
+The housing gap analysis will not only need to account for the unique needs and gaps in each locality but also account for the interjurisdictional nature of populations housed in the FAAR region. For example, Loisann’s Hope House serves unhoused and working populations across the region and both economic development authorities interviewed recruit workforce from outside of their home counties.
+
+While many localities aspire to have residents that live and work within their bounds, the reality is that many households will continue to commute or migrate in search of affordable options. The housing gap analysis could be leveraged to call attention to the reality of these differences and to help illuminate missing markets. 

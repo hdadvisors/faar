@@ -4,36 +4,16 @@ engine: knitr
 
 # About this study {.unnumbered}
 
-This study is...
+::: {.callout-caution}
+### Note
+*Draft last updated `r format(Sys.Date(), "%B %d, %Y")`*
+:::
 
-*Completed `r format(Sys.Date(), "%B %d, %Y")`*
+This study is a regional housing gap analysis conducted by [HDAdvisors](https://www.hdadvisors.net) (HDA) for the [Fredericksburg Area Association of REALTORS®](https://www.faarmembers.com/) (FAAR). The study has four objectives:
 
-```
-About this study
+* Frame workforce housing needs within the context of the region’s full housing spectrum,
+* Assess the housing affordability landscape for the workforce, with specific focus on workers whose homes and jobs are within the region,
+* Determine what types, locations, and prices of homes best meet the needs of current and projected workers, and
+* Present results at both the regional and local levels with fact sheets and other deliverables that can be easily disseminated and consumed by multiple audiences.
 
-Executive summary
-
-Introduction
-└── Background
-└── Engagement
-└── Data notes
-
-Housing spectrum
-└── Regional
-└── Core workforce
-
-Housing market
-└── Homeownership
-└── Rental
-
-Housing gaps
-└── Current gaps
-└── Projected gaps
-
-Local fact sheets
-└── Fredericksburg, etc.
-
-[if needed] References
-
-[if needed] Appendices
-```
+Use the links on the left side of this page to navigate between chapters.

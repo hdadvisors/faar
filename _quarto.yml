@@ -21,11 +21,9 @@ book:
   chapters:
     - index.qmd
     - exec-sum.qmd
-    - part: "Introduction"
-      chapters:
-        - background.qmd
-        - engagement.qmd
-        - data-notes.qmd
+  # - background.qmd
+    - engagement.qmd
+    - data-notes.qmd
     - part: "Housing spectrum"
       chapters:
         - spectrum-reg.qmd
@@ -60,8 +58,8 @@ format:
     grid: 
       sidebar-width: 300px
     fontsize: "100%"
-    # template-partials:
-    #   - toc.html
+    template-partials:
+     - toc.html
     toc-title: "On this page"
     number-depth: 2
     reference-location: margin

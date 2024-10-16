@@ -1,9 +1,11 @@
 {
-  "hash": "68482985be99564c1209dad603788e1d",
+  "hash": "a207462925ab0accc39dba4fc8d8041b",
   "result": {
     "engine": "knitr",
-    "markdown": "---\nengine: knitr\n---\n\n\n# About this study {.unnumbered}\n\nThis study is...\n\n*Completed May 16, 2024*\n\n```\nAbout this study\n\nExecutive summary\n\nIntroduction\n└── Background\n└── Engagement\n└── Data notes\n\nHousing spectrum\n└── Regional\n└── Core workforce\n\nHousing market\n└── Homeownership\n└── Rental\n\nHousing gaps\n└── Current gaps\n└── Projected gaps\n\nLocal fact sheets\n└── Fredericksburg, etc.\n\n[if needed] References\n\n[if needed] Appendices\n```\n",
-    "supporting": [],
+    "markdown": "---\nengine: knitr\n---\n\n\n\n\n# About this study {.unnumbered}\n\n::: {.callout-caution}\n### Note\n*Draft last updated October 16, 2024*\n:::\n\nThis study is a regional housing gap analysis conducted by [HDAdvisors](https://www.hdadvisors.net) (HDA) for the [Fredericksburg Area Association of REALTORS®](https://www.faarmembers.com/) (FAAR). The study has four objectives:\n\n* Frame workforce housing needs within the context of the region’s full housing spectrum,\n* Assess the housing affordability landscape for the workforce, with specific focus on workers whose homes and jobs are within the region,\n* Determine what types, locations, and prices of homes best meet the needs of current and projected workers, and\n* Present results at both the regional and local levels with fact sheets and other deliverables that can be easily disseminated and consumed by multiple audiences.\n\nUse the links on the left side of this page to navigate between chapters.",
+    "supporting": [
+      "index_files"
+    ],
     "filters": [
       "rmarkdown/pagebreak.lua"
     ],
