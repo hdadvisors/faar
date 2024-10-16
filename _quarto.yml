@@ -65,6 +65,8 @@ format:
     toc-title: "On this page"
     number-depth: 2
     reference-location: margin
+    footnotes-hover: false
+    crossrefs-hover: false
     
   # docx: 
   #   toc: true

@@ -1,3 +1,788 @@
 # Data notes {#sec-data-notes}
 
-. . .
+This chapter includes important context about certain data sources and methods used throughout the report.
+
+The first two sections explain how Area Median Incomes are customized to build the regional housing spectrums found in @sec-spectrum-reg and @sec-spectrum-work. 
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+source("_common.R")
+
+# Load packages other than tidyverse and hdatools
+ 
+library(sf)
+library(leaflet)
+library(htmltools)
+
+# Load data
+
+hud_ami_areas <- read_rds("data/ami/hud_ami_areas.rds")
+
+hud_ami_counties <- read_rds("data/ami/hud_ami_counties.rds") |> 
+  mutate(
+    hud_area_name = fct_reorder(hud_area_name, str_length(hud_area_name), .desc = TRUE)
+  )
+
+dc_msa <- read_rds("data/ami/dc_msa.rds")
+
+puma_va <- read_rds("data/ami/puma_va.rds")
+
+faar_ami_all <- read_rds("data/ami/faar_ami_all.rds") |> 
+  mutate(
+    level = str_replace(level, "ami(\\d+)", "\\1% AMI"),
+    area = str_replace_all(area, "HUD Metro FMR Area", "HMFA")
+  )
+
+fsa <- data.frame(
+  np = 1:8,
+  fsa = c("70%", "80%", "90%", "—", "108%", "116%", "124%", "132%")
+  ) |> 
+  pivot_wider(
+    names_from = np,
+    values_from = fsa
+  )
+
+mfi <- data.frame(
+  area = unique(faar_ami_all$area),
+  mfi = c(154700, 102800, 110400, 124000, 116300)
+)
+
+hmfrs <- unique(faar_ami_all$area)
+
+ami_pal <- setNames(hda_pal[1:5], hmfrs[1:5])
+
+```
+
+## Area Median Income
+
+The U.S. Department of Housing and Urban Development (HUD) calculates the *Area Median Income* (AMI) for every part of the country each year using income estimates from the Census Bureau. Many housing programs managed by HUD, other public agencies, and nonprofit providers use AMIs to limit eligibility to households with low or moderate incomes. Because wages and living costs vary by market, AMIs help ensure housing assistance reaches those with the most needs.
+
+### How AMIs are calculated
+
+To calculate AMI, all households[^hh] in a given area are arranged from lowest to highest gross income. The household exactly in the middle has the *median* income for that given area. We can then refer to any other income value relative to that AMI. For example, if the AMI is \$80,000, a household with an income of \$40,000 is at 50% AMI.
+
+[^hh]: As described further below, HUD's official income limits are actually derived from estimates of *family* incomes.
+
+HUD's process to calculate AMIs for each area across the nation has two major parts:
+
+1. Estimate the current *Median Family Income* (MFI)
+2. Use MFI to generate Very Low-Income, Extremely Low-Income, and Low-Income limits 
+
+::: {.callout-tip}
+
+#### "Family" versus "Household"
+
+HUD bases its AMIs on the median incomes of *families* rather than *households*. The Census Bureau definition for a family refers to a householder living with at least one other person related by birth, marriage, or adoption. Single persons living alone and households with *no* related individuals are excluded from MFI calculations. 
+
+:::
+
+#### Median Family Income
+
+MFIs are calculated as follows:
+
+1. **Data source:** HUD uses median family income data from the most recent version of the American Community Survey (ACS), an annual Census Bureau survey completed by 1% of the population. For FY 2024, the latest ACS estimates were from 2022.
+2. **Reliability:** Because the ACS is based on a sample, HUD tests each the income estimates for each area to determine whether the margin of error is within an acceptable range.
+3. **Inflation adjustment:** To account for the two-year lag from the ACS sample, HUD adjusts each value according to an inflation factor based on Consumer Price Index (CPI) projections published by the Congressional Budget Office (CBO).
+4. **Round final value:** HUD rounds the adjusted median income value to the nearest $100. This result is the official MFI for a given area.
+
+#### Income limit categories
+
+To translate the MFI into income values that can be used to determine program eligibility, HUD follows a standard methodology to create new limits for three different income levels:
+
+* **Extremely Low-Income:** Households whose incomes are not above 30% of the MFI
+* **Very Low-Income:** Households whose incomes are not above 50% of the MFI
+* **Low Income:** Households whose incomes are not above 80% of the MFI
+
+For each of these, HUD generates specific values for household sizes between 1-person and 8-persons.
+
+**Very Low-Income Limits**
+
+1. Set 50% of the MFI as the preliminary 4-person Very Low-Income Limit (VLIL)
+2. Adjustment VLIL up if:
+    + Area has unusually high housing costs (35% of VLIL is no greater than 85% of annualized 2-bedroom FMR)
+    + Area has unusually low incomes (VLIL is less than 50% of state's MFI for non-metro areas)
+3. Adjust VLIL down if:
+    + Area has unusually high incomes (VLIL is greater than 80% of U.S. MFI, and the annualized 2-bedroom FMR is no greater than 30% of VLIL)
+4. Compare change with previous year and apply "ceiling or floor" rules:
+    + Maximum annual increase: 10%
+    + Minimum annual decrease: 5%
+5. Adjust final VLIL by family size and round up to nearest $50
+
+```{r}
+#| label: tbl-fsa
+#| tbl-cap: "Family size adjustments for number of persons in family"
+#| html-table-processing: none
+
+fsa |> 
+  #mutate(across(1:8, ~ digits(.x, 2))) |> 
+  kable(align = "cccccccc") |> 
+  kable_styling(c("condensed"))
+
+```
+
+**Low-Income Limits**
+
+1. Multiply the VLIL by 1.6 (80% divided by 50%) to get preliminary 4-person Low-Income Limit
+2. Round to the nearest $50
+3. Adjust down if preliminary value is greater than U.S. MFI ("capped")
+4. Adjust up if 85% of annualized 2-bedroom FMR (multiplied by 1.6) is greater than 35% of preliminary value
+5. Apply same "ceiling or floor" rules and family size adjustments used for Very Low-Income Limits
+
+**Extremely Low-Income Limits**
+
+1. Multiply the VLIL by 0.6 (30% divided by 50%) to get preliminary 4-person Extremely Low-Income Limit
+2. Round to the nearest $50
+3. Adjust by family size
+4. Replace any values with federal poverty guidelines[^hhs] if guideline is higher
+
+[^hhs]: As published by the Department of Health and Human Services (HHS): [U.S. Federal Poverty Guidelines](https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines) (aspe.hhs.gov)
+
+### Income limit areas
+
+HUD calculates AMIs for "income limit areas" that usually align with the Metropolitan Statistical Area (MSA) definitions published and occasionally revised by the U.S. Office of Management and Budget (OMB).[^omb] For FY 2024 AMIs, HUD based its geographies on the delineations provided in *OMB Bulletin No. 18-04* from September 2018.
+
+[^omb]: Additional details on OMB definitions can be found here: [About Metropolitan and Micropolitan Areas](https://www.census.gov/programs-surveys/metro-micro.html) (census.gov)
+
+However, HUD further subdivides many MSAs into "HUD Metro Fair Market Rent Areas" (HMFAs) that can sometimes be a single county.[^fmr] HFMAs can more accurately reflect income and market trends in a community, especially when they are part of very large metro areas like the Washington, D.C. region. If a county is not located in an MSA, HUD will calculate its unique AMI if reliable estimates are available.
+
+[^fmr]: Fair Market Rents (FMRs) are also calculated by HUD at the same geographies it provides AMIs. FMRs are used to set payment standards for federal housing assistance programs. For more, see: [Fair Market Rents](https://www.huduser.gov/portal/datasets/fmr.html) (huduser.gov)
+
+As of FY 2024, HUD uses four different income limit areas across the six localities included in this study. The table below shows which OMB and HUD designations correspond to each locality.
+
+```{r}
+#| label: tbl-ami-areas
+#| tbl-cap: "OMB and HUD area designations by locality"
+#| html-table-processing: none
+
+hud_ami_areas |> 
+  filter(GEOID %in% faar_fips) |> 
+  mutate(
+    msa = case_when(
+      county %in% c("033", "099") ~ "Non-metro",
+      .default = "Washington-Arlington-Alexandria, DC-VA-MD-WV Metro Area"
+    )
+  ) |> 
+  arrange(desc(msa), desc(hud_area_name)) |> 
+  select(msa, hud_area_name, County_Name) |> 
+  kable(
+    col.names = c("OMB Designation", "HUD Income Limit Area", "Locality")
+  ) |> 
+  column_spec(2, width = "250px") |>
+  column_spec(3, width = "200px") |> 
+  kableExtra::collapse_rows(columns = 1:2, valign = "top") |> 
+  kableExtra::kable_styling(c("condensed"))
+
+```
+
+This map shows HUD income limit areas by color for localities in the Fredericksburg and Washington, D.C. regions. The Washington, D.C. MSA is outlined in black. 
+
+```{css}
+
+.quarto-figure-center>figure>p, .quarto-figure-center>figure>div {
+    text-align: left;
+}
+
+```
+
+```{r}
+#| label: fig-ami-areas
+#| fig-cap: "HUD FY 2024 Income Limit Areas in Fredericksburg and Washington, D.C. regions"
+#| fig-asp: 0.8
+
+hda_leaflet_colors <- colorFactor(
+  palette = hda_pal_discrete(direction = 1)(4),  # Assuming you want to use all 6 colors
+  domain = hud_ami_counties$hud_area_name
+)
+
+leaflet(options = leafletOptions(zoomControl = FALSE)) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addMapPane("dc_msa", zIndex = 430) |> 
+  addMapPane("faar_y", zIndex = 420) |> 
+  addMapPane("faar_n", zIndex = 410) |> 
+  addPolylines(
+    data = dc_msa,
+    color = "black",
+    weight = 1.5,
+    opacity = 1,
+    options = pathOptions(pane = "dc_msa")
+  ) |> 
+  addPolygons(
+    data = filter(hud_ami_counties, faar == "Y"),
+    fillColor = ~ hda_leaflet_colors(hud_area_name),
+    fillOpacity = 0.6,
+    color = "white",
+    opacity = 0.6,
+    weight = 1.5,
+    label = ~ as.character(County_Name),
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "white",
+      opacity = 1,
+      fillOpacity = 0.7
+    ),
+    options = pathOptions(pane = "faar_y")
+  ) |> 
+  addPolygons(
+    data = filter(hud_ami_counties, faar == "N"),
+    fillColor = ~ hda_leaflet_colors(hud_area_name),
+    fillOpacity = 0.3,
+    color = "white",
+    opacity = 0.4,
+    weight = 1.5,
+    label = ~ as.character(County_Name),
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "white",
+      opacity = 1,
+      fillOpacity = 0.4
+    ),
+    options = pathOptions(pane = "faar_n")
+  ) |> 
+  addLegend(
+    data = hud_ami_counties,
+    pal = hda_leaflet_colors,
+    values = ~hud_area_name,
+    opacity = 0.8,
+    title = "HUD FY 2024 Income Limit Areas",
+    position = "topleft"
+  ) |>
+  addLegend(
+    data = dc_msa,
+    colors = c("black"),
+    opacity = 0.9,
+    labels = c("Washington-Arlington-Alexandria, DC-VA-MD-WV Metro Area"),
+    position = "bottomleft"
+  )
+
+```
+
+The *Washington-Arlington-Alexandria, DC-VA-MD-WV Metro Area* ("Washington, DC MSA") is a large MSA encompassing the capital and localities in three other states. HUD assigns much of this region to its *Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area* ("Washington, DC HMFA") --- including the City of Fredericksburg, Spotsylvania County, and Stafford County.
+
+Although Culpeper County is part of the Washington, D.C. MSA, HUD considers it distinct enough to calculate its own AMI under the *Culpeper County, VA HUD Metro FMR Area*.
+
+Because Caroline[^cc] and King George counties are not part of any MSA (i.e., non-metropolitan), HUD calculates their AMIs separately.
+
+[^cc]: Caroline County was part of the Richmond, VA MSA until *OMB Bulletin No. 18-04*. HUD incorporated this change beginning with income limits published for FY 2022.
+
+### AMIs in the Fredericksburg region
+
+The official HUD FY 2024 MFIs that apply to the Fredericksburg region range from \$102,000 in Caroline County to \$154,700 for the three localities in the Washington, DC HMFA.
+
+```{r}
+#| label: fig-mfi
+#| fig-cap: "Median family incomes for HUD income limit areas"
+
+mfi |> 
+  filter(area != "Planning District 16") |> 
+  mutate(
+    area = fct_reorder(area, mfi),
+    area = str_replace_all(area, "n-Al", "n-\nAl")  
+  ) |> 
+  ggplot(aes(x = mfi, y = area, label = label_dollar()(mfi))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    color = "white",
+    hjust = 1,
+    nudge_x = -1500
+  ) +
+  scale_y_discrete(labels = label_wrap(24)) +
+  scale_x_continuous(
+    expand = c(0.01, 0.01),
+    labels = label_dollar()
+    ) +
+  add_zero_line("x") +
+  labs(
+    title = "Median family incomes for HUD income limit areas",
+    subtitle = "FY 2024 values based on 2022 American Community Survey",
+    caption = "**Source:** HUD Office of Policy Development and Research, FY 2024 Income Limits."
+  ) +
+  theme_hda(flip_gridlines = TRUE)
+
+```
+
+The chart below shows the actual income limits (at 30%, 50%, and 80% AMI) for each of these four areas, broken down by number of persons in a family.
+
+```{r}
+#| label: fig-ami
+#| fig-cap: "Area Median Incomes by family size for HUD income limit areas"
+
+hud_ami_plot <- faar_ami_all |> 
+  filter(
+    area != "Planning District 16",
+    #str_detect(hh_size, "[1234]" ),
+    str_detect(level, "[358]")
+  ) |> 
+  filter(
+    !(str_starts(area, "W|K") & cap == "Uncapped" & level == "80% AMI")
+  ) |> 
+  group_by(area, hh_size) |> 
+  mutate(area = str_replace_all(area, "n-Al", "n-\nAl")) |> 
+  mutate(
+    income_plot = case_when(
+      level == "30% AMI" ~ income,
+      .default = income - lag(income)
+    )
+  )
+
+label <- data.frame(
+  hh_size = 1,
+  income = c(97800, 113700),
+  level = "80% AMI",
+  area = "Caroline County, VA",
+  label = c("U.S. MFI: **$97,800**", "Virginia<span> </span>MFI: **$113,700**")
+)
+
+fig_ami_subtitle <- paste(
+  "FY 2024 values for",
+  "<span style='color: #e9ab3f'><b>30% AMI</b></span>,",
+  "<span style='color: #8baeaa'><b>50% AMI</b></span>, and",
+  "<span style='color: #445ca9'><b>80% AMI</b></span>"
+)
+
+hud_ami_plot |> 
+  ggplot(aes(x = str_sub(hh_size, 1, 1), y = income_plot, fill = rev(level))) +
+  geom_hline(yintercept = 97800) +
+  geom_hline(yintercept = 113700, linetype = 2) +
+  geom_col(position = "stack", alpha = 0.6, width = 1) +
+  geom_segment(
+    aes(
+      x = as.numeric(factor(hud_ami_plot$hh_size)) - 0.5,
+      xend = as.numeric(factor(hud_ami_plot$hh_size)) + 0.5,
+      y = income,
+      yend = income,
+      color = level
+    ),
+    linewidth = 2
+  ) +
+  geom_richtext(
+    data = label,
+    aes(x = hh_size, y = income, label = label),
+    family = "Lato",
+    size = 3,
+    hjust = 0,
+    nudge_x = -0.6,
+    nudge_y = 5000,
+    fill = NA,
+    label.color = NA
+  ) +
+  facet_wrap(~area, nrow = 1, labeller = labeller(area = markdown_wrap_gen(16))) +
+  scale_fill_hda(guide = "none") +
+  scale_color_hda(-1) +
+  scale_y_continuous(
+    limits = c(0, 140000),
+    breaks = seq(0, 120000, 20000),
+    expand = c(0.01, 0.05),
+    labels = label_dollar()
+  ) +
+  labs(
+    title = "Area Median Incomes by family size for HUD income limit areas",
+    subtitle = fig_ami_subtitle,
+    caption = "**Source:** HUD Office of Policy Development and Research, FY 2024 Income Limits."
+  ) +
+  add_zero_line("y") +
+  theme_hda()
+
+```
+
+For King George and the Washington, DC HMFA, note that the 4-person limit at 80% AMI is "capped" at the MFI for the United States. This follows HUD's methods described above, which adjust the preliminary 4-person Low-Income Limit down if higher than the national MFI. This adjustment ensures that federal housing resources targeted at low-income households are primarily available to those with *actual* low incomes.
+
+```{r}
+#| label: tbl-uncap
+#| tbl-cap: "Capped and uncapped preliminary 4-person Low-Income Limits"
+#| html-table-processing: none
+
+faar_ami_all |> 
+  filter(
+    str_starts(area, "W|K"),
+    hh_size == "4-person",
+    level == "80% AMI"
+  ) |> 
+  select(1, 2, 5) |> 
+  pivot_wider(
+    names_from = cap,
+    values_from = income
+  ) |> 
+  mutate(across(2:3, ~ formattable::currency(.x, digits = 0))) |> 
+  kable(
+    col.names = c("Income limit area", "Capped", "Uncapped"),
+    align = "lcc"
+  ) |> 
+  kable_styling("condensed")
+
+```
+
+The red shaded areas in the chart below are the unofficial "uncapped" 80% AMI limits for these two areas. Uncapped values were calculated following HUD's methodology for Low-Income Limits, but omitting the comparison and adjustment for the U.S. MFI. The uncapped limits for King George are all no greater than \$2,000 of the official capped limits, since its preliminary 4-person Low-Income Limit is very close to the national MFI. That difference is much greater for the Washington, DC HMFA (nearly \$26,000), which leads to uncapped limits that defines any household with two or more persons as "low-income" even if they earn six figures.
+
+```{r}
+#| label: fig-uncap
+#| fig-cap: "Uncapped Low-Income Limits by family size"
+
+hud_ami_uncap <- faar_ami_all |> 
+  filter(
+    str_starts(area, "W|K"),
+    str_detect(level, "8")
+  ) |> 
+  mutate(
+    level = case_when(
+      cap == "Uncapped" & level == "80% AMI" ~ "80% AMI Uncapped",
+      .default = level
+    )
+  ) |>
+  arrange(area, level, hh_size) |> 
+  group_by(area, hh_size) |> 
+  mutate(
+    income_plot = case_when(
+      level == "80% AMI" ~ income,
+      .default = income - lag(income)
+    )
+  )
+
+uncap_cols <- c("80% AMI" = hda_pal[4], "80% AMI Uncapped" = hda_pal[1])
+
+fig_uncap_subtitle <- paste(
+  "FY 2024 values for",
+  "<span style='color: #445ca9'><b>80% AMI</b> (capped)</span> and",
+  "<span style='color: #e76f52'><b>80% AMI</b> (uncapped)</span>"
+)
+
+hud_ami_uncap |> 
+  ggplot(aes(x = str_sub(hh_size, 1, 1), y = income_plot, fill = rev(level))) +
+  facet_wrap(~area, nrow = 1, labeller = labeller(area = markdown_wrap_gen(18))) +
+  geom_col(position = "stack", alpha = 0.6, width = 1) +
+  geom_segment(
+    aes(
+      x = as.numeric(factor(hud_ami_uncap$hh_size)) - 0.5,
+      xend = as.numeric(factor(hud_ami_uncap$hh_size)) + 0.5,
+      y = income,
+      yend = income,
+      color = rev(level)
+    ),
+    linewidth = 2
+  ) +
+  scale_fill_manual(values = uncap_cols) +
+  scale_color_manual(values = uncap_cols) +
+  scale_y_continuous(
+    limits = c(0, 165000),
+    breaks = seq(0, 160000, 20000),
+    expand = c(0.01, 0.05),
+    labels = label_dollar()
+  ) +
+  labs(
+    title = "Uncapped Low-Income Limits by family size",
+    subtitle = fig_uncap_subtitle,
+    caption = "**Source:** HDAdvisors calculations of HUD FY 2024 Income Limits."
+  ) +
+  add_zero_line("y") +
+  theme_hda()
+
+```
+
+## Custom AMIs for GWRC region
+
+Four different sets of income limits make it difficult to build a universal housing spectrum for the Fredericksburg region. However, we can build custom AMI values by applying HUD's official methodology to the latest Public Use Microdata Sample (PUMS) data.
+
+### PUMS and PUMAs
+
+::: {.callout-note}
+### What is PUMS?
+
+Along with a series of published tables with pre-calculated estimates, the Census Bureau provides data from the American Community Survey (ACS) in the Public Use Microdata Sample. PUMS records are anonymized responses at the individual and household level, and are weighted to reflect characteristics of the overall population. Researchers use PUMS to calculate custom tabulations from ACS data that are not available in the standard tables.
+
+:::
+
+PUMS data are only available for specific geographies called Public Use Microdata Areas (PUMAs) that contain at least 100,000 people. Localities with large populations are split into multiple PUMAs, while localities with small populations are grouped into single PUMAs. 
+
+The George Washington Regional Commission (GWRC) officially serves Planning District 16, which includes the following localities:
+
+* City of Fredericksburg
+* Caroline County
+* King George County
+* Spotsylvania County
+* Stafford County
+
+Planning District 16 is composed of two contiguous PUMAs:
+
+* George Washington Regional Commission (North) PUMA – Fredericksburg and Stafford
+* George Washington Regional Commission (South) PUMA – Caroline, King George, and Spotsylvania
+
+The map below shows these two PUMAs, along with outlines for other PUMAs in Virginia.[^puma]
+
+[^puma]: The Census Bureau updates PUMA geographies following each decennial census. The current boundaries, released in 2022, are based on 2020 census population data. Several PUMAs in Virginia are changed from their 2010 versions; however, the GWRC PUMAs were not altered. Therefore, ACS responses in the 2018-2022 5-year PUMS data for the GWRC region are contiguous, and no adjustments are required.
+
+```{r}
+#| label: fig-pumas
+#| fig-cap: "Public Use Microdata Areas in Virginia"
+#| fig-asp: 0.8
+
+puma_pal <- colorFactor(
+  palette = c(hda_pal[1], "grey90"),
+  domain = c("GWRC", "Other")
+)
+
+bbox <- st_bbox(filter(puma_va, gwrc == "GWRC")) |> 
+  as.vector()
+
+leaflet(options = leafletOptions(zoomControl = FALSE)) |> 
+  fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addMapPane("gwrc_y", zIndex = 430) |> 
+  addMapPane("gwrc_n", zIndex = 420) |> 
+  addMapPane("local_va", zIndex = 410) |> 
+  addPolygons(
+    data = filter(puma_va, gwrc == "GWRC"),
+    fillColor = hda_pal[1],
+    fillOpacity = 0.7,
+    color = "black",
+    opacity = 0.7,
+    weight = 2,
+    label = ~ as.character(NAMELSAD20),
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "black",
+      opacity = 1,
+      fillOpacity = 0.8
+    ),
+    options = pathOptions(pane = "gwrc_y")
+  ) |> 
+  addPolygons(
+    data = filter(puma_va, gwrc != "GWRC"),
+    fillColor = "grey90",
+    fillOpacity = 0.01,
+    color = "grey",
+    opacity = 0.75,
+    weight = 1.5,
+    label = ~ as.character(NAMELSAD20),
+    highlightOptions = highlightOptions(
+      fillOpacity = 0.2
+    ),
+    options = pathOptions(pane = "gwrc_n")
+  ) |> 
+  addLegend(
+    data = puma_va,
+    pal = puma_pal,
+    values = ~gwrc,
+    opacity = 0.8,
+    title = "Public Use Microdata Areas",
+    position = "topleft"
+  )
+  
+```
+
+### Methods
+
+Using PUMS data from these two contiguous PUMAs for the GWRC region, we can calculate new income limits and define household income categories for a regional housing spectrum.
+
+At the time of this analysis, the latest sample available are the 2018-2022 ACS 5-year PUMS.[^acs] The steps below outline the methods used to calculate a custom MFI and derived income limits for the GWRC region. The FY 2024 methods published by HUD are used, with the following exceptions:
+
+* High housing cost adjustments (which use FMR values) and previous year "ceiling or floor" rules are omitted for simplicity. None of the four HUD income limit areas already discussed used these adjustments.
+* Additional income limits are generated at the 100% AMI and 120% levels to help build a complete housing spectrum.
+
+[^acs]: PUMS data are also available for the 1-year ACS; however, the increased sample size for the 5-year dataset significantly reduces margins of error calculated from the records.
+
+**Median Family Income**
+
+1. Filter PUMS records to relevant entries only:
+    + Household-level records; exclude persons in group quarters (`SPORDER == 1`)
+    + Valid values for family income from past 12 months (`FINCP >= 0`)
+2. Calculate MFI:
+    + Apply housing record replicate weights
+    + Calculate weighted median of `FINCP` variable and margin of error for 90% confidence interval (CI)
+3. Apply HUD inflation adjustment to update 2022 ACS for FY 2024 (1.062)[^infadj]
+4. Round to nearest $100
+
+[^infadj]: For details on inflation adjustment, see: [*Methodology for Calculating FY 2024 Medians*](https://www.huduser.gov/portal/datasets/il/il24/Medians-Methodology-FY24.pdf) (huduser.gov)
+
+```{r}
+#| label: tbl-gwrc-mfi
+#| tbl-cap: "FY 2024 MFI for GWRC region derived from 2018-2022 ACS 5-year PUMS"
+#| html-table-processing: none
+
+gwrc_mfi <- data.frame(
+  wm = "$109,500",
+  adj = "× 1.062",
+  mfi = "$116,300",
+  moe = "± $2,893"
+)
+
+gwrc_mfi |> 
+  kable(
+    col.names = c("Weighted median", "Inflation adjustment", "Inflation-adjusted MFI", "Margin of error (90% CI)"),
+    align = "cccc"
+  ) |> 
+  column_spec(3, bold = T, background = "#fcf6eb") |> 
+  kable_styling()
+
+```
+
+**Income Limits**
+
+1. Calculate 4-person Very Low-Income Limit (VLIL)
+    + \$116,300 × 0.5 = \$58,150
+2. Calculate 4-person Low-Income Limit and round to nearest \$50
+    + \$58,150 × 1.6 = \$93,050
+    + Verify limit is below U.S. MFI (\$93,040 < \$97,800)
+3. Calculate 4-person Extremely Low-Income Limit and round to nearest \$50
+    + \$58,150 × 0.6 = \$34,900
+4. Calculate 4-person limits for 100% AMI and 120% AMI and round to nearest \$50
+    + 100% AMI: \$58,150 × 2.0 = \$116,300 (same as MFI)
+    + 120% AMI: \$58,150 × 2.4 = \$139,550
+5. Adjust 4-person limits by family size and round to nearest \$50
+
+### Results
+
+The table below shows the final income limits by number of persons in the family.
+
+::: {#tbl-gwrc-ami}
+
+```{r}
+#| label: gwrc-ami
+
+faar_ami_all |> 
+  filter(
+    area == "Planning District 16"
+  ) |> 
+  mutate(
+    level = fct_reorder(level, income),
+    text_color = case_when(
+      income > 140000 ~ "light",
+      .default = "dark"
+    )
+  ) |> 
+  select(3:6) |> 
+  ggplot(
+    aes(x = level, y = fct_rev(hh_size))
+  ) +
+  geom_tile(
+    aes(fill = income, alpha = income),
+    color = "white"
+  ) +
+  geom_text(
+    aes(color = text_color, label = label_dollar()(income))
+  ) +
+  scale_x_discrete(position = "top") +
+  scale_fill_gradientn(
+    colors = c("#e9ab3f", "#8baeaa", "#445ca9"),
+    values = rescale(c(0, 0.4, 1))
+  ) +
+  scale_color_manual(
+    values = c("light" = "white", "dark" = "grey20")
+  ) +
+  scale_alpha_continuous(
+    range = c(0.4, 1)
+  ) +
+  #labs(
+  #  subtitle = "Income limits for GWRC region derived from 2018-2022 ACS 5-year PUMS"
+  #) +
+  theme_hda(
+    panel.grid.major.y = element_blank(),
+    axis.text.x = element_text(size = 11)
+  )
+
+```
+
+Income limits for GWRC region derived from 2018-2022 ACS 5-year PUMS
+
+:::
+
+### Compared to official AMIs
+
+The MFI for Planning District 16 falls in the middle of the official MFIs calculated by HUD for the region's respective income limit areas.
+
+```{r}
+#| label: fig-mfi-comp
+#| fig-cap: "Median Family Incomes for GWRC region and HUD income limit areas"
+
+mfi |> 
+  mutate(
+    label = fct_reorder(str_replace_all(area, "n-Al", "n-\nAl"), mfi),
+    area = fct_other(area, keep = "Planning District 16", other_level = "Other")
+  ) |> 
+  ggplot(aes(x = mfi, y = label, alpha = area, label = label_dollar()(mfi))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    color = "white",
+    hjust = 1,
+    nudge_x = -1500
+  ) +
+  scale_fill_hda() +
+  scale_alpha_manual(values = c("Planning District 16" = 1, "Other" = 0.6)) +
+  scale_y_discrete(labels = label_wrap(24)) +
+  scale_x_continuous(
+    expand = c(0.01, 0.01),
+    labels = label_dollar()
+    ) +
+  add_zero_line("x") +
+  labs(
+    title = "Median Family Incomes for GWRC region and HUD income limit areas",
+    subtitle = "Values valid for FY 2024",
+    caption = "**Source:** HUD FY 2024 Income Limits and HDAdvisors calculations of 2018-2022 5-year ACS PUMS."
+  ) +
+  theme_hda(flip_gridlines = TRUE)
+
+```
+
+The income limits across family sizes at 30%, 50%, and 80% AMI levels are similarly situated in the middle, even when the capped 80% AMI limits for King George and the Washington, DC HMFA are considered.
+
+```{r}
+#| label: fig-ami-comp
+#| fig-cap: "AMIs by family size for GWRC region and HUD income limit areas"
+
+ami_comp_plot <- faar_ami_all |> 
+  filter(
+    str_detect(level, "[358]"),
+    !(str_starts(area, "W|K") & cap == "Uncapped" & level == "80% AMI")
+  ) |> 
+  arrange(area, level, hh_size) |> 
+  group_by(area, hh_size) |> 
+  mutate(
+    income_plot = case_when(
+      level == "30% AMI" ~ income,
+      .default = income - lag(income)
+    )
+  ) |> 
+  ungroup() |> 
+  mutate(
+    alpha = fct_other(area, keep = "Planning District 16", other_level = "Other"),
+    area = str_replace_all(area, "n-Al", "n-\nAl")
+  ) |> 
+  mutate(
+    area = fct_reorder(area, income, min)
+  )
+
+ami_comp_plot |> 
+  ggplot(aes(x = str_sub(hh_size, 1, 1), y = income_plot, fill = rev(level), alpha = alpha)) +
+  geom_col(position = "stack", width = 1) +
+  geom_segment(
+    aes(
+      x = as.numeric(factor(ami_comp_plot$hh_size)) - 0.5,
+      xend = as.numeric(factor(ami_comp_plot$hh_size)) + 0.5,
+      y = income,
+      yend = income,
+      color = level
+    ),
+    linewidth = 2,
+    alpha = 1
+  ) +
+  facet_wrap(vars(area), nrow = 1, labeller = labeller(area = markdown_wrap_gen(16))) +
+  scale_fill_hda(guide = "none") +
+  scale_color_hda(-1) +
+  scale_alpha_manual(values = c("Planning District 16" = 0.7, "Other" = 0.3)) +
+  scale_y_continuous(
+    limits = c(0, 140000),
+    breaks = seq(0, 120000, 20000),
+    expand = c(0.01, 0.05),
+    labels = label_dollar()
+  ) +
+  labs(
+    title = "AMIs by family size for GWRC region and HUD income limit areas",
+    subtitle = fig_ami_subtitle,
+    caption = "**Source:** HUD FY 2024 Income Limits and HDAdvisors calculations of 2018-2022 5-year ACS PUMS."
+  ) +
+  add_zero_line("y") +
+  theme_hda(strip.text = element_markdown(size = 8))
+
+```

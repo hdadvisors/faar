@@ -4,6 +4,7 @@
 # 1. Setup ------------------------------------------------
 
 library(tidyverse)
+library(tidycensus)
 library(srvyr)
 
 # Load PUMS data
@@ -30,8 +31,9 @@ hud_adj <- 1.062
 faar_mfi <- pums_data |>
   to_survey(type = "housing", design = "rep_weights") |> 
   summarise(
-    mfi = survey_median(FINCP, na.rm = TRUE)
-  )
+    mfi = survey_median(FINCP, na.rm = TRUE, vartype = c("se"))
+  ) |> 
+  mutate(moe = mfi_se * 1.645)
 
 # Adjust MFI from PUMS to FY 2024 dollars
 faar_mfi_adj <- round(faar_mfi$mfi * hud_adj, -2) # $116,300
