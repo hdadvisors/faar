@@ -19,6 +19,8 @@ pums_faar <- read_rds("data/pums/pums_faar.rds")
 # Household records only
 pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
+
+
 ```
 
 This report outlines the *housing spectrum* concept and its utility for understanding housing market dynamics. It includes assessments of households in the region by various demographic and socioeconomic characteristics, primarily by wages/income. Special analysis for the region's core workforce (i.e. persons both living and working within the region) can be found in @sec-spectrum-work.
@@ -231,7 +233,7 @@ read_rds("data/spectrum_reg/fig_ami_tenure.rds") |>
 
 ### Household characteristics
 
-...
+The most common type of household in the region are those headed by a married (or unmarried) couple. Single persons living alone are the next most common, and make up larger shares of households with incomes below 50% AMI. Single parents with at least one child are also more prevalent among lower-income households.
 
 ```{r}
 #| label: fig-ami-hh-type
@@ -273,7 +275,7 @@ read_rds("data/spectrum_reg/fig_ami_hh_type.rds") |>
 
 ```
 
-...
+Middle-aged households---where the average age of primary adults under one roof is between 35 and 64---are the most prevalent age group across every income level. Since these are the prime income-earning years for most adults, middle-aged households are a larger share of higher income households. Conversely, young households and senior/elderly households are more likely to have below-average incomes.
 
 ```{r}
 #| label: fig-ami-hh-age
@@ -315,7 +317,7 @@ read_rds("data/spectrum_reg/fig_ami_hh_age.rds") |>
 
 ```
 
-...
+Only a third of all households have at least one school-aged child under 18. While this share is fairly consistent across all income levels, households earning between 50% AMI and 120% AMI are slightly more likely to have children than households with the lowest and highest incomes.
 
 ```{r}
 #| label: fig-ami-hh-child
@@ -357,7 +359,101 @@ read_rds("data/spectrum_reg/fig_ami_hh_child.rds") |>
 
 ```
 
-...
+### Employment
+
+The majority of adults in the region who are between 25 to 54, and who do not have a disability, are currently employed or looking for work. While another small share are active duty members of the military, any of those adults not actively working or seeking jobs are outside of the labor force. With very little or no income of their own, non-working individuals are much more likely to be part of households below 50% AMI. 
+
+::: {.callout-tip}
+### Who could work, but isn't?
+Among persons in extremely and very low-income households who are not in the labor force and do not have a disability, many are probably *stay-at-home moms*. These individuals are mostly women (83%) who live with at least one earner (80%), and live with at least one child (80%).
+:::
+
+
+```{r}
+#| label: fig-ami-employ
+#| fig.cap: "Employment status of prime working age non-disabled adults by AMI"
+
+read_rds("data/spectrum_reg/fig_ami_employ.rds") |> 
+  ggplot(
+    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = emp_status)
+  ) +
+  facet_wrap(~ami_faar) +
+  geom_rect() +
+  geom_text(
+    data = . %>% filter(pct > 0.05),
+    aes(
+      x = 3.5,
+      y = pct_label,
+      label = label_percent(accuracy = 1)(pct)
+    ),
+    color = "white"
+  ) +
+  coord_polar(theta = "y", clip = "off") +
+  scale_x_continuous(
+    limits = c(2, 4),
+    expand = c(-0.1, 0)
+  ) +
+  scale_fill_hda() +
+  labs(
+    title = "Employment status of prime working age non-disabled adults by AMI",
+    subtitle = "All adults aged 25–54 without a disability",
+    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    axis.text = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.spacing.x = unit(3.5, "lines")
+  )
+
+```
+
+Only 18% of all households in the region do not include someone earning income.[^earn] The majority of those are senior or elderly households (76%) with lower incomes. Households with incomes between 30% AMI and 80% AMI are more likely than average to have just a single earner, while double-earner households are increasingly prevalent as incomes go up.
+
+Higher-income groups also have a noticeable share of households with three or more earners. Many of these multiple-earner households (68%) are families with at least one younger, working adult child still living with parents who have not retired. 
+
+[^earn]: A person is an *earner* if their total pay from wages and/or self-employment income over the last 12 months is at least \$5,000. 
+
+```{r}
+#| label: fig-ami-earn
+#| fig.cap: "Number of earners per household by AMI"
+
+read_rds("data/spectrum_reg/fig_ami_earn.rds") |> 
+  ggplot(
+    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = hh_earners)
+  ) +
+  facet_wrap(~ami_faar) +
+  geom_rect(stat = "identity") +
+  geom_text(
+    data = . %>% filter(pct > 0.05),
+    aes(
+      x = 3.5,
+      y = pct_label,
+      label = label_percent(accuracy = 1)(pct)
+    ),
+    color = "white"
+  ) +
+  coord_polar(theta = "y", clip = "off") +
+  scale_x_continuous(
+    limits = c(2, 4),
+    expand = c(-0.1, 0)
+  ) +
+  scale_fill_hda() +
+  labs(
+    title = "Number of earners per household by AMI",
+    subtitle = "All households in GWRC region",
+    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    axis.text = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.spacing.x = unit(3.5, "lines")
+  )
+
+```
 
 
 

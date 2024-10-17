@@ -159,6 +159,103 @@ fig_ami_hh_child <- pums_faar_hh |>
 write_rds(fig_ami_hh_child, "data/spectrum_reg/fig_ami_hh_child.rds")
 
 
+## fig-ami-employ -----------------------------------------
+
+fig_ami_employ <- pums_faar |> 
+  filter(
+    hh_income > 1,
+    age %in% c(25:54),
+    disability == "Without a disability"
+  ) |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(ami_faar, emp_status) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup()
+
+write_rds(fig_ami_employ, "data/spectrum_reg/fig_ami_employ.rds")
+
+
+pums_faar |> 
+  filter(
+    ami_faar %in% c("Below 30% AMI", "30-50% AMI"),
+    age %in% c(25:54),
+    disability == "Without a disability",
+    emp_status == "Not in labor force"
+  ) |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(race) |> 
+  summarise(
+    #q = survey_quantile(age, c(0.25, 0.66, 0.75))
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  )
+
+
+## fig-ami-earn -----------------------------------------
+
+fig_ami_earn <- pums_faar_hh |> 
+  filter(hh_income > 1) |> 
+  mutate(
+    hh_earners = fct_case_when(
+      hh_earners == 0 ~ "None",
+      hh_earners == 1 ~ "Single",
+      hh_earners == 2 ~ "Double",
+      hh_earners > 2 ~ "Multiple"
+    )
+  ) |>
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, hh_earners) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup()
+  
+write_rds(fig_ami_earn, "data/spectrum_reg/fig_ami_earn.rds")
+
+pums_faar |> 
+  group_by(SERIALNO) |> 
+  mutate(
+    adult_child = if_else(
+      SPORDER == 1,
+      any(relationship == "Adult child", na.rm = TRUE),
+      NA
+    )
+  ) |> 
+  ungroup() |> 
+  filter(SPORDER ==1, hh_income > 1, hh_earners > 2) |>
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(adult_child) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |> arrange(pct)
+  
+## fig-30-
+
+
+
+
+
+
+
 ## Household typologies
 
 faar_hh_types <- pums_faar |> 
