@@ -9,14 +9,14 @@
 source("_common.R")
 
 # Load packages other than tidyverse and hdatools
-
 library(tidycensus)
 library(srvyr)
+library(ggridges)
 
-# Load data
-
+# Load PUMS data
 pums_faar <- read_rds("data/pums/pums_faar.rds")
 
+# Household records only
 pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
 ```
@@ -51,7 +51,7 @@ With few exceptions, housing opportunities are primarily limited by how much mon
 #| html-table-processing: none
 
 ami_labels <- data.frame(
-  level = rev(levels(pums_faar$ami_faar)),
+  ami_faar = rev(levels(pums_faar$ami_faar)),
   label = c(
     "High-income", "Above-average income", "Moderate-income", "Low-income",
     "Very low-income", "Extremely low-income", "No income"
@@ -60,7 +60,7 @@ ami_labels <- data.frame(
 
 ami_labels |> 
   kbl(
-    col.names = c("Income group", "Description"),
+    col.names = c("Income group (AMI)", "Description"),
     align = "lr"
   ) |>
   column_spec(2, italic = T) |> 
@@ -76,7 +76,7 @@ Based on 2018-2022 ACS 5-year estimates, there are approximately 385,000 persons
 
 ```{r}
 #| label: fig-ami
-#| fig.cap: "Households by AMI category"
+#| fig.cap: "Households by AMI"
 
 pums_faar_hh |> 
   to_survey(type = "housing", design = "rep_weights") |>
@@ -97,6 +97,7 @@ pums_faar_hh |>
   geom_text(
     aes(label = label_comma()(n)),
     color = "white",
+    alpha = 0.8,
     hjust = 1,
     nudge_x = -950
   ) +
@@ -120,7 +121,7 @@ pums_faar_hh |>
   ) +
   add_zero_line("x") +
   labs(
-    title = "Households by AMI category",
+    title = "Households by AMI",
     subtitle = "All households in GWRC region",
     caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
   ) +
@@ -129,40 +130,125 @@ pums_faar_hh |>
 ```
 
 ::: {.callout-note}
-### No income households excluded
+### Households with no income excluded
 
-Fewer than 1,000 households (<1%) reported no income for the 12 months prior to their survey response. While the housing needs of this small group represent an outsized component of the region's housing challenges, the small sample of responses prevents reliable estimates from being calculated. As a result, these records are mostly excluded from the remainder of the report.
+Fewer than 1,000 households (<1%) did not have a net positive income for the 12 months prior to their survey response. While the housing needs of this small group represent an outsized component of the region's housing challenges, the small sample of responses prevents reliable estimates from being calculated. As a result, these records are mostly excluded from the remainder of the report.
 :::
+
+We can provide a clearer picture of actual household incomes within these AMI groups by plotting their distributions, as shown in the figure below. The overlapping curves demonstrate that while incomes generally increase with higher AMI percentages, there's significant variation within each group due to the variety of household sizes represented.
+
+```{r}
+#| label: fig-ami-dist
+#| fig.cap: "Distribution of household incomes by AMI"
+
+ami_wm <- pums_faar_hh |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  filter(hh_income > 0) |> 
+  group_by(ami_faar) |> 
+  summarise(
+    wm = survey_median(hh_income, vartype = "cv"),
+    q = survey_quantile(hh_income, c(0.1, 0.9))
+  ) |> 
+  ungroup() |> 
+  mutate(
+    range = paste(dollar(q_q10), "-", dollar(q_q90))
+  )
+  
+pums_faar_hh |> 
+  select(SERIALNO, WGTP, ami_faar, hh_income) |> 
+  filter(hh_income > 0) |> 
+  ggplot(aes(x = hh_income, y = ami_faar, fill = ami_faar)) +
+  geom_density_ridges2(
+    aes(weight = WGTP, scale = 2.5),
+    color = NA,
+    alpha = 0.75,
+    linewidth = 0.75
+  ) +
+  geom_text(
+    data = ami_wm,
+    aes(x = wm, y = ami_faar, label = paste0(label_dollar()(wm), "\n", "|")),
+    color = "white",
+    size = 3,
+    lineheight = 0.8,
+    nudge_y = 0.2
+  ) +
+  scale_fill_hda() +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0, 245000),
+    expand = c(0.01, 0),
+    labels = label_dollar(),
+    position = "top"
+  ) +
+  labs(
+    title = "Distribution of household incomes by AMI",
+    subtitle = "Median household incomes in white",
+    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+  ) +
+  theme_hda(
+    flip_gridlines = TRUE,
+    axis.text.x = element_text(size = 11, vjust = 0),
+    axis.text.y = element_text(vjust = -2)
+  )
+
+```
+
+This table adds the typical range for each AMI group to its descriptions.[^tr] For example, we now know to associate *low-income* households with incomes between roughly \$50,000 and \$90,000.
+
+[^tr]: Here, *typical range* includes all values between the 10th and 90th percentiles. This removes outliers and reflects the middle 80% of households within each group.
+
+```{r}
+#| label: tbl-ami-range
+#| tbl-cap: "Typical household income ranges by AMI"
+#| html-table-processing: none
+
+ami_dist <- ami_labels |> 
+  left_join(select(ami_wm, ami_faar, range)) |> 
+  drop_na()
+
+ami_dist |> 
+  kbl(
+    col.names = c("Income group (AMI)", "Description", "Typical range"),
+    align = "llr"
+  ) |>
+  column_spec(2, italic = T) |> 
+  kable_styling(c("condensed", "striped"), full_width = F)
+
+```
 
 ### Tenure
 
-...
+For every 100 households in the region, 76 own their homes. Of these 76 homeowners, 58 are still making mortgage payments, while 18 have fully paid off their homes. The other 24 out of every 100 households are renters.
+
+While homeownership becomes less common as we move down the income scale, homeowners still outnumber renters in every income group except for extremely low-income households. Of note are the slightly higher shares of homeowners below 50% AMI without mortgages---likely a reflection of seniors on fixed incomes who live in the same homes they purchased over 30 years ago.
 
 ```{r}
 #| label: fig-ami-tenure
 #| fig.cap: "Households by AMI and tenure"
 
 fig_tenure_subtitle <- paste(
-  "Percent of households who are",
-  "<span style='color: #445ca9'><b>renters</b></span> or",
-  "<span style='color: #8baeaa'><b>homeowners</b></span>"
+  "Percent who are",
+  "<span style='color: #445ca9'><b>homeowners</b> (with mortgage)</span>,",
+  "<span style='color: #8baeaa'><b>homeowners</b> (no mortgage)</span>, or",
+  "<span style='color: #e9ab3f'><b>renters</b></span>"
 )
 
 pums_faar_hh |> 
   filter(hh_income > 0) |> 
+  mutate(tenure_detail = str_remove_all(tenure_detail, " \\(no rent\\)")) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(ami_faar, tenure) |> 
+  group_by(ami_faar, tenure_detail) |> 
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
   mutate(
     pct = n/sum(n)
-  ) |> 
+  ) |>
   ungroup() |> 
-  ggplot(aes(x = pct, y = ami_faar, fill = rev(tenure), group = tenure)) +
+  ggplot(aes(x = pct, y = ami_faar, fill = tenure_detail, group = fct_rev(tenure_detail))) +
   geom_col() +
   geom_text(
-    aes(label = label_percent()(pct)),
+    aes(label = label_percent(accuracy = 1)(pct)),
     position = position_stack(vjust = 0.5),
     color = "white"
   ) +
@@ -179,4 +265,222 @@ pums_faar_hh |>
   )
 
 ```
+
+### Household characteristics
+
+...
+
+```{r}
+#| label: fig-ami-hh-type
+#| fig.cap: "Households by AMI and type"
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, hh_type) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup() |> 
+  ggplot(
+    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = hh_type)
+  ) +
+  facet_wrap(~ami_faar) +
+  geom_rect() +
+  geom_text(
+    data = . %>% filter(pct > 0.05),
+    aes(
+      x = 3.5,
+      y = pct_label,
+      label = label_percent(accuracy = 1)(pct)
+    ),
+    color = "white"
+  ) +
+  coord_polar(theta = "y", clip = "off") +
+  scale_x_continuous(
+    limits = c(2, 4),
+    expand = c(-0.1, 0)
+  ) +
+  scale_fill_hda() +
+  labs(
+    title = "Households by AMI and type",
+    subtitle = "All households in GWRC region",
+    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    axis.text = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.spacing.x = unit(3, "lines")
+  )
+
+```
+
+...
+
+```{r}
+#| label: fig-ami-hh-age
+#| fig.cap: "Households by AMI and age"
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, hh_age) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  mutate(
+    hh_age = fct_case_when(
+      hh_age == "Young" ~ "Young (<35)",
+      hh_age == "Middle-age" ~ "Middle-age (35-64)",
+      hh_age == "Senior" ~ "Senior (65-79)",
+      hh_age == "Elderly" ~ "Elderly (80+)"
+    )
+  ) |> 
+  ungroup() |> 
+  ggplot(
+    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = hh_age)
+  ) +
+  facet_wrap(~ami_faar) +
+  geom_rect() +
+  geom_text(
+    data = . %>% filter(pct > 0.05),
+    aes(
+      x = 3.5,
+      y = pct_label,
+      label = label_percent(accuracy = 1)(pct)
+    ),
+    color = "white"
+  ) +
+  coord_polar(theta = "y", clip = "off") +
+  scale_x_continuous(
+    limits = c(2, 4),
+    expand = c(-0.1, 0)
+  ) +
+  scale_fill_hda() +
+  labs(
+    title = "Households by AMI and age",
+    subtitle = "Average age of householder and any spouse/partner/roommates",
+    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    axis.text = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.spacing.x = unit(3, "lines")
+  )
+
+```
+
+...
+
+```{r}
+#| label: fig-ami-hh-child
+#| fig.cap: "Households by AMI and number of school-age children"
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
+  mutate(
+    minors = fct_case_when(
+      minors == 0 ~ "None",
+      minors == 1 ~ "1",
+      minors > 1 ~ "Multiple"
+    )
+  ) |>
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, minors) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup() |> 
+  ggplot(
+    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = minors)
+  ) +
+  facet_wrap(~ami_faar) +
+  geom_rect() +
+  geom_text(
+    data = . %>% filter(pct > 0.05),
+    aes(
+      x = 3.5,
+      y = pct_label,
+      label = label_percent(accuracy = 1)(pct)
+    ),
+    color = "white"
+  ) +
+  coord_polar(theta = "y", clip = "off") +
+  scale_x_continuous(
+    limits = c(2, 4),
+    expand = c(-0.1, 0)
+  ) +
+  scale_fill_hda() +
+  labs(
+    title = "Households by AMI and number of school-age children",
+    subtitle = "All households in GWRC region",
+    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    axis.text = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.spacing.x = unit(3, "lines")
+  )
+
+```
+
+```{r}
+#| eval: false
+
+pums_faar_hh |> 
+  mutate(hh_age = str_replace_all(hh_age, "Elderly", "Senior")) |> 
+  filter(ami_faar == "50-80% AMI") |> 
+  to_survey(type = "housing", design = "rep_weights") |> 
+  group_by(interact(hh_type, hh_age, children, hh_earners)) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  ungroup() |> 
+  add_reliability() |> 
+  slice_max(n, n = 10)
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
+  to_survey(type = "housing", design = "rep_weights") |> 
+  group_by(ami_faar, hh_type) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  ungroup() |>
+  ggplot(aes(x = pct, y = fct_reorder(hh_type, pct))) +
+  geom_col() +
+  facet_wrap(~ami_faar)
+
+```
+
 

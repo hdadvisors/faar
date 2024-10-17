@@ -12,25 +12,9 @@ library(waffle)
 # Load clean, labels PUMS data with variables and weights
 pums_faar <- read_rds("data/pums/pums_faar.rds")
 
-pums_faar |> 
-  filter(SPORDER == 1, tenure_detail == "Renter", hh_income > 0) |> 
-  ggplot(aes(x = cost_rent, group = ami_faar, fill = ami_faar)) +
-  geom_density(aes(weight = WGTP)) +
-  facet_wrap(~ami_faar) +
-  scale_x_continuous(
-    #limits = c(0, 500000),
-    labels = label_currency()
-    ) +
-  scale_fill_hda() +
-  theme_hda() +
-  theme(
-    legend.position = "right"
-  )
-
-
 ## Household typologies
 
-faar_hh_typologies <- pums_faar |> 
+faar_hh_types <- pums_faar |> 
   mutate(
     children = case_when(
       children == 0 ~ "No",
@@ -58,14 +42,10 @@ faar_hh_typologies <- pums_faar |>
 # 4. Working single-parent: Single parent > Middle-age > Working
 # 5. Familial providers: Relatives > Middle-age > No children > Working
 
+
 ## Regional housing spectrum ------------------------------
 
-faar_hh_typologies |> 
-  #slice_max(n, n = 10) |> 
-  ggplot(aes(y = pct, x = hh_age, fill = hh_earners)) +
-  geom_col(position = "dodge")
-  #facet_wrap(~hh_type)
-  
+
 pums_faar |> 
   filter(
     hh_type == "Relatives",

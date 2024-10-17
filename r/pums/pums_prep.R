@@ -152,8 +152,19 @@ faar_pums_agedis <- faar_pums_cb |>
   ) |> 
   ungroup()
 
+## 7. Add number of minors --------------------------------
 
-## 7. Recode PUMS data as needed --------------------------
+# Children under 18 in household
+
+faar_pums_minors <- faar_pums_agedis |> 
+  group_by(SERIALNO) |>
+  mutate(
+    minors = sum(str_detect(RELSHIPP, "25|26|27|30|35") & AGEP < 18)
+  ) |> 
+  ungroup()
+
+
+## 8. Recode PUMS data as needed --------------------------
 
 # Use custom function from pums_labels.R
 pums_recode <- function(data, vars) {
@@ -183,7 +194,7 @@ vars_recode <- c(
   "DIS", "ESR", "NAICSP", "SOCP"
 )
 
-faar_pums_recode <- pums_recode(faar_pums_agedis, vars_recode)
+faar_pums_recode <- pums_recode(faar_pums_minors, vars_recode)
 
 
 ## 8. Rename PUMS variables as needed ---------------------
@@ -238,7 +249,10 @@ faar_pums_rename <- pums_rename(faar_pums_recode)
 ## 8. Group NAICS and SOC codes into categories -----------
 
 # Load lookup tables created in naics_soc_lookup.rds
-naics_recode <- read_rds("data/pums/naics_recode.rds")
+
+naics_recode <- read_rds("data/pums/naics_recode.rds") |> 
+  select(naics = val_label, naics_group)
+
 soc_recode <- read_rds("data/pums/soc_recode.rds")
 
 faar_pums_occ <- faar_pums_rename |> 
@@ -262,7 +276,8 @@ faar_pums_clean <- faar_pums_occ |>
     "hh_type",
     "hh_age",
     "multigen",
-    " ",
+    "children",
+    "minors",
     "race",
     "ethnicity",
     # Person info
@@ -346,6 +361,13 @@ faar_pums_simple <- faar_pums_clean |>
       str_detect(relationship, "Father or mother") ~ "Parent",
       str_detect(relationship, "Brother or sister") ~ "Sibling",
       str_detect(relationship, "in-law") ~ "In-law",
+      .default = relationship
+    )
+  ) |> 
+  mutate(
+    relationship = case_when(
+      relationship == "Child" & age > 18 ~ "Adult child",
+      relationship == "Grandchild" & age > 18 ~ "Adult grandchild",
       .default = relationship
     )
   ) |> 

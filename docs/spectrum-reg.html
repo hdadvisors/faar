@@ -122,7 +122,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./exec-sum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Executive summary {#sec-exec-sum}</span></a>
+ <span class="menu-text">Executive summary</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -179,6 +179,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#income" id="toc-income" class="nav-link" data-scroll-target="#income">Income</a></li>
   <li><a href="#tenure" id="toc-tenure" class="nav-link" data-scroll-target="#tenure">Tenure</a></li>
+  <li><a href="#household-characteristics" id="toc-household-characteristics" class="nav-link" data-scroll-target="#household-characteristics">Household characteristics</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -250,7 +251,7 @@ Table&nbsp;3.1: Housing spectrum income group categories
 <table class="table table-condensed table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
-   <th style="text-align:left;"> Income group </th>
+   <th style="text-align:left;"> Income group (AMI) </th>
    <th style="text-align:right;"> Description </th>
   </tr>
  </thead>
@@ -302,7 +303,7 @@ Table&nbsp;3.1: Housing spectrum income group categories
 <img src="spectrum-reg_files/figure-html/fig-ami-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ami-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.1: Households by AMI category
+Figure&nbsp;3.1: Households by AMI
 </figcaption>
 </figure>
 </div>
@@ -314,17 +315,89 @@ Figure&nbsp;3.1: Households by AMI category
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-No income households excluded
+Households with no income excluded
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Fewer than 1,000 households (&lt;1%) reported no income for the 12 months prior to their survey response. While the housing needs of this small group represent an outsized component of the region’s housing challenges, the small sample of responses prevents reliable estimates from being calculated. As a result, these records are mostly excluded from the remainder of the report.</p>
+<p>Fewer than 1,000 households (&lt;1%) did not have a net positive income for the 12 months prior to their survey response. While the housing needs of this small group represent an outsized component of the region’s housing challenges, the small sample of responses prevents reliable estimates from being calculated. As a result, these records are mostly excluded from the remainder of the report.</p>
+</div>
+</div>
+<p>We can provide a clearer picture of actual household incomes within these AMI groups by plotting their distributions, as shown in the figure below. The overlapping curves demonstrate that while incomes generally increase with higher AMI percentages, there’s significant variation within each group due to the variety of household sizes represented.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-ami-dist" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ami-dist-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="spectrum-reg_files/figure-html/fig-ami-dist-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ami-dist-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: Distribution of household incomes by AMI
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This table adds the typical range for each AMI group to its descriptions.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> For example, we now know to associate <em>low-income</em> households with incomes between roughly $50,000 and $90,000.</p>
+<div class="no-row-height column-margin column-container"><div id="fn2"><p><sup>2</sup>&nbsp;Here, <em>typical range</em> includes all values between the 10th and 90th percentiles. This removes outliers and reflects the middle 80% of households within each group.</p></div></div><div class="cell" data-layout-align="left">
+<div id="tbl-ami-range" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-layout-align="left">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ami-range-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3.2: Typical household income ranges by AMI
+</figcaption>
+<div aria-describedby="tbl-ami-range-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="table table-condensed table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Income group (AMI) </th>
+   <th style="text-align:left;"> Description </th>
+   <th style="text-align:right;"> Typical range </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Above 120% AMI </td>
+   <td style="text-align:left;font-style: italic;"> High-income </td>
+   <td style="text-align:right;"> $124,300 - $292,700 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 100-120% AMI </td>
+   <td style="text-align:left;font-style: italic;"> Above-average income </td>
+   <td style="text-align:right;"> $93,000 - $140,000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 80-100% AMI </td>
+   <td style="text-align:left;font-style: italic;"> Moderate-income </td>
+   <td style="text-align:right;"> $75,000 - $116,000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 50-80% AMI </td>
+   <td style="text-align:left;font-style: italic;"> Low-income </td>
+   <td style="text-align:right;"> $49,000 - $88,000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 30-50% AMI </td>
+   <td style="text-align:left;font-style: italic;"> Very low-income </td>
+   <td style="text-align:right;"> $28,600 - $51,500 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Below 30% AMI </td>
+   <td style="text-align:left;font-style: italic;"> Extremely low-income </td>
+   <td style="text-align:right;"> $3,500 - $28,000 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</figure>
 </div>
 </div>
 </section>
 <section id="tenure" class="level3">
 <h3 class="anchored" data-anchor-id="tenure">Tenure</h3>
-<p>…</p>
+<p>For every 100 households in the region, 76 own their homes. Of these 76 homeowners, 58 are still making mortgage payments, while 18 have fully paid off their homes. The other 24 out of every 100 households are renters.</p>
+<p>While homeownership becomes less common as we move down the income scale, homeowners still outnumber renters in every income group except for extremely low-income households. Of note are the slightly higher shares of homeowners below 50% AMI without mortgages—likely a reflection of seniors on fixed incomes who live in the same homes they purchased over 30 years ago.</p>
 <div class="cell" data-layout-align="left">
 <div class="cell-output-display">
 <div id="fig-ami-tenure" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
@@ -333,7 +406,55 @@ No income households excluded
 <img src="spectrum-reg_files/figure-html/fig-ami-tenure-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ami-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.2: Households by AMI and tenure
+Figure&nbsp;3.3: Households by AMI and tenure
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="household-characteristics" class="level3">
+<h3 class="anchored" data-anchor-id="household-characteristics">Household characteristics</h3>
+<p>…</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-ami-hh-type" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ami-hh-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="spectrum-reg_files/figure-html/fig-ami-hh-type-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ami-hh-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.4: Households by AMI and type
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>…</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-ami-hh-age" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ami-hh-age-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="spectrum-reg_files/figure-html/fig-ami-hh-age-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ami-hh-age-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.5: Households by AMI and age
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>…</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-ami-hh-child" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ami-hh-child-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="spectrum-reg_files/figure-html/fig-ami-hh-child-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ami-hh-child-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.6: Households by AMI and number of school-age children
 </figcaption>
 </figure>
 </div>
