@@ -65,6 +65,7 @@ format:
     reference-location: margin
     footnotes-hover: false
     crossrefs-hover: false
+    html-table-processing: none
     
   # docx: 
   #   toc: true

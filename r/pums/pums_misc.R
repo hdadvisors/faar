@@ -2,21 +2,7 @@
 
 
 
-# 8. Survey
-
-# Convert to survey object
-pums_svy_h <- pums_ami |> 
-  to_survey(type = "housing", design = "rep_weights")
-
-pums_ami <- pums_svy_h |> 
-  group_by(ami_category) |> 
-  summarise(
-    estimate = survey_total()
-  )
-
-
-
-
+###########################################################
 
 fxburg_units <- pums_join |> 
   filter(SPORDER == 1) |> 

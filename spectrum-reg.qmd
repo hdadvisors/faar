@@ -19,7 +19,8 @@ pums_faar <- read_rds("data/pums/pums_faar.rds")
 # Household records only
 pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
-
+# AMI summary table
+tbl_ami <- read_rds("data/spectrum_reg/tbl_ami.rds")
 
 ```
 
@@ -50,7 +51,6 @@ With few exceptions, housing opportunities are primarily limited by how much mon
 ```{r}
 #| label: tbl-ami-labels
 #| tbl-cap: "Housing spectrum income group categories"
-#| html-table-processing: none
 
 ami_labels <- data.frame(
   ami_faar = rev(levels(pums_faar$ami_faar)),
@@ -176,7 +176,6 @@ This table adds the typical range for each AMI group to its descriptions.[^tr] F
 ```{r}
 #| label: tbl-ami-range
 #| tbl-cap: "Typical household income ranges by AMI"
-#| html-table-processing: none
 
 ami_dist <- ami_labels |> 
   left_join(select(ami_wm, ami_faar, range)) |> 
@@ -456,40 +455,104 @@ read_rds("data/spectrum_reg/fig_ami_earn.rds") |>
 ```
 
 
+## Below 30% AMI
+
+...
 
 ```{r}
-#| eval: false
+#| label: tbl-below-30
+#| tbl-cap: "Summary of households below 30% AMI"
 
-pums_faar_hh |> 
-  mutate(hh_age = str_replace_all(hh_age, "Elderly", "Senior")) |> 
-  filter(ami_faar == "50-80% AMI") |> 
-  to_survey(type = "housing", design = "rep_weights") |> 
-  group_by(interact(hh_type, hh_age, children, hh_earners)) |> 
-  summarise(
-    n = survey_total(vartype = "cv")
+fn_tbl_ami <- function(level){
+  
+  tbl_ami |> 
+  filter(ami_faar == level) |> 
+  select(-1) |> 
+  kbl(
+    col.names = c(level, "Summary"),
+    align = "lr"
   ) |> 
-  mutate(
-    pct = n/sum(n)
-  ) |>
-  ungroup() |> 
-  add_reliability() |> 
-  slice_max(n, n = 10)
+  kable_styling(c("condensed", "striped"), full_width = F)
+  
+}
 
-pums_faar_hh |> 
-  filter(hh_income > 0) |> 
-  to_survey(type = "housing", design = "rep_weights") |> 
-  group_by(ami_faar, hh_type) |> 
-  summarise(
-    n = survey_total(vartype = "cv")
-  ) |> 
-  mutate(
-    pct = n/sum(n)
-  ) |>
-  ungroup() |>
-  ggplot(aes(x = pct, y = fct_reorder(hh_type, pct))) +
-  geom_col() +
-  facet_wrap(~ami_faar)
+fn_tbl_ami("Below 30% AMI")
 
 ```
+
+Sources of income
+
+Public assistance
+
+Housing costs
+
+Housing type
+
+Year moved
+
+
+## 30-50% AMI
+
+...
+
+```{r}
+#| label: tbl-30-50
+#| tbl-cap: "Summary of households between 30-50% AMI"
+
+fn_tbl_ami("30-50% AMI")
+
+```
+
+
+## 50-80% AMI
+
+...
+
+```{r}
+#| label: tbl-50-80
+#| tbl-cap: "Summary of households between 50-80% AMI"
+
+fn_tbl_ami("50-80% AMI")
+
+```
+
+
+## 80-100% AMI
+
+...
+
+```{r}
+#| label: tbl-80-100
+#| tbl-cap: "Summary of households between 80-100% AMI"
+
+fn_tbl_ami("80-100% AMI")
+
+```
+
+
+## 100-120% AMI
+
+...
+
+```{r}
+#| label: tbl-100-120
+#| tbl-cap: "Summary of households between 100-120% AMI"
+
+fn_tbl_ami("100-120% AMI")
+
+```
+
+##  Above 120% AMI
+
+...
+
+```{r}
+#| label: tbl-above-120
+#| tbl-cap: "Summary of households above 120% AMI"
+
+fn_tbl_ami("Above 120% AMI")
+
+```
+
 
 

@@ -1,5 +1,6 @@
-# ignore folders with no .R or .qmd files
+# ignore folders
 /data/
 /docs/
 /.quarto/
 /_freeze/
+/r/

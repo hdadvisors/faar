@@ -15,6 +15,93 @@ pums_faar <- read_rds("data/pums/pums_faar.rds")
 # Household records only
 pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
+
+## Household typologies -----------------------------------
+
+pums_hh_types <- pums_faar_hh |> 
+  filter(hh_income > 0) |>
+  mutate(
+    minors = case_when(
+      minors == 0 ~ "No",
+      minors > 0 ~ "Yes"
+    )
+  ) |> 
+  mutate(
+    hh_earners = case_when(
+      hh_earners == 0 ~ "None",
+      hh_earners == 1 ~ "Single",
+      hh_earners == 2 ~ "Double",
+      hh_earners > 2 ~ "Multiple"
+    )
+  ) |> 
+  mutate(
+    hh_age = case_match(
+      hh_age,
+      "Elderly" ~ "Senior",
+      .default = hh_age
+    )
+  ) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(interact(ami_faar, hh_type, hh_age, minors, hh_earners)) |>
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  ungroup() |> 
+  add_reliability() |> 
+  group_by(ami_faar) |> 
+  mutate(pct = n/sum(n)) |> 
+  ungroup() |> 
+  select(1:6, 9, 8)
+
+write_rds(pums_hh_types, "data/pums/pums_hh_types.rds")
+
+
+## Summary AMI table --------------------------------------
+
+pums_tbl_tot <- pums_faar |>
+  filter(hh_income > 0) |> 
+  group_by(ami_faar) |> 
+  summarise(
+    hh = sum(WGTP[SPORDER == 1]),
+    p = sum(PWGTP),
+  )
+
+pums_tbl_avg <- pums_faar_hh |>
+  filter(hh_income > 0) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar) |> 
+  summarise(
+    hh_size = survey_mean(hh_size),
+    hh_income = survey_median(hh_income)
+  ) |> 
+  select(-3, -5)
+
+pums_tbl <- pums_tbl_tot |> 
+  left_join(pums_tbl_avg) |> 
+  pivot_longer(
+    cols = 2:5,
+    names_to = "var"
+  ) |> 
+  mutate(value = as.numeric(value)) |> 
+  mutate(
+    value = case_when(
+      var %in% c("hh", "p") ~ formatC(value, format = "d", big.mark = ","),
+      var == "hh_size" ~ formatC(value, format = "f", digits = 2, big.mark = ","),
+      var == "hh_income" ~ paste0("$", formatC(value, format = "d", big.mark = ","))
+    )
+  ) |> 
+  mutate(
+    var = case_match(
+      var,
+      "hh" ~ "Households",
+      "p" ~ "Persons",
+      "hh_size" ~ "Average household size",
+      "hh_income" ~ "Median household income"
+    )
+  )
+
+write_rds(pums_tbl, "data/spectrum_reg/tbl_ami.rds")
+
 ## fig-ami ------------------------------------------------
 
 fig_ami <- pums_faar_hh |> 
@@ -228,6 +315,14 @@ fig_ami_earn <- pums_faar_hh |>
   
 write_rds(fig_ami_earn, "data/spectrum_reg/fig_ami_earn.rds")
 
+
+  
+## fig-30-
+
+
+
+###########################################################
+
 pums_faar |> 
   group_by(SERIALNO) |> 
   mutate(
@@ -247,38 +342,43 @@ pums_faar |>
   mutate(
     pct = n/sum(n)
   ) |> arrange(pct)
-  
-## fig-30-
-
-
-
-
-
-
 
 ## Household typologies
 
-faar_hh_types <- pums_faar |> 
+
+
+pums_faar_hh |> 
   mutate(
-    children = case_when(
-      children == 0 ~ "No",
-      children > 0 ~ "Yes"
+    hh_age = case_match(
+      hh_age,
+      "Elderly" ~ "Senior",
+      .default = hh_age
     )
+  ) |>
+  filter(
+    ami_faar == "Below 30% AMI",
+    hh_type == "Individual",
+    hh_age == "Senior",
+    minors == 0,
+    hh_earners == 0
   ) |> 
-  #mutate(
-  #  hh_earners = case_when(
-  #    hh_earners == 0 ~ "No",
-  #    hh_earners > 0 ~ "Yes"
-  #  )
-  #) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(interact(hh_type, hh_age, children, hh_earners)) |>
+  group_by(hh_disability) |>
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
   ungroup() |> 
-  mutate(pct = n/sum(n)) |> 
-  add_reliability()
+  add_reliability() |> 
+  mutate(pct = n/sum(n))
+  
+# Below 30%
+# Individual > Senior > No children > No earners
+# Individual > Middle-age > No children > No earners (52% disabled)
+# Couple > Middle-age > Children > Single earner
+# Single parent > Middle-age > Children > Single earner
+
+# Couple > Middle-age > Children > Double earners
+# Couple > Senior > No children > No earners
 
 # 1. Working family (middle-age): Couple > Middle-age > Children > Working
 # 2. SINKs/DINKs: Couple > Middle-age > No children > Working
@@ -288,7 +388,6 @@ faar_hh_types <- pums_faar |>
 
 
 ## Regional housing spectrum ------------------------------
-
 
 pums_faar |> 
   filter(
