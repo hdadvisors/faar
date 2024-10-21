@@ -82,7 +82,6 @@ faar_pums_pow <- faar_pums_earners |>
       is.na(POWSP) ~ NA,
       POWPUMA10 != "-0009" ~ paste0(POWSP, POWPUMA10),
       POWPUMA20 != "-0009" ~ paste0(POWSP, POWPUMA20)
-      
     )
   ) |>
   # Join POW lookup data
@@ -105,6 +104,7 @@ faar_pums_pow <- faar_pums_earners |>
       NA
     )
   ) |> 
+  fill(core_workforce, .direction = "downup") |> 
   ungroup()
   
 
@@ -237,6 +237,8 @@ pums_rename <- function(data) {
       sex = SEX,
       disability = DIS,
       emp_status = ESR,
+      last_work = WKL,
+      jtw = JWTRNS,
       naics = NAICSP,
       soc = SOCP
     ) 
@@ -317,7 +319,9 @@ faar_pums_clean <- faar_pums_occ |>
     "workers",
     "hh_earners",
     "emp_status",
+    "last_work",
     "wkr_class",
+    "jtw",
     "pow_label",
     "core_workforce",
     "naics",
@@ -449,6 +453,14 @@ faar_pums_simple <- faar_pums_clean |>
     )
   ) |> 
   mutate(
+    last_work = fct_case_when(
+      last_work == "1" ~ "Within year",
+      last_work == "2" ~ "1-5 years ago",
+      last_work == "3" ~ "Over 5 years ago or never",
+      last_work == "b" ~ NA
+    )
+  ) |> 
+  mutate(
     wkr_class = case_when(
       str_detect(wkr_class, "last worked") ~ "Non-earner",
       str_detect(wkr_class, "without pay") ~ "Non-earner",
@@ -459,6 +471,15 @@ faar_pums_simple <- faar_pums_clean |>
       str_detect(wkr_class, "Self-employed") ~ "Self-employed"
     )
   ) |> 
+  mutate(
+    jtw = fct_case_when(
+      jtw == "01" ~ "Car or van",
+      jtw %in% c("02", "03", "04", "05") ~ "Public transit",
+      jtw %in% c("06", "07", "08", "09", "10", "12") ~ "Other",
+      jtw == "11" ~ "Work from home",
+      jtw == "bb" ~ NA
+    )
+  ) |>
   mutate(
     across(c(naics, soc), ~ replace(., . %in% c("N", "00000N"), NA))
   ) |> 

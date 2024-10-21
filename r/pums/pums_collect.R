@@ -69,7 +69,8 @@ make_pums_vars <- function() {
     "SEX",         # Sex
     "SSIP",        # Supplemental Security Income amount
     "SSP",         # Social Security amount
-    "WAGP"         # Wages or salary income
+    "WAGP",        # Wages or salary income
+    "WKL"          # When last worked
   )
   
   # PERSON RECORD - RECODED PERSON VARIABLES

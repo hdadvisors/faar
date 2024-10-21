@@ -316,13 +316,12 @@ fig_ami_earn <- pums_faar_hh |>
 write_rds(fig_ami_earn, "data/spectrum_reg/fig_ami_earn.rds")
 
   
-## fig-30-str -------------------
+## fig-ami-str -------------------
 
-fig_30_str <- pums_faar_hh |> 
-  filter(ami_faar == "Below 30% AMI") |> 
+fig_ami_str <- pums_faar_hh |> 
   mutate(tenure = paste0(tenure, "s")) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(tenure, str_type) |> 
+  group_by(ami_faar, tenure, str_type) |> 
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
@@ -334,32 +333,32 @@ fig_30_str <- pums_faar_hh |>
   ) |>
   ungroup() 
   
-write_rds(fig_30_str, "data/spectrum_reg/fig_30_str.rds")
+write_rds(fig_ami_str, "data/spectrum_reg/fig_ami_str.rds")
 
-## fig-30-soi -------------------
+## fig-ami-soi -------------------
 
-fig_30_soi <- pums_faar |> 
-  filter(ami_faar == "Below 30% AMI") |> 
+fig_ami_soi <- pums_faar |> 
   mutate(
     across(20:27, ~ replace_na(.x, 0)),
     tenure = paste0(tenure, "s")
   ) |> 
   to_survey(type = "person", design = "rep_weights") |>
-  group_by(tenure) |> 
+  group_by(ami_faar, tenure) |> 
   summarise(
     inc_wages = survey_total(inc_wages + inc_selfemp),
     inc_ret = survey_total(inc_ret),
     inc_ss = survey_total(inc_ss),
     inc_public = survey_total(inc_ssi + inc_public),
   ) |> 
-  select(1, 2, 4, 6, 8) |> 
+  select(1, 2, 3, 5, 7, 9) |> 
   pivot_longer(
-    cols = 2:5,
+    cols = 3:6,
     names_to = "inc",
     values_to = "amt"
   ) |> 
+  group_by(ami_faar, tenure) |>
   mutate(
-    pct = amt/sum(amt), .by = tenure
+    pct = amt/sum(amt)
   ) |>
   mutate(
     inc = case_match(
@@ -372,7 +371,7 @@ fig_30_soi <- pums_faar |>
   ) |> 
   ungroup()
 
-write_rds(fig_30_soi, "data/spectrum_reg/fig_30_soi.rds")
+write_rds(fig_ami_soi, "data/spectrum_reg/fig_ami_soi.rds")
 
 
 ## fig-30-costs -------------------------------------------
@@ -380,6 +379,7 @@ write_rds(fig_30_soi, "data/spectrum_reg/fig_30_soi.rds")
 costs_wm <- pums_faar_hh |> 
   filter(hh_income > 0) |> 
   mutate(
+    tenure = paste0(tenure, "s"),
     costs = case_when(
       cost_own == -1 ~ cost_rent,
       .default = cost_own
@@ -398,6 +398,7 @@ write_rds(costs_wm, "data/spectrum_reg/costs_wm.rds")
 fig_ami_costs <- pums_faar_hh |> 
   filter(hh_income > 0) |> 
   mutate(
+    tenure = paste0(tenure, "s"),
     costs = case_when(
       cost_own == -1 ~ cost_rent,
       .default = cost_own
@@ -410,10 +411,10 @@ write_rds(fig_ami_costs, "data/spectrum_reg/fig_ami_costs.rds")
 
 ## fig-30-cb ----------------------------------------------
 
-fig_30_cb <- pums_faar_hh |> 
-  filter(ami_faar == "Below 30% AMI") |> 
+fig_ami_cb <- pums_faar_hh |> 
+  mutate(tenure = paste0(tenure, "s")) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(tenure, cb_label) |> 
+  group_by(ami_faar, tenure, cb_label) |> 
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
@@ -425,7 +426,7 @@ fig_30_cb <- pums_faar_hh |>
   ) |>
   ungroup()
 
-write_rds(fig_30_cb, "data/spectrum_reg/fig_30_cb.rds")
+write_rds(fig_ami_cb, "data/spectrum_reg/fig_ami_cb.rds")
 
 
 ###########################################################
