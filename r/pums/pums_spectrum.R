@@ -315,11 +315,116 @@ fig_ami_earn <- pums_faar_hh |>
   
 write_rds(fig_ami_earn, "data/spectrum_reg/fig_ami_earn.rds")
 
-
   
-## fig-30-
+## fig-30-str -------------------
+
+fig_30_str <- pums_faar_hh |> 
+  filter(ami_faar == "Below 30% AMI") |> 
+  mutate(tenure = paste0(tenure, "s")) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(tenure, str_type) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup() 
+  
+write_rds(fig_30_str, "data/spectrum_reg/fig_30_str.rds")
+
+## fig-30-soi -------------------
+
+fig_30_soi <- pums_faar |> 
+  filter(ami_faar == "Below 30% AMI") |> 
+  mutate(
+    across(20:27, ~ replace_na(.x, 0)),
+    tenure = paste0(tenure, "s")
+  ) |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(tenure) |> 
+  summarise(
+    inc_wages = survey_total(inc_wages + inc_selfemp),
+    inc_ret = survey_total(inc_ret),
+    inc_ss = survey_total(inc_ss),
+    inc_public = survey_total(inc_ssi + inc_public),
+  ) |> 
+  select(1, 2, 4, 6, 8) |> 
+  pivot_longer(
+    cols = 2:5,
+    names_to = "inc",
+    values_to = "amt"
+  ) |> 
+  mutate(
+    pct = amt/sum(amt), .by = tenure
+  ) |>
+  mutate(
+    inc = case_match(
+      inc,
+      "inc_wages" ~ "Wages",
+      "inc_ss" ~ "Social Security",
+      "inc_ret" ~ "Retirement",
+      "inc_public" ~ "Public assistance"
+    )
+  ) |> 
+  ungroup()
+
+write_rds(fig_30_soi, "data/spectrum_reg/fig_30_soi.rds")
+
+## fig-30-costs ------
+
+fig_30_costs <- pums_faar_hh |> 
+  filter(ami_faar == "Below 30% AMI") |> 
+  mutate(
+    tenure = paste0(tenure, "s"),
+    costs = case_when(
+      cost_own == -1 ~ cost_rent,
+      .default = cost_own
+    )
+  ) |> 
+  uncount(WGTP) |> 
+  select(tenure, cb_label, cb) |> 
+  group_by(tenure, cb_label) |> 
+  summarise(dens = list(density(cb)), .groups = "drop") %>%
+  # Extract x and y from the density object
+  mutate(x = map(dens, "x"),
+         y = map(dens, "y")) %>%
+  # Remove the original density object
+  select(-dens) %>%
+  # Unnest the x and y columns
+  unnest(c(x, y)) %>%
+  # Rename the y column to density for clarity
+  rename(density = y)
 
 
+ggplot() +
+  facet_wrap(~tenure) +
+  geom_area(
+    data = filter(fig_30_costs,
+                  cb_label == "Not cost-burdened"),
+    aes(x = x, y = density)
+  ) +
+  geom_area(
+    data = filter(fig_30_costs,
+                  cb_label == "Cost-burdened"),
+    aes(x = x, y = density)
+  )
+  
+  
+  geom_density_ridges(
+    aes(scale = 2.5),
+    position = "stack",
+    color = NA,
+    alpha = 0.75,
+    linewidth = 0.75
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1)
+  )
+  
 
 ###########################################################
 

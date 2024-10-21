@@ -22,6 +22,9 @@ pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 # AMI summary table
 tbl_ami <- read_rds("data/spectrum_reg/tbl_ami.rds")
 
+# Plot caption for PUMS source
+pums_cap <- pums_cap
+
 ```
 
 This report outlines the *housing spectrum* concept and its utility for understanding housing market dynamics. It includes assessments of households in the region by various demographic and socioeconomic characteristics, primarily by wages/income. Special analysis for the region's core workforce (i.e. persons both living and working within the region) can be found in @sec-spectrum-work.
@@ -112,7 +115,7 @@ read_rds("data/spectrum_reg/fig_ami.rds") |>
   labs(
     title = "Households by AMI",
     subtitle = "All households in GWRC region",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(flip_gridlines = T)
 
@@ -159,7 +162,7 @@ read_rds("data/spectrum_reg/fig_ami_dist.rds") |>
   labs(
     title = "Distribution of household incomes by AMI",
     subtitle = "Median household incomes in white",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     flip_gridlines = TRUE,
@@ -221,7 +224,7 @@ read_rds("data/spectrum_reg/fig_ami_tenure.rds") |>
   labs(
     title = "Households by AMI and tenure",
     subtitle = fig_tenure_subtitle,
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     panel.grid.major.y = element_blank(),
@@ -262,7 +265,7 @@ read_rds("data/spectrum_reg/fig_ami_hh_type.rds") |>
   labs(
     title = "Households by AMI and type",
     subtitle = "All households in GWRC region",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     legend.position = "right",
@@ -304,7 +307,7 @@ read_rds("data/spectrum_reg/fig_ami_hh_age.rds") |>
   labs(
     title = "Households by AMI and age",
     subtitle = "Average age of householder and any spouse/partner/roommates",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     legend.position = "right",
@@ -346,7 +349,7 @@ read_rds("data/spectrum_reg/fig_ami_hh_child.rds") |>
   labs(
     title = "Households by AMI and number of school-age children",
     subtitle = "All households in GWRC region",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     legend.position = "right",
@@ -396,7 +399,7 @@ read_rds("data/spectrum_reg/fig_ami_employ.rds") |>
   labs(
     title = "Employment status of prime working age non-disabled adults by AMI",
     subtitle = "All adults aged 25–54 without a disability",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     legend.position = "right",
@@ -442,7 +445,7 @@ read_rds("data/spectrum_reg/fig_ami_earn.rds") |>
   labs(
     title = "Number of earners per household by AMI",
     subtitle = "All households in GWRC region",
-    caption = "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year PUMS."
+    caption = pums_cap
   ) +
   theme_hda(
     legend.position = "right",
@@ -480,13 +483,87 @@ fn_tbl_ami("Below 30% AMI")
 
 ```
 
+...
+
+Housing type
+
+```{r}
+#| label: fig-30-str
+#| fig-cap: "Types of homes occupied by households below 30% AMI"
+
+library(waffle)
+
+read_rds("data/spectrum_reg/fig_30_str.rds") |> 
+  ggplot(
+    aes(fill = str_type, values = n/50)
+  ) +
+  facet_wrap(~tenure) +
+  geom_waffle(
+    color = "white",
+    n_rows = 10,
+    size = 1,
+    flip = TRUE
+  ) +
+  coord_equal() +
+  scale_y_continuous(
+    breaks = c(4, 8, 12, 16),
+    labels = label_comma(scale = 500)
+  ) +
+  scale_fill_hda(guide = guide_legend(reverse = T)) +
+  labs(
+    title = "Types of homes occupied by households below 30% AMI",
+    subtitle = "1 square = 500 households",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    panel.grid.major.y = element_blank(),
+    axis.ticks.y = element_line(linewidth = 0.5),
+    axis.text.x = element_blank()
+  )
+
+```
+
+
 Sources of income
+
+...
+
+```{r}
+#| label: fig-30-soi
+#| fig-cap: "Total income amounts by source"
+
+read_rds("data/spectrum_reg/fig_30_soi.rds") |> 
+  ggplot(aes(x = pct, y = tenure, fill = inc)) +
+  facet_wrap(~tenure, ncol = 1, scales = "free_y") +
+  geom_col() +
+  geom_text(
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_fill_hda(-1, guide = guide_legend(reverse = T)) +
+  labs(
+    title = "Income sources for households below 30% AMI",
+    subtitle = "Percent of total annual income by source",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    legend.position = "top",
+    legend.justification = "left",
+    axis.text = element_blank(),
+    strip.text = element_markdown(hjust = 0)
+  )
+
+```
+
 
 Public assistance
 
 Housing costs
 
-Housing type
 
 Year moved
 
