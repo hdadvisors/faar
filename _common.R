@@ -30,6 +30,14 @@ hda_pal <- c(
   "#8abc8e"  # Sea Green
 )
 
+# Cost burden label color palette
+
+cb_pal <- c(
+  "Severely cost-burdened" = hda_pal[4],
+  "Cost-burdened" = hda_pal[3],
+  "Not cost-burdened" = "grey80"
+)
+
 # List of FAAR region locality FIPS codes
 
 faar_fips <- c("51033", "51047", "51099", "51177", "51179", "51630")

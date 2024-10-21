@@ -374,83 +374,65 @@ fig_30_soi <- pums_faar |>
 
 write_rds(fig_30_soi, "data/spectrum_reg/fig_30_soi.rds")
 
-## fig-30-costs ------
 
-fig_30_costs <- pums_faar_hh |> 
-  filter(ami_faar == "Below 30% AMI") |> 
+## fig-30-costs -------------------------------------------
+
+costs_wm <- pums_faar_hh |> 
+  filter(hh_income > 0) |> 
   mutate(
-    tenure = paste0(tenure, "s"),
     costs = case_when(
       cost_own == -1 ~ cost_rent,
       .default = cost_own
     )
   ) |> 
-  uncount(WGTP) |> 
-  select(tenure, cb_label, cb) |> 
-  group_by(tenure, cb_label) |> 
-  summarise(dens = list(density(cb)), .groups = "drop") %>%
-  # Extract x and y from the density object
-  mutate(x = map(dens, "x"),
-         y = map(dens, "y")) %>%
-  # Remove the original density object
-  select(-dens) %>%
-  # Unnest the x and y columns
-  unnest(c(x, y)) %>%
-  # Rename the y column to density for clarity
-  rename(density = y)
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, tenure) |> 
+  summarise(
+    wm = survey_median(costs, vartype = "cv"),
+    q = survey_quantile(costs, c(0.1, 0.9))
+  ) |> 
+  ungroup()
 
+write_rds(costs_wm, "data/spectrum_reg/costs_wm.rds")
 
-ggplot() +
-  facet_wrap(~tenure) +
-  geom_area(
-    data = filter(fig_30_costs,
-                  cb_label == "Not cost-burdened"),
-    aes(x = x, y = density)
-  ) +
-  geom_area(
-    data = filter(fig_30_costs,
-                  cb_label == "Cost-burdened"),
-    aes(x = x, y = density)
-  )
-  
-  
-  geom_density_ridges(
-    aes(scale = 2.5),
-    position = "stack",
-    color = NA,
-    alpha = 0.75,
-    linewidth = 0.75
-  ) +
-  scale_x_continuous(
-    limits = c(0, 1)
-  )
-  
-
-###########################################################
-
-pums_faar |> 
-  group_by(SERIALNO) |> 
+fig_ami_costs <- pums_faar_hh |> 
+  filter(hh_income > 0) |> 
   mutate(
-    adult_child = if_else(
-      SPORDER == 1,
-      any(relationship == "Adult child", na.rm = TRUE),
-      NA
+    costs = case_when(
+      cost_own == -1 ~ cost_rent,
+      .default = cost_own
     )
   ) |> 
-  ungroup() |> 
-  filter(SPORDER ==1, hh_income > 1, hh_earners > 2) |>
+  select(SERIALNO, WGTP, ami_faar, tenure, costs)
+
+write_rds(fig_ami_costs, "data/spectrum_reg/fig_ami_costs.rds")
+
+
+## fig-30-cb ----------------------------------------------
+
+fig_30_cb <- pums_faar_hh |> 
+  filter(ami_faar == "Below 30% AMI") |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(adult_child) |> 
+  group_by(tenure, cb_label) |> 
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
   mutate(
-    pct = n/sum(n)
-  ) |> arrange(pct)
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup()
+
+write_rds(fig_30_cb, "data/spectrum_reg/fig_30_cb.rds")
+
+
+###########################################################
+
+
 
 ## Household typologies
-
-
 
 pums_faar_hh |> 
   mutate(
@@ -508,28 +490,6 @@ pums_faar |>
   ggplot(aes(x = age_group, y = count, fill = relationship)) +
   geom_col(position = "dodge") +
   facet_wrap(~relationship)
-  
 
-
-## 3. Stats for all households ----------------------------
-
-# AMI by tenure
-pums_faar_fct |> 
-  filter(SPORDER == 1, cost_hsg_pct > 0 & cost_hsg_pct < 1) |> 
-  mutate(cb_bin = cut(cost_hsg_pct, breaks = 50)) |> 
-  #select(cost_hsg_pct, cb_bin)
-  to_survey(type = "housing", design = "rep_weights") |>
-  group_by(tenure, cb_bin) |> 
-  summarise(
-    n = survey_prop(vartype = "cv")
-  ) |> 
-  mutate(bin_midpoint = as.numeric(str_extract(cb_bin, "(?<=,).*(?=\\])"))) |> 
-  #add_reliability()
-  ggplot(aes(x = bin_midpoint, y = n, fill = tenure)) +
-    geom_col(position = "dodge")
-
-
-
-## 4. Stats for households with at least 
 
 

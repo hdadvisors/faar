@@ -23,7 +23,7 @@ pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 tbl_ami <- read_rds("data/spectrum_reg/tbl_ami.rds")
 
 # Plot caption for PUMS source
-pums_cap <- pums_cap
+pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
 
 ```
 
@@ -460,8 +460,6 @@ read_rds("data/spectrum_reg/fig_ami_earn.rds") |>
 
 ## Below 30% AMI
 
-...
-
 ```{r}
 #| label: tbl-below-30
 #| tbl-cap: "Summary of households below 30% AMI"
@@ -475,7 +473,7 @@ fn_tbl_ami <- function(level){
     col.names = c(level, "Summary"),
     align = "lr"
   ) |> 
-  kable_styling(c("condensed", "striped"), full_width = F)
+  kable_styling(c("condensed", "striped"))
   
 }
 
@@ -483,9 +481,7 @@ fn_tbl_ami("Below 30% AMI")
 
 ```
 
-...
-
-Housing type
+Like other income groups, most extremely low-income households live in detached single-family homes or townhomes. Among renters, single-family homes are the most common type but are not the majority. A large portion of renters live in smaller apartment buildings, with slightly smaller shares in medium and large-sized buildings. 
 
 ```{r}
 #| label: fig-30-str
@@ -525,14 +521,13 @@ read_rds("data/spectrum_reg/fig_30_str.rds") |>
 
 ```
 
+The majority of total aggregate income earned by extremely-low income households comes from wages earned from work. This share is larger (70%) for younger renter households who are more likely to be of working age. Among homeowners, nearly equal amounts come from both wages and Social Security, which reflect their higher average ages. Only a small fraction (about 5%) of income for these households comes from public assistance programs.[^pa]
 
-Sources of income
-
-...
+[^pa]: This total combines the separate two ACS estimates for *Supplemental Security Income (SSI)* and for *Public assistance programs*. The latter includes Temporary Assistance to Needy Families (TANF) and other forms of cash benefits. Noncash benefits, such as Food Stamps, are excluded.
 
 ```{r}
 #| label: fig-30-soi
-#| fig-cap: "Total income amounts by source"
+#| fig-cap: "Income sources for households below 30% AMI"
 
 read_rds("data/spectrum_reg/fig_30_soi.rds") |> 
   ggplot(aes(x = pct, y = tenure, fill = inc)) +
@@ -547,7 +542,7 @@ read_rds("data/spectrum_reg/fig_30_soi.rds") |>
   scale_fill_hda(-1, guide = guide_legend(reverse = T)) +
   labs(
     title = "Income sources for households below 30% AMI",
-    subtitle = "Percent of total annual income by source",
+    subtitle = "Percent of total aggregate annual income by source",
     caption = pums_cap
   ) +
   theme_hda(
@@ -559,18 +554,84 @@ read_rds("data/spectrum_reg/fig_30_soi.rds") |>
 
 ```
 
+The amounts households below 30% AMI spend on housing each month highly depends on whether they own or rent. Average homeowner costs are less than \$800---with many paying less than \$500 monthly---likely due to many seniors who have paid off their mortgages, and now must only pay property taxes and insurance. The average renter, on the other hand, pays more than \$1,100 for their apartment.
 
-Public assistance
+```{r}
+#| label: fig-30-costs
+#| fig-cap: "Monthly housing costs for households below 30% AMI"
 
-Housing costs
+costs_wm <- read_rds("data/spectrum_reg/costs_wm.rds")
 
+read_rds("data/spectrum_reg/fig_ami_costs.rds") |>
+  filter(ami_faar == "Below 30% AMI") |>
+  ggplot() +
+  geom_density_ridges2(
+    aes(x = costs, y = tenure, fill = tenure, weight = WGTP, scale = 2.5),
+    color = NA,
+    alpha = 0.75,
+    linewidth = 0.75
+  ) +
+  geom_text(
+    data = filter(costs_wm, ami_faar == "Below 30% AMI"),
+    aes(x = wm, y = tenure, label = paste0(label_dollar()(wm), "\n", "|")),
+    color = "white",
+    size = 5,
+    lineheight = 0.8,
+    nudge_y = 0.2
+  ) +
+  scale_fill_hda() +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0, 2600),
+    expand = c(0.01, 0),
+    labels = label_dollar(),
+    position = "top"
+  ) +
+  labs(
+    title = "Monthly housing costs for households below 30% AMI",
+    subtitle = "Median monthly costs in white",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    flip_gridlines = TRUE,
+    axis.text.x = element_text(size = 11, vjust = 0),
+    axis.text.y = element_text(vjust = -2)
+  )
 
-Year moved
+```
 
+More than 2 in 3 extremely low-income households spend more than 30% of their gross income on basic housing costs. Worse, most of these households are severely cost-burdened---dedicating more than 50% of their income toward housing.
+
+```{r}
+#| label: fig-30-cb
+#| fig-cap: "Housing affordability for households below 30% AMI"
+
+read_rds("data/spectrum_reg/fig_30_cb.rds") |> 
+  ggplot(aes(x = pct, y = tenure, fill = cb_label)) +
+  facet_wrap(~tenure, ncol = 1, scales = "free_y") +
+  geom_col() +
+  geom_text(
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_fill_manual(values = cb_pal, guide = guide_legend(reverse = T)) +
+  labs(
+    title = "Housing affordability for households below 30% AMI",
+    subtitle = "Percent of households by housing cost burden",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    legend.position = "top",
+    legend.justification = "left",
+    axis.text = element_blank(),
+    strip.text = element_markdown(hjust = 0)
+  )
+
+```
 
 ## 30-50% AMI
-
-...
 
 ```{r}
 #| label: tbl-30-50
