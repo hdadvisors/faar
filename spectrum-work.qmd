@@ -9,14 +9,497 @@
 source("_common.R")
 
 # Load packages other than tidyverse and hdatools
-# 
-# library(scales)
+
+library(tidycensus)
+library(srvyr)
+library(ggridges)
+library(waffle)
+
+# Load PUMS data
+pums_faar <- read_rds("data/pums/pums_faar.rds")
+
+# Household records only
+pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
 ```
 
 . . .
 
 ```{r}
+
+pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
+
+pums_faar |> 
+  filter(!is.na(pow_label)) |> 
+  mutate(
+    pow_label = case_match(
+      pow_label,
+      "Fredericksburg area" ~ pow_label,
+      "Northern Virginia" ~ "Northern Virginia and D.C.",
+      "Washington, DC " ~ "Northern Virginia and D.C.",
+      "Maryland" ~ "Another state",
+      "Another state" ~ pow_label,
+      .default = "Somewhere else in Virginia"
+    )
+  ) |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(pow_label) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  ungroup() |> 
+  mutate(
+    pct = n/sum(n)
+  ) |> 
+  ggplot(aes(x = pct, y = fct_reorder(pow_label, pct), fill = pow_label)) +
+  geom_col() +
+  geom_text(
+    aes(label = label_percent()(pct)),
+    hjust = 0,
+    nudge_x = 0.01
+  ) +
+  scale_fill_hda(-1) +
+  scale_y_discrete(labels = label_wrap(16)) +
+  scale_x_continuous(
+    limits = c(0, 0.75),
+    expand = c(0, 0),
+    labels = label_percent()
+    ) +
+  add_zero_line("x") +
+  labs(
+    title = "Place of work for job holders who live in region",
+    subtitle = "All workers over 16",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    flip_gridlines = T,
+    axis.text.y = element_text(size = 12)
+  )
+
+```
+
+. . . 
+
+```{r}
+
+# pums_faar_hh |>
+#   to_survey(type = "housing", design = "rep_weights") |>
+#   group_by(core_workforce, hh_earners) |> 
+#   summarise(
+#     n = survey_total(vartype = "cv")
+#   ) 
+
+pums_faar_hh |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "At least one earner in core workforce",
+      hh_earners < 1 ~ "No earners",
+      .default = "All earners work outside region"
+    )
+  ) |> 
+  #filter(core_workforce == TRUE) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(wf) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  ungroup() |> 
+  mutate(
+    pct = n/sum(n),
+    color = case_when(
+      wf == "At least one earner in core workforce" ~ "1",
+      .default = "0"
+    )
+  ) |> 
+  ggplot(aes(x = pct, y = fct_reorder(wf, pct), fill = color, color = color)) +
+  geom_col() +
+  geom_text(
+    aes(label = label_percent()(pct)),
+    hjust = 0,
+    nudge_x = 0.01
+  ) +
+  scale_fill_hda(-1) +
+  scale_color_hda(-1) +
+  scale_y_discrete(labels = label_wrap(16)) +
+  scale_x_continuous(
+    limits = c(0, 0.75),
+    expand = c(0, 0),
+    labels = label_percent()
+    ) +
+  add_zero_line("x") +
+  labs(
+    title = "Households in the core workforce",
+    subtitle = "All households in GWRC region",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    flip_gridlines = T,
+    axis.text.y = element_text(size = 12)
+  )
+
+```
+
+. . . 
+
+```{r}
+
+library(formattable)
+
+pums_faar |> 
+  filter(pow_label == "Fredericksburg area") |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(naics_group) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  slice_max(pct, n = 5) |> 
+  mutate(
+    n = comma(n, digits = 0),
+    pct = percent(pct, digits = 0)
+  ) |> 
+  select(-3) |> 
+  kbl(
+    col.names = c("Industry group", "Workers", "Percent"),
+    align = "lrr"
+  ) |>
+  kable_styling(c("condensed", "striped"), full_width = T)
+
+```
+
+. . .
+
+```{r}
+
+pums_faar |> 
+  filter(pow_label == "Fredericksburg area") |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(soc_group) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  slice_max(pct, n = 5) |> 
+  mutate(
+    n = comma(n, digits = 0),
+    pct = percent(pct, digits = 0)
+  ) |> 
+  select(-3) |> 
+  kbl(
+    col.names = c("Occupational group", "Workers", "Percent"),
+    align = "lrr"
+  ) |>
+  kable_styling(c("condensed", "striped"), full_width = T)
+
+```
+
+. . .
+
+```{r}
+
+fig_subtitle <- paste(
+  "Percent of households in",
+  "<span style='color: #445ca9'><b>core workforce</b></span> or",
+  "<span style='color: #8baeaa'><b>non-core workforce</b></span>"
+)
+
+pums_faar_hh |> 
+  filter(hh_income > 0, hh_earners > 0) |> 
+  mutate(
+    wf = fct_case_when(
+      core_workforce == TRUE ~ "Core workforce",
+      core_workforce == FALSE ~  "Non-core workforce"
+    )
+  ) |>
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(wf, ami_faar) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |> 
+  ungroup() |> 
+  ggplot(aes(x = ami_faar, y = pct, fill = wf)) +
+  #facet_wrap(~wf) +
+  geom_col(
+    width = 0.9,
+    position = position_dodge2(0.9)
+    ) +
+  geom_text(
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_dodge2(0.9),
+    color = "white",
+    vjust = 2,
+    hjust = 0.5
+  ) +
+  scale_fill_hda() +
+  scale_color_hda() +
+  scale_x_discrete(labels = label_wrap(20)) +
+  scale_y_continuous(
+    limits = c(0, 0.43),
+    expand = c(0.01, 0.01),
+    breaks = seq(0, 1, 0.1),
+    labels = label_percent(accuracy = 1)
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Core and non-core workforce households by AMI",
+    subtitle = fig_subtitle,
+    caption = pums_cap
+  ) +
+  theme_hda(flip_gridlines = F)
+
+
+```
+
+
+```{r}
+
+pums_faar_hh |> 
+  filter(core_workforce == TRUE) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, hh_type) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup() |> 
+  ggplot(
+    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = hh_type)
+  ) +
+  facet_wrap(~ami_faar) +
+  geom_rect() +
+  geom_text(
+    data = . %>% filter(pct > 0.05),
+    aes(
+      x = 3.5,
+      y = pct_label,
+      label = label_percent(accuracy = 1)(pct)
+    ),
+    color = "white"
+  ) +
+  coord_polar(theta = "y", clip = "off") +
+  scale_x_continuous(
+    limits = c(2, 4),
+    expand = c(-0.1, 0)
+  ) +
+  scale_fill_hda() +
+  labs(
+    title = "Core workforce household types by AMI",
+    subtitle = "",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    legend.position = "right",
+    legend.justification = "top",
+    axis.text = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.spacing.x = unit(3, "lines")
+  )
+
+```
+
+```{r}
+
+costs_wm_wf <- pums_faar_hh |> 
+  filter(core_workforce == TRUE) |> 
+  mutate(
+    tenure = paste0(tenure, "s"),
+    costs = case_when(
+      cost_own == -1 ~ cost_rent,
+      .default = cost_own
+    )
+  ) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, tenure) |> 
+  summarise(
+    wm = survey_median(costs, vartype = "cv"),
+    q = survey_quantile(costs, c(0.1, 0.9))
+  ) |> 
+  ungroup()
+
+fig_subtitle2 <- paste(
+  "For ",
+  "<span style='color: #445ca9'><b>homeowners</b></span> and",
+  "<span style='color: #8baeaa'><b>renters</b></span>",
+  " (median monthly costs in white)"
+)
+
+pums_faar_hh |> 
+  filter(core_workforce == TRUE) |> 
+  mutate(
+    tenure = paste0(tenure, "s"),
+    costs = case_when(
+      cost_own == -1 ~ cost_rent,
+      .default = cost_own
+    )
+  ) |> 
+  select(SERIALNO, WGTP, ami_faar, tenure, costs) |> 
+  ggplot() +
+  geom_density_ridges2(
+    aes(x = costs, y = tenure, fill = tenure, weight = WGTP, scale = 1),
+    color = NA,
+    alpha = 0.75,
+    linewidth = 0.75
+  ) +
+  geom_text(
+    data = filter(costs_wm_wf),
+    aes(x = wm, y = tenure, label = paste0(label_dollar()(wm), "\n", "|")),
+    color = "white",
+    size = 5,
+    lineheight = 0.8,
+    nudge_y = 0.1
+  ) +
+  facet_wrap(~ami_faar) +
+  scale_fill_hda() +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0, 2800),
+    expand = c(0.01, 0),
+    labels = label_dollar(),
+    position = "top"
+  ) +
+  labs(
+    title = "Monthly housing costs for core workforce households by AMI",
+    subtitle = fig_subtitle2,
+    caption = pums_cap
+  ) +
+  theme_hda(
+    panel.grid.major.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    panel.spacing.y = unit(1, "lines"),
+    strip.text = element_markdown(margin = margin(t = 3, b = 2))
+  )
+
+```
+
+```{r}
+
+fig_subtitle3 <- paste(
+  "Percent of households ",
+  "<span style='color: #e9ab3f'><b>cost-burdened</b></span> or",
+  "<span style='color: #e76f52'><b>severely cost-burdened</b></span>"
+)
+
+pums_faar_hh |> 
+  filter(core_workforce == TRUE) |> 
+  mutate(tenure = paste0(tenure, "s")) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, cb_label) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup() |> 
+  filter(cb_label != "Not cost-burdened") |> 
+  ggplot(aes(x = ami_faar, y = pct, fill = cb_label)) +
+  facet_wrap(~ami_faar, nrow = 1, scales = "free_x") +
+  geom_col() +
+  geom_text(
+    data = . %>% filter(pct > 0.04),
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_y_continuous(expand = c(0,0.03)) +
+  scale_fill_manual(values = c(cb_pal[1], cb_pal[2])) +
+  labs(
+    title = "Housing affordability for core workforce by AMI",
+    subtitle = fig_subtitle3,
+    caption = pums_cap
+  ) +
+  add_zero_line() +
+  theme_hda(
+    panel.grid.major.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    strip.text = element_markdown(margin = margin(t = 5))
+  )
+
+```
+
+
+
+```{r}
+#| eval: false
+
+pums_faar_hh |>
+  filter(hh_income > 0) |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "Core workforce",
+      hh_earners < 1 ~ "Not in workforce",
+      .default = "Non-core workforce"
+    )
+  ) |> 
+  filter(wf != "Not in workforce") |> 
+  ggplot(aes(x = hh_income, y = wf, fill = wf)) +
+  facet_wrap(~ami_faar, scales = "free_x") +
+  geom_density_ridges2(
+    aes(weight = PWGTP, scale = 2, rel_min_height = 0.01),
+    color = NA,
+    alpha = 0.75,
+    linewidth = 0.75
+  ) +
+  #geom_density_ridges2(
+  #  data = . %>% filter(wf == "Non-core workforce"),
+  #  aes(x = hh_income, y = ami_faar, weight = PWGTP, scale = 1.25, rel_min_height = 0.01),
+  #  fill = NA,
+  #  color = hda_pal[2],
+  #  alpha = 0.5,
+  #  linewidth = 0.5
+  #) +
+  #geom_density_ridges2(
+  #  data = . %>% filter(wf == "Core workforce"),
+  #  aes(x = hh_income, y = ami_faar, weight = PWGTP, scale = 1.25),
+  #  fill = hda_pal[1],
+  #  color = NA,
+  #  alpha = 0.75,
+  #  linewidth = 0.75
+  #) +
+  #geom_text(
+  #  data = ami_wm,
+  #  aes(x = wm, y = ami_faar, label = paste0(label_dollar()(wm), "\n", "|")),
+  #  color = "white",
+  #  size = 3,
+  #  lineheight = 0.8,
+  #  nudge_y = 0.2
+  #) +
+  scale_fill_hda() +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    #breaks = c(0, 20000, 40000, 60000, 80000),
+    expand = c(0.01, 0),
+    labels = label_dollar(scale = 0.001, suffix = "k"),
+    position = "bottom"
+  ) +
+  labs(
+    title = "Distribution of household incomes by AMI",
+    subtitle = "Median household incomes in white",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    panel.grid.major = element_blank(),
+    legend.position = "top",
+    axis.text.x = element_text(size = 11, vjust = 0, margin = margin(b = 10)),
+    axis.text.y = element_blank()
+  )
 
 ```
 

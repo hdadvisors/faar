@@ -48,7 +48,7 @@ fsa <- data.frame(
 
 mfi <- data.frame(
   area = unique(faar_ami_all$area),
-  mfi = c(154700, 102800, 110400, 124000, 116300)
+  mfi = c(154700, 102800, 124000, 107100, 116300)
 )
 
 hmfrs <- unique(faar_ami_all$area)
@@ -162,11 +162,11 @@ hud_ami_areas |>
   filter(GEOID %in% faar_fips) |> 
   mutate(
     msa = case_when(
-      county %in% c("033", "099") ~ "Non-metro",
+      county %in% c("033", "099", "137") ~ "Non-metro",
       .default = "Washington-Arlington-Alexandria, DC-VA-MD-WV Metro Area"
     )
   ) |> 
-  arrange(desc(msa), desc(hud_area_name)) |> 
+  arrange(desc(msa), County_Name) |> 
   select(msa, hud_area_name, County_Name) |> 
   kable(
     col.names = c("OMB Designation", "HUD Income Limit Area", "Locality")
@@ -195,7 +195,8 @@ This map shows HUD income limit areas by color for localities in the Fredericksb
 
 hda_leaflet_colors <- colorFactor(
   palette = hda_pal_discrete(direction = 1)(4),  # Assuming you want to use all 6 colors
-  domain = hud_ami_counties$hud_area_name
+  domain = hud_ami_counties$hud_area_name,
+  ordered = TRUE
 )
 
 leaflet(options = leafletOptions(zoomControl = FALSE)) |> 
@@ -245,7 +246,7 @@ leaflet(options = leafletOptions(zoomControl = FALSE)) |>
   addLegend(
     data = hud_ami_counties,
     pal = hda_leaflet_colors,
-    values = ~hud_area_name,
+    values = ~fct_rev(hud_area_name),
     opacity = 0.8,
     title = "HUD FY 2024 Income Limit Areas",
     position = "topleft"
@@ -279,10 +280,9 @@ The official HUD FY 2024 MFIs that apply to the Fredericksburg region range from
 mfi |> 
   filter(area != "Planning District 16") |> 
   mutate(
-    area = fct_reorder(area, mfi),
     area = str_replace_all(area, "n-Al", "n-\nAl")  
   ) |> 
-  ggplot(aes(x = mfi, y = area, label = label_dollar()(mfi))) +
+  ggplot(aes(x = mfi, y = fct_reorder(area, mfi), label = label_dollar()(mfi))) +
   geom_col(fill = hda_pal[1]) +
   geom_text(
     color = "white",
@@ -312,21 +312,25 @@ The chart below shows the actual income limits (at 30%, 50%, and 80% AMI) for ea
 
 hud_ami_plot <- faar_ami_all |> 
   filter(
-    area != "Planning District 16",
-    #str_detect(hh_size, "[1234]" ),
-    str_detect(level, "[358]")
-  ) |> 
-  filter(
+    str_detect(level, "[358]"),
     !(str_starts(area, "W|K") & cap == "Uncapped" & level == "80% AMI")
   ) |> 
+  arrange(area, level, hh_size) |> 
   group_by(area, hh_size) |> 
-  mutate(area = str_replace_all(area, "n-Al", "n-\nAl")) |> 
   mutate(
     income_plot = case_when(
       level == "30% AMI" ~ income,
       .default = income - lag(income)
     )
-  )
+  ) |> 
+  ungroup() |> 
+  mutate(
+    area = str_replace_all(area, "n-Al", "n-\nAl")
+  ) |> 
+  mutate(
+    area = fct_reorder(area, income, min)
+  ) |> 
+  filter(area != "Planning District 16")
 
 label <- data.frame(
   hh_size = 1,
@@ -356,7 +360,8 @@ hud_ami_plot |>
       yend = income,
       color = level
     ),
-    linewidth = 2
+    linewidth = 2,
+    alpha = 1
   ) +
   geom_richtext(
     data = label,
@@ -369,7 +374,7 @@ hud_ami_plot |>
     fill = NA,
     label.color = NA
   ) +
-  facet_wrap(~area, nrow = 1, labeller = labeller(area = markdown_wrap_gen(16))) +
+  facet_wrap(vars(area), nrow = 1, labeller = labeller(area = markdown_wrap_gen(16))) +
   scale_fill_hda(guide = "none") +
   scale_color_hda(-1) +
   scale_y_continuous(
@@ -385,6 +390,7 @@ hud_ami_plot |>
   ) +
   add_zero_line("y") +
   theme_hda()
+
 
 ```
 

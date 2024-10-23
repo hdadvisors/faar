@@ -80,18 +80,19 @@ faar_pums_pow <- faar_pums_earners |>
   mutate(
     pow_geoid = case_when(
       is.na(POWSP) ~ NA,
-      POWPUMA10 != "-0009" ~ paste0(POWSP, POWPUMA10),
-      POWPUMA20 != "-0009" ~ paste0(POWSP, POWPUMA20)
+      POWPUMA10 != "-0009" ~ paste0("10-", POWSP, POWPUMA10),
+      POWPUMA20 != "-0009" ~ paste0("20-", POWSP, POWPUMA20)
     )
   ) |>
   # Join POW lookup data
-  left_join(powpuma_lookup, relationship = "many-to-many") |> 
+  left_join(powpuma_lookup) |> 
   # Retain Virginia region labels and add DC/MD labels
   mutate(
     pow_label = case_when(
       POWSP == "51" ~ pow_label,
       POWSP == "11" ~ "Washington, DC",
       POWSP == "24" ~ "Maryland",
+      !is.na(POWSP) ~ "Another state",
       .default = NA
     )
   ) |> 

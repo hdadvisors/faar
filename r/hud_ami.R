@@ -5,6 +5,7 @@
 library(tidyverse)
 library(readxl)
 library(tigris)
+library(sf)
 
 # Load HUD FY 2024 Income Limits and filter to 3 FMR areas in FAAR region
 
@@ -13,8 +14,9 @@ hud_ami <- read_excel("data/raw/hud_ami_fy24.xlsx", sheet = "Section8-FY24") |>
     hud_area_name %in% c(
       "Washington-Arlington-Alexandria, DC-VA-MD HUD Metro FMR Area",
       "Caroline County, VA",
-      "Culpeper County, VA HUD Metro FMR Area",
-      "King George County, VA")
+      "King George County, VA",
+      "Orange County, VA"
+      )
   )
 
 # Save AMI area assignments
@@ -114,17 +116,7 @@ dc_ami <- calc_ami(
   mutate(cap = "Uncapped", .after = 1)
 
 
-# 5. Calculate Culpeper 100% and 120% income limits -------
-
-culp_ami <- calc_ami(
-  110400,
-  "Culpeper County, VA HUD Metro FMR Area",
-  c(100, 120)
-) |> 
-  mutate(cap = "Uncapped", .after = 1)
-
-
-# 6. Calculate Caroline 100% and 120% income limits -------
+# 5. Calculate Caroline 100% and 120% income limits -------
 
 caro_ami <- calc_ami(
   102800,
@@ -134,7 +126,7 @@ caro_ami <- calc_ami(
   mutate(cap = "Uncapped", .after = 1)
 
 
-# 7. Calculate "uncapped" King George income limits -------
+# 6. Calculate "uncapped" King George income limits -------
 
 kg_ami <- calc_ami(
   124000,
@@ -144,17 +136,29 @@ kg_ami <- calc_ami(
   mutate(cap = "Uncapped", .after = 1)
 
 
+# 7. Calculate Culpeper 100% and 120% income limits -------
+
+orng_ami <- calc_ami(
+  107100,
+  "Orange County, VA",
+  c(100, 120)
+) |> 
+  mutate(cap = "Uncapped", .after = 1)
+
+
 # 8. Combine all AMI values -------------------------------
 
 faar_ami_pums <- read_rds("data/pums/faar_ami_pums.rds")
 
 faar_ami_all <- hud_ami_cap |> 
-  bind_rows(dc_ami, culp_ami, caro_ami, kg_ami, faar_ami_pums)
+  bind_rows(dc_ami, caro_ami, kg_ami, orng_ami, faar_ami_pums)
 
 write_rds(faar_ami_all, "data/ami/faar_ami_all.rds")
 
 
 # 9. Get geographies for mapping AMI areas ----------------
+
+faar_fips <- c("51033", "51099", "51137", "51177", "51179", "51630")
 
 hud_ami_counties <- counties(state = c("DC", "MD", "VA"), year = 2021, progress_bar = FALSE) |> 
   select(GEOID, geometry) |> 

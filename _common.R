@@ -40,7 +40,7 @@ cb_pal <- c(
 
 # List of FAAR region locality FIPS codes
 
-faar_fips <- c("51033", "51047", "51099", "51177", "51179", "51630")
+faar_fips <- c("51033", "51099", "51137", "51177", "51179", "51630")
 
 # Set plot rendering options
 

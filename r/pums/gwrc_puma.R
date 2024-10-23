@@ -59,7 +59,8 @@ mapview(va_local) + mapview(gwrc)
 ## Make PUMA lookup file for place-of-work ----------------
 
 powpuma_lookup <- read_csv("data/pums/puma_pow.csv") |> 
-  mutate(pow_geoid = paste0(st, pow_puma)) |> 
+  mutate(version = str_sub(version, -2)) |> 
+  mutate(pow_geoid = paste0(version, "-", st, pow_puma)) |> 
   select(1:2, 5:6, 8, 7) |> 
   distinct()
 

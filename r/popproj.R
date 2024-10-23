@@ -20,7 +20,7 @@ library(tigris)
 va_counties <- counties("VA", cb = TRUE)
 
 # Load weldon center data 
-wecoop <- wecoop %>%
+wecoop <- read_rds("data/wecoop.rds") %>%
   mutate(fips = as.character(fips))
 
 #List of FAAR counties

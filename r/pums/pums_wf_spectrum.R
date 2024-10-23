@@ -22,10 +22,25 @@ pums_wf_hh <- pums_wf |> filter(SPORDER == 1)
 # Person records only
 pums_wf_wkr <- pums_wf |> filter(pow_label == "Fredericksburg area")
 
+#                           ACS     PUMS    
+# Worked in Virginia:       180054  167072      
+# Worked outside Virginia:  12291   11873   
+
+# POWPUMA2010 0000N:  188606
+#             -0009:  38003
+#             51115:  54323
+#             51120:  44853
+#             FAAR:   99176
+# POWPUMA2020 0000N:  188606
+#             -0009:  150558
+#             17900:  14499
+#             17700:  11637
+#             FAAR:   26136
+# FAAR CF:            125312
 
 ## Workforce breakdown ------------------------------------
 
-pums_wf |> 
+faar_pums_pow |> left_join(pums_wgt) |> 
   filter(!is.na(pow_label)) |> 
   to_survey(type = "person", design = "rep_weights") |>
   group_by(pow_label) |> 
@@ -35,7 +50,7 @@ pums_wf |>
   ungroup() |> 
   mutate(
     pct = n/sum(n)
-  ) |> arrange(n)
+  ) |> arrange(desc(n))
 
 ## Household typologies -----------------------------------
 
@@ -145,10 +160,17 @@ write_rds(fig_ami, "data/spectrum_reg/fig_ami.rds")
 
 ## fig-ami-dist -------------------------------------------
 
-ami_wm <- pums_faar_hh |> 
+ami_wm_wf <- pums_faar_hh |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "Core workforce",
+      hh_earners < 1 ~ "Not in workforce",
+      .default = "Non-core workforce"
+    )
+  ) |> 
   to_survey(type = "housing", design = "rep_weights") |>
   filter(hh_income > 0) |> 
-  group_by(ami_faar) |> 
+  group_by(wf, ami_faar) |> 
   summarise(
     wm = survey_median(hh_income, vartype = "cv"),
     q = survey_quantile(hh_income, c(0.1, 0.9))
