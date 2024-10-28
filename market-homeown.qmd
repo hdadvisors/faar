@@ -8,6 +8,7 @@
 
 install.packages("rmarkdown")
 install.packages("tidyverse")
+install.packages("knitr")
 
 source("_common.R")
 
@@ -60,7 +61,21 @@ ggplot(owner_supply,
 
 ```
 
-Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024. While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
+Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024.[^2] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
+
+[^2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
+
+```{r}
+#| label: fig-owner-costs
+#| fig-cap: "Monthly Owner Costs and Interest Rates"
+
+
+
+
+
+```
+
+
 
 
 
