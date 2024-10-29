@@ -71,3 +71,34 @@ ggplot() +
     legend.key.height = unit(1, "cm"),
     legend.key.width = unit(0.5, "cm")
   )
+
+avg_hh_size = 2.854
+
+pop <- read_csv("data/raw/pop-total.csv") |> 
+  filter(as.character(GEOID) %in% faar_fips, year == 2022) |> 
+  mutate(fips = as.character(GEOID)) |> 
+  select(5, pop2022 = 4) 
+
+faar_fips <- unique(wecoop$fips)
+
+faar_proj <- wecoop |> 
+  group_by(fips, name) |> 
+  summarize(
+    proj2030 = value[year == 2030],
+    proj2040 = value[year == 2040],
+    proj2050 = value[year == 2050]
+  ) |> 
+  left_join(pop) |> 
+  mutate(
+    d2030 = (proj2030 - pop2022)/avg_hh_size,
+    d2040 = (proj2040 - proj2030)/avg_hh_size,
+    d2050 = (proj2050 - proj2040)/avg_hh_size
+  ) |> 
+  ungroup()
+  
+faar_proj |> 
+  summarise(
+    hh2030 = sum(d2030),
+    hh2040 = sum(d2030 + d2040),
+    hh2050 = sum(d2030 + d2040 + d2050)
+  )

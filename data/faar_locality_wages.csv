@@ -11,8 +11,8 @@ Stafford,Teacher,Teacher,"69,226.00",average,24,VDOE Report Data
 Caroline ,Teacher,Teacher,"52,940.00",average,24,VDOE Report Data
 King George,Teacher,Teacher,"65,027.00",average,24,VDOE Report Data
 Orange,Teacher,Teacher,"56,932.00",average,24,VDOE Report Data
-Orange,Fire/EMS,Firefighter/EMT,"51,320.00",median ,,email with HR
-Orange,Fire/Medic,Firefighter/Medic,"56,577.00",median ,,email with HR
+Orange,Firefighter,Firefighter/EMT,"51,320.00",median ,,email with HR
+Orange,Firefighter,Firefighter/Medic,"56,577.00",median ,,email with HR
 Orange,Police Officer,Sherriff's Deputy/Police Officer,"52,500.00",median ,,email with HR
 Orange,Social Worker,Social Services Worker - Benefits Program Specialist,"32,415.00",median ,,email with HR
 King George,Police Officer,Parole and Probation Officer,"58,065.00",average,22,BLS - Parole and Probation Offices
@@ -25,7 +25,7 @@ Orange,Social Worker,Social Assistance,"49,302.00",average,22,BLS - Social Assis
 Fredericksburg,Social Worker,Social Assistance,"53,162.00",average,22,BLS - Social Assistance
 King George,Social Worker,Social Assistance,"71,308.00",average,22,BLS - Social Assistance
 Caroline ,Social Worker,Social Assistance,"69,990.00",average,22,BLS - Social Assistance
-Fredericksburg,Fire,Fire Protection,"76,354.00",average,22,BLS - Fire Protection
-Orange,Fire,Fire Protection,"18,112.00",average,22,BLS - Fire Protection
-Stafford,Fire,Fire Protection,"100,470.00",average,22,BLS - Fire Protection
-Spotsylvania,Fire,Fire Protection,"87,705.00",average,22,BLS - Fire Protection
+Fredericksburg,Firefighter,Fire Protection,"76,354.00",average,22,BLS - Fire Protection
+Orange,Firefighter,Fire Protection,"18,112.00",average,22,BLS - Fire Protection
+Stafford,Firefighter,Fire Protection,"100,470.00",average,22,BLS - Fire Protection
+Spotsylvania,Firefighter,Fire Protection,"87,705.00",average,22,BLS - Fire Protection

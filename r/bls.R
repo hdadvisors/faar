@@ -3,7 +3,7 @@ library(tidyverse)
 library(fredr)
 library(zoo)
 
-years <- 2015:2022
+years <- 2015:2023
 
 cnty <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
@@ -44,8 +44,44 @@ qcew_data_cpi <- qcew_data |>
   left_join(cpi, by = 'year') |> 
   transform(adj_pay = ((311.8802/priceindex)*avg_annual_pay))
 
-write_rds(qcew_data_cpi, "data/qcew_data.rds)
+cnty_names <- data.frame(
+  fips = as.integer(cnty),
+  name = c("Fredericksburg", "Caroline", "King George", "Spotsylvania", "Stafford", "Orange")
+)
 
+qcew_data |> 
+  select(
+    fips = area_fips,
+    year,
+    emp = annual_avg_emplvl
+  ) |> 
+  left_join(cnty_names) |> 
+  write_rds("data/qcew_data.rds")
+
+qcew_plot <- read_rds("data/qcew_data.rds") |> 
+  group_by(year) |> 
+  summarise(emp = sum(emp)) |> 
+  arrange(year) |> # Get in correct order
+  mutate(
+    chg = emp - first(emp), # Cumulative change
+    pct_chg = chg / first(emp)
+  )
+
+qcew_plot |> 
+  filter(year != 2015) |> 
+  ggplot(aes(x = year, y = chg)) +
+  geom_col(fill = "#445ca9") +
+  scale_x_continuous(breaks = seq(2016, 2023, 1)) +
+  scale_y_continuous(labels = label_comma()) +
+  add_zero_line() +
+  labs(
+    title = "Cumulative job growth in Fredericksburg area",
+    subtitle = "2016 through 2023",
+    caption = "**Source:** Bureau of Labor Statistics, Quarterly Census of Employment and Wages"
+  ) +
+  theme_hda(base_size = 16)
+
+####
 
 oews_2023 <- read_xlsx("data/raw/oews_va_2023.xlsx",
                        sheet = "dc",

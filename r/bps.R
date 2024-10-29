@@ -4,7 +4,7 @@ library(tigris)
 faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
 
-bps_years <- 2000:2022
+bps_years <- 2000:2023
 
 header_rows <- read_csv("https://www2.census.gov/econ/bps/County/co2020a.txt", 
                         col_names = FALSE,
@@ -33,14 +33,14 @@ cbps_raw <- map_df(bps_years, ~{
 })
 
 
-# Read in latest 2023 cumulative data (thru July)
+# Read in latest 2024 cumulative data (thru July)
 
-cbps_ytd <- read_csv("https://www2.census.gov/econ/bps/County/co2307y.txt", 
+cbps_ytd <- read_csv("https://www2.census.gov/econ/bps/County/co2408y.txt", 
                      col_names = FALSE,
                      skip = 2) |> 
   select(X1:X18) |> 
   set_names(column_names) |> 
-  mutate(`Survey: Date` = 2023)
+  mutate(`Survey: Date` = 2024)
 
 
 cbps_data <- cbps_raw |> 
@@ -62,7 +62,16 @@ faar_cbps <- cbps_data |>
   left_join(counties("VA", year = 2021), by = "GEOID") |> 
   select(GEOID, NAMELSAD, year, type, units) |> 
   group_by(GEOID, NAMELSAD, year, type) |> 
-  summarise(units = sum(units))
+  summarise(units = sum(units)) |> 
+  ungroup()
 
 
 write_rds(faar_cbps, "data/faar_cbps.rds")
+
+
+faar_cbps |> 
+  filter(year > 2015) |> 
+  group_by(year) |> 
+  summarize(
+    total = sum(units)
+  )
