@@ -21,7 +21,6 @@ book:
   chapters:
     - index.qmd
     - exec-sum.qmd
-  # - background.qmd
     - engagement.qmd
     - data-notes.qmd
     - part: "Housing spectrum"

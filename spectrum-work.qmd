@@ -21,13 +21,32 @@ pums_faar <- read_rds("data/pums/pums_faar.rds")
 # Household records only
 pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
+pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
+
+scale_text_size <- function(scale_factor = 1, base_size = 14, output_format = NULL) {
+  actual_format <- get_output_format(output_format)
+  adjusted_base_size <- adjust_base_size(base_size, 4, 7, actual_format)
+  adjusted_base_size * scale_factor
+}
+
+
 ```
 
-. . .
+This chapter assesses the housing spectrum for the region's *core workforce*. This includes all households where at least one member is employed at a job also located within the region. 
+
+::: {.callout-tip}
+### Defining the "core workforce"
+
+For every record of an employed person, the Public Use Microdata Sample (PUMS) includes a variable for the place-of-work Public Use Microdata Area ("POWPUMA"). Households with at least one person who has worked in the last 12 months *and* whose POWPUMA values correspond to the Fredericksburg area (Planning District 16) were designated as members of the core workforce.
+:::
+
+## Identifying the core workforce
+
+Overall commuting trends --- 2/3 of all workers are in core workforce
 
 ```{r}
-
-pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
+#| label: fig-pow-jobs
+#| fig-cap: "Place of work for job holders who live in region"
 
 pums_faar |> 
   filter(!is.na(pow_label)) |> 
@@ -54,11 +73,13 @@ pums_faar |>
   ggplot(aes(x = pct, y = fct_reorder(pow_label, pct), fill = pow_label)) +
   geom_col() +
   geom_text(
-    aes(label = label_percent()(pct)),
+    aes(label = label_percent()(pct), color = pow_label),
+    size = rel(12/2.835),
     hjust = 0,
     nudge_x = 0.01
   ) +
   scale_fill_hda(-1) +
+  scale_color_hda(-1) +
   scale_y_discrete(labels = label_wrap(16)) +
   scale_x_continuous(
     limits = c(0, 0.75),
@@ -73,14 +94,17 @@ pums_faar |>
   ) +
   theme_hda(
     flip_gridlines = T,
-    axis.text.y = element_text(size = 12)
+    axis.text.y = element_text(size = rel(1.25))
   )
 
 ```
 
-. . . 
+When sorted into their respective households --- most households are part of core workforce (79,545, 60.2%)
+
 
 ```{r}
+#| label: fig-wf-hh
+#| fig-cap: "Households in the core workforce"
 
 # pums_faar_hh |>
 #   to_survey(type = "housing", design = "rep_weights") |>
@@ -115,6 +139,7 @@ pums_faar_hh |>
   geom_col() +
   geom_text(
     aes(label = label_percent()(pct)),
+    size = rel(14/2.835),
     hjust = 0,
     nudge_x = 0.01
   ) +
@@ -134,14 +159,67 @@ pums_faar_hh |>
   ) +
   theme_hda(
     flip_gridlines = T,
-    axis.text.y = element_text(size = 12)
+    axis.text.y = element_text(size = rel(1.25))
   )
 
 ```
 
-. . . 
+## Common industries and occupations
+
+Most workers employed at private for-profit businesses in the region
 
 ```{r}
+#| label: fig-wkr-class
+#| fig-cap: "Class of workers in core workforce"
+
+pums_faar |> 
+  filter(last_work == "Within year" & wkr_class != "Non-earner") |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(wkr_class) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  ungroup() |> 
+  mutate(
+    pct = n/sum(n)
+  ) |> 
+  ggplot(aes(x = pct, y = fct_reorder(wkr_class, pct))) +
+  geom_col(
+    fill = hda_pal[1]
+  ) +
+  geom_text(
+    aes(label = label_percent()(pct)),
+    color = hda_pal[1],
+    size = rel(12/2.835),
+    hjust = 0,
+    nudge_x = 0.01
+  ) +
+  scale_fill_hda() +
+  scale_color_hda() +
+  scale_y_discrete(labels = label_wrap(16)) +
+  scale_x_continuous(
+    limits = c(0, 0.75),
+    expand = c(0, 0),
+    labels = label_percent()
+    ) +
+  add_zero_line("x") +
+  labs(
+    title = "Class of workers in core workforce",
+    subtitle = "All workers over 16 who worked in last 12 months",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    flip_gridlines = T,
+    axis.text.y = element_text(size = rel(1.25))
+  )
+
+```
+
+Most common industries where core workforce is employed
+
+```{r}
+#| label: tbl-wf-ind
+#| tbl-cap: "Top five most common core workforce industry groups"
 
 library(formattable)
 
@@ -169,9 +247,11 @@ pums_faar |>
 
 ```
 
-. . .
+Most common job types of core workforce --- across all industries
 
 ```{r}
+#| label: tbl-wf-occ
+#| tbl-cap: "Top five most common core workforce occupational groups"
 
 pums_faar |> 
   filter(pow_label == "Fredericksburg area") |> 
@@ -197,24 +277,31 @@ pums_faar |>
 
 ```
 
-. . .
+## Overview
+
+Core workforce households more likely to have incomes above 120% AMI, otherwise distribution is similar to households whose workers all have jobs outside of the region
 
 ```{r}
+#| label: fig-wf-ami
+#| fig-cap: "Households by workforce status and AMI"
 
 fig_subtitle <- paste(
-  "Percent of households in",
-  "<span style='color: #445ca9'><b>core workforce</b></span> or",
-  "<span style='color: #8baeaa'><b>non-core workforce</b></span>"
+  "Share of",
+  "<span style='color: #445ca9'><b>core workforce</b></span>,",
+  "<span style='color: #8baeaa'><b>non-core workforce</b></span>, and",
+  "<span style='color: #e9ab3f'><b>non-earner</b></span>",
+  "households"
 )
 
 pums_faar_hh |> 
-  filter(hh_income > 0, hh_earners > 0) |> 
+  filter(hh_income > 0) |> 
   mutate(
-    wf = fct_case_when(
-      core_workforce == TRUE ~ "Core workforce",
-      core_workforce == FALSE ~  "Non-core workforce"
+    wf = case_when(
+      core_workforce == TRUE ~ "At least one earner in core workforce",
+      hh_earners < 1 ~ "No earners",
+      .default = "All earners work outside region"
     )
-  ) |>
+  ) |> 
   to_survey(type = "housing", design = "rep_weights") |>
   group_by(wf, ami_faar) |> 
   summarise(
@@ -224,7 +311,15 @@ pums_faar_hh |>
     pct = n/sum(n)
   ) |> 
   ungroup() |> 
-  ggplot(aes(x = ami_faar, y = pct, fill = wf)) +
+  mutate(
+    wf = fct_relevel(
+      wf,
+      "At least one earner in core workforce",
+      "All earners work outside region",
+      "No earners"
+    )
+  ) |> 
+  ggplot(aes(x = ami_faar, y = pct, fill = wf, alpha = wf)) +
   #facet_wrap(~wf) +
   geom_col(
     width = 0.9,
@@ -239,6 +334,13 @@ pums_faar_hh |>
   ) +
   scale_fill_hda() +
   scale_color_hda() +
+  scale_alpha_manual(
+    values = c(
+      "At least one earner in core workforce" = 1,
+      "All earners work outside region" = 0.55,
+      "No earners" = 0.55
+    )
+  ) +
   scale_x_discrete(labels = label_wrap(20)) +
   scale_y_continuous(
     limits = c(0, 0.43),
@@ -248,7 +350,7 @@ pums_faar_hh |>
   ) +
   add_zero_line() +
   labs(
-    title = "Core and non-core workforce households by AMI",
+    title = "Households by workforce status and AMI",
     subtitle = fig_subtitle,
     caption = pums_cap
   ) +
@@ -258,7 +360,11 @@ pums_faar_hh |>
 ```
 
 
+...
+
 ```{r}
+#| label: fig-wf-hh-types
+#| fig-cap: "Core workforce household types by AMI"
 
 pums_faar_hh |> 
   filter(core_workforce == TRUE) |> 
@@ -308,6 +414,8 @@ pums_faar_hh |>
   )
 
 ```
+
+...
 
 ```{r}
 
@@ -383,6 +491,8 @@ pums_faar_hh |>
   )
 
 ```
+
+...
 
 ```{r}
 
