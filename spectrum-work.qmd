@@ -21,14 +21,10 @@ pums_faar <- read_rds("data/pums/pums_faar.rds")
 # Household records only
 pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 
+# Load PUMS data
+pums_wf_hh_types <- read_rds("data/pums/pums_wf_hh_types.rds")
+
 pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
-
-scale_text_size <- function(scale_factor = 1, base_size = 14, output_format = NULL) {
-  actual_format <- get_output_format(output_format)
-  adjusted_base_size <- adjust_base_size(base_size, 4, 7, actual_format)
-  adjusted_base_size * scale_factor
-}
-
 
 ```
 
@@ -40,7 +36,9 @@ This chapter assesses the housing spectrum for the region's *core workforce*. Th
 For every record of an employed person, the Public Use Microdata Sample (PUMS) includes a variable for the place-of-work Public Use Microdata Area ("POWPUMA"). Households with at least one person who has worked in the last 12 months *and* whose POWPUMA values correspond to the Fredericksburg area (Planning District 16) were designated as members of the core workforce.
 :::
 
-## Identifying the core workforce
+## Overview
+
+### Identifying the core workforce
 
 Overall commuting trends --- 2/3 of all workers are in core workforce
 
@@ -100,7 +98,6 @@ pums_faar |>
 ```
 
 When sorted into their respective households --- most households are part of core workforce (79,545, 60.2%)
-
 
 ```{r}
 #| label: fig-wf-hh
@@ -164,7 +161,7 @@ pums_faar_hh |>
 
 ```
 
-## Common industries and occupations
+### Common industries and occupations
 
 Most workers employed at private for-profit businesses in the region
 
@@ -277,13 +274,12 @@ pums_faar |>
 
 ```
 
-## Overview
+### Income
 
 Core workforce households more likely to have incomes above 120% AMI, otherwise distribution is similar to households whose workers all have jobs outside of the region
 
 ```{r}
-#| label: fig-wf-ami
-#| fig-cap: "Households by workforce status and AMI"
+#| eval: false
 
 fig_subtitle <- paste(
   "Share of",
@@ -319,9 +315,9 @@ pums_faar_hh |>
       "No earners"
     )
   ) |> 
-  ggplot(aes(x = ami_faar, y = pct, fill = wf, alpha = wf)) +
-  #facet_wrap(~wf) +
+  ggplot(aes(x = ami_faar, y = pct, fill = wf)) +
   geom_col(
+    aes(alpha = wf),
     width = 0.9,
     position = position_dodge2(0.9)
     ) +
@@ -329,6 +325,7 @@ pums_faar_hh |>
     aes(label = label_percent(accuracy = 1)(pct)),
     position = position_dodge2(0.9),
     color = "white",
+    size = rel(10/2.835),
     vjust = 2,
     hjust = 0.5
   ) +
@@ -359,61 +356,110 @@ pums_faar_hh |>
 
 ```
 
-
-...
-
 ```{r}
-#| label: fig-wf-hh-types
-#| fig-cap: "Core workforce household types by AMI"
+#| label: fig-wf-ami
+#| fig-cap: "Households by workforce status and AMI"
+
+ami_cols <- c(
+  "Above 120% AMI" = "#445ca9",
+  "100-120% AMI" = "#7a83b9",
+  "80-100% AMI" = "#aaacc8",
+  "50-80% AMI" = "#e3b5a9",
+  "30-50% AMI" = "#e8937d",
+  "Below 30% AMI" = "#e76f52"
+  )
 
 pums_faar_hh |> 
-  filter(core_workforce == TRUE) |> 
+  filter(hh_income > 0) |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "At least one earner in core workforce",
+      hh_earners < 1 ~ "No earners",
+      .default = "All earners work outside region"
+    )
+  ) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(ami_faar, hh_type) |> 
+  group_by(wf, ami_faar) |> 
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
   mutate(
-    pct = n/sum(n),
-    ymax = cumsum(pct),
-    ymin = c(0, head(ymax, n = -1)),
-    pct_label = (ymax + ymin)/2
-  ) |>
+    pct = n/sum(n)
+  ) |> 
   ungroup() |> 
-  ggplot(
-    aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.9, fill = hh_type)
+  mutate(
+    wf = fct_relevel(
+      wf,
+      "At least one earner in core workforce",
+      "All earners work outside region",
+      "No earners"
+    )
+  ) |> 
+  ggplot(aes(x = pct, y = fct_rev(wf), fill = fct_rev(ami_faar))) +
+  geom_col(
+    aes(alpha = wf)
   ) +
-  facet_wrap(~ami_faar) +
-  geom_rect() +
   geom_text(
-    data = . %>% filter(pct > 0.05),
-    aes(
-      x = 3.5,
-      y = pct_label,
-      label = label_percent(accuracy = 1)(pct)
-    ),
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
     color = "white"
   ) +
-  coord_polar(theta = "y", clip = "off") +
-  scale_x_continuous(
-    limits = c(2, 4),
-    expand = c(-0.1, 0)
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_discrete(labels = label_wrap(16)) +
+  scale_fill_manual(
+    values = ami_cols,
+    guide = guide_legend(nrow = 1, reverse = TRUE)
   ) +
-  scale_fill_hda() +
+  scale_alpha_manual(
+    values = c(
+      "At least one earner in core workforce" = 1,
+      "All earners work outside region" = 0.55,
+      "No earners" = 0.55
+    ),
+    guide = "none"
+  ) +
   labs(
-    title = "Core workforce household types by AMI",
-    subtitle = "",
+    title = "Households by workforce status and AMI",
+    subtitle = "Percent of households by income category",
     caption = pums_cap
   ) +
   theme_hda(
-    legend.position = "right",
-    legend.justification = "top",
-    axis.text = element_blank(),
+    legend.position = "top",
     panel.grid.major.y = element_blank(),
-    panel.spacing.x = unit(3, "lines")
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(size = rel(1.25))
   )
 
 ```
+
+
+## Household characteristics
+
+Most households in core workforce are headed by couples who both hold jobs in the region
+
+```{r}
+#| label: tbl-wf-hh-type
+#| tbl-cap: "Five most common core workforce household types"
+
+pums_wf_hh_types |> 
+  summarise(
+    n = sum(n),
+    .by = c(hh_type, minors, hh_earners)
+  ) |> 
+  mutate(pct = n/sum(n)) |> 
+  slice_max(pct, n = 5) |> 
+  select(1:3, 5) |> 
+  mutate(pct = percent(pct, digits = 0)) |> 
+  kbl(
+    col.names = c("Household type", "Children", "Earners", "Percent"),
+    align = "lllc"
+  ) |> 
+  kable_styling(c("condensed", "striped"))
+
+```
+
+
+## Affordability
 
 ...
 
@@ -544,8 +590,6 @@ pums_faar_hh |>
 
 ```
 
-
-
 ```{r}
 #| eval: false
 
@@ -613,3 +657,134 @@ pums_faar_hh |>
 
 ```
 
+
+
+## Below 30% AMI
+
+...
+
+```{r}
+#| label: tbl-below-30
+#| tbl-cap: "Three most common core workforce household types below 30% AMI"
+
+fn_tbl_wf_ami <- function(level){
+  
+  pums_wf_hh_types |> 
+    filter(ami_faar == level) |> 
+    slice_max(pct, n = 3) |> 
+    select(2:4, 6) |> 
+    mutate(pct = percent(pct, digits = 0)) |> 
+    kbl(
+      col.names = c("Household type", "Children", "Earners", "Percent"),
+      align = "lllc"
+    ) |> 
+    kable_styling(c("condensed", "striped"))
+
+}
+
+fn_tbl_wf_ami("Below 30% AMI")
+
+```
+
+
+...
+
+```{r}
+#| label: tbl-below-30-occ
+#| tbl-cap: "Five most common core workforce occupations below 30% AMI"
+
+pums_wf_occ <- pums_faar |> 
+  filter(pow_label == "Fredericksburg area") |> 
+  to_survey(type = "person", design = "rep_weights") |>
+  group_by(ami_faar, soc) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  ungroup() |> 
+  slice_max(pct, n = 5, by = ami_faar) |> 
+  mutate(
+    n = comma(n, digits = 0),
+    pct = percent(pct, digits = 0)
+  ) 
+
+fn_tbl_wf_occ <- function(level){
+  
+  pums_wf_occ |> 
+    filter(ami_faar == level) |> 
+    select(2:3) |> 
+    kbl(
+      col.names = c("Occupation", "Workers"),
+      align = "lc"
+    ) |> 
+    kable_styling(c("condensed", "striped"))
+
+}
+
+fn_tbl_wf_occ("Below 30% AMI")
+
+```
+
+## 30-50% AMI
+
+...
+
+```{r}
+#| label: tbl-30-50
+#| tbl-cap: "Three most common core workforce household types between 30-50% AMI"
+
+fn_tbl_wf_ami("30-50% AMI")
+
+```
+
+## 50-80% AMI
+
+...
+
+```{r}
+#| label: tbl-50-80
+#| tbl-cap: "Three most common core workforce household types between 50-80% AMI"
+
+fn_tbl_wf_ami("50-80% AMI")
+
+```
+
+## 80-100% AMI
+
+...
+
+```{r}
+#| label: tbl-80-100
+#| tbl-cap: "Three most common core workforce household types between 80-100% AMI"
+
+fn_tbl_wf_ami("80-100% AMI")
+
+```
+
+## 100-120% AMI
+
+...
+
+```{r}
+#| label: tbl-100-120
+#| tbl-cap: "Three most common core workforce household types between 100-120% AMI"
+
+fn_tbl_wf_ami("100-120% AMI")
+
+```
+
+## Above 120% AMI
+
+...
+
+Couples with no children but multiple earners would include adult, working children living with their parents
+
+```{r}
+#| label: tbl-120
+#| tbl-cap: "Three most common core workforce household types above 120% AMI"
+
+fn_tbl_wf_ami("Above 120% AMI")
+
+```

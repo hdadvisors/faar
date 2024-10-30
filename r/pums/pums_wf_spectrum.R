@@ -65,8 +65,8 @@ pums_wf_hh_types <- pums_wf_hh |>
   mutate(
     hh_earners = case_when(
       hh_earners == 0 ~ "None",
-      hh_earners == 1 ~ "Single",
-      hh_earners == 2 ~ "Double",
+      hh_earners == 1 ~ "One",
+      hh_earners == 2 ~ "Two",
       hh_earners > 2 ~ "Multiple"
     )
   ) |> 
@@ -78,7 +78,7 @@ pums_wf_hh_types <- pums_wf_hh |>
     )
   ) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(interact(ami_faar, hh_type, hh_age, minors, hh_earners)) |>
+  group_by(interact(ami_faar, hh_type, minors, hh_earners)) |>
   summarise(
     n = survey_total(vartype = "cv")
   ) |> 
@@ -87,9 +87,9 @@ pums_wf_hh_types <- pums_wf_hh |>
   group_by(ami_faar) |> 
   mutate(pct = n/sum(n)) |> 
   ungroup() |> 
-  select(1:6, 9, 8)
+  select(1:5, 8, 7)
 
-write_rds(pums_hh_types, "data/pums/pums_hh_types.rds")
+write_rds(pums_wf_hh_types, "data/pums/pums_wf_hh_types.rds")
 
 
 ## Summary AMI table --------------------------------------
