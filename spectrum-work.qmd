@@ -279,84 +279,6 @@ pums_faar |>
 Core workforce households more likely to have incomes above 120% AMI, otherwise distribution is similar to households whose workers all have jobs outside of the region
 
 ```{r}
-#| eval: false
-
-fig_subtitle <- paste(
-  "Share of",
-  "<span style='color: #445ca9'><b>core workforce</b></span>,",
-  "<span style='color: #8baeaa'><b>non-core workforce</b></span>, and",
-  "<span style='color: #e9ab3f'><b>non-earner</b></span>",
-  "households"
-)
-
-pums_faar_hh |> 
-  filter(hh_income > 0) |> 
-  mutate(
-    wf = case_when(
-      core_workforce == TRUE ~ "At least one earner in core workforce",
-      hh_earners < 1 ~ "No earners",
-      .default = "All earners work outside region"
-    )
-  ) |> 
-  to_survey(type = "housing", design = "rep_weights") |>
-  group_by(wf, ami_faar) |> 
-  summarise(
-    n = survey_total(vartype = "cv")
-  ) |> 
-  mutate(
-    pct = n/sum(n)
-  ) |> 
-  ungroup() |> 
-  mutate(
-    wf = fct_relevel(
-      wf,
-      "At least one earner in core workforce",
-      "All earners work outside region",
-      "No earners"
-    )
-  ) |> 
-  ggplot(aes(x = ami_faar, y = pct, fill = wf)) +
-  geom_col(
-    aes(alpha = wf),
-    width = 0.9,
-    position = position_dodge2(0.9)
-    ) +
-  geom_text(
-    aes(label = label_percent(accuracy = 1)(pct)),
-    position = position_dodge2(0.9),
-    color = "white",
-    size = rel(10/2.835),
-    vjust = 2,
-    hjust = 0.5
-  ) +
-  scale_fill_hda() +
-  scale_color_hda() +
-  scale_alpha_manual(
-    values = c(
-      "At least one earner in core workforce" = 1,
-      "All earners work outside region" = 0.55,
-      "No earners" = 0.55
-    )
-  ) +
-  scale_x_discrete(labels = label_wrap(20)) +
-  scale_y_continuous(
-    limits = c(0, 0.43),
-    expand = c(0.01, 0.01),
-    breaks = seq(0, 1, 0.1),
-    labels = label_percent(accuracy = 1)
-  ) +
-  add_zero_line() +
-  labs(
-    title = "Households by workforce status and AMI",
-    subtitle = fig_subtitle,
-    caption = pums_cap
-  ) +
-  theme_hda(flip_gridlines = F)
-
-
-```
-
-```{r}
 #| label: fig-wf-ami
 #| fig-cap: "Households by workforce status and AMI"
 
@@ -433,7 +355,7 @@ pums_faar_hh |>
 ```
 
 
-## Household characteristics
+### Household characteristics
 
 Most households in core workforce are headed by couples who both hold jobs in the region
 
@@ -459,81 +381,83 @@ pums_wf_hh_types |>
 ```
 
 
-## Affordability
+### Affordability
 
 ...
 
 ```{r}
+#| label: fig-wf-costs
+#| fig-cap: "Housing costs by workforce status and AMI"
 
-costs_wm_wf <- pums_faar_hh |> 
-  filter(core_workforce == TRUE) |> 
+fig_subtitle <- paste(
+  "Median housing costs for",
+  "<span style='color: #445ca9'><b>core workforce</b></span>,",
+  "<span style='color: #8baeaa'><b>non-core workforce</b></span>, and",
+  "<span style='color: #e9ab3f'><b>non-earner</b></span>",
+  "households"
+)
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
   mutate(
-    tenure = paste0(tenure, "s"),
+    wf = case_when(
+      core_workforce == TRUE ~ "At least one earner in core workforce",
+      hh_earners < 1 ~ "No earners",
+      .default = "All earners work outside region"
+    ),
     costs = case_when(
       cost_own == -1 ~ cost_rent,
       .default = cost_own
     )
   ) |> 
   to_survey(type = "housing", design = "rep_weights") |>
-  group_by(ami_faar, tenure) |> 
+  group_by(wf, ami_faar) |> 
   summarise(
     wm = survey_median(costs, vartype = "cv"),
-    q = survey_quantile(costs, c(0.1, 0.9))
+    q = survey_quantile(costs, c(0.25, 0.75))
   ) |> 
-  ungroup()
-
-fig_subtitle2 <- paste(
-  "For ",
-  "<span style='color: #445ca9'><b>homeowners</b></span> and",
-  "<span style='color: #8baeaa'><b>renters</b></span>",
-  " (median monthly costs in white)"
-)
-
-pums_faar_hh |> 
-  filter(core_workforce == TRUE) |> 
+  ungroup() |> 
   mutate(
-    tenure = paste0(tenure, "s"),
-    costs = case_when(
-      cost_own == -1 ~ cost_rent,
-      .default = cost_own
+    wf = fct_relevel(
+      wf,
+      "No earners",
+      "All earners work outside region",
+      "At least one earner in core workforce"
     )
   ) |> 
-  select(SERIALNO, WGTP, ami_faar, tenure, costs) |> 
-  ggplot() +
-  geom_density_ridges2(
-    aes(x = costs, y = tenure, fill = tenure, weight = WGTP, scale = 1),
-    color = NA,
-    alpha = 0.75,
-    linewidth = 0.75
+  ggplot(aes(x = wm, y = ami_faar, color = wf)) +
+  geom_point(size = rel(2), position = position_dodge2(0.5)) +
+  geom_segment(
+    aes(y = ami_faar, x = q_q25, xend = q_q75, alpha = wf),
+    linewidth = rel(1.5),
+    lineend = "round",
+    position = position_dodge2(0.5)
   ) +
-  geom_text(
-    data = filter(costs_wm_wf),
-    aes(x = wm, y = tenure, label = paste0(label_dollar()(wm), "\n", "|")),
-    color = "white",
-    size = 5,
-    lineheight = 0.8,
-    nudge_y = 0.1
+  scale_color_hda(-1) +
+  scale_alpha_manual(
+    values = c(
+      "At least one earner in core workforce" = 0.8,
+      "All earners work outside region" = 0.3,
+      "No earners" = 0.3
+    )
   ) +
-  facet_wrap(~ami_faar) +
-  scale_fill_hda() +
-  scale_y_discrete(expand = c(0, 0)) +
   scale_x_continuous(
-    limits = c(0, 2800),
-    expand = c(0.01, 0),
+    limits = c(300, 2800),
+    breaks = seq(500, 2500, 500),
+    expand = c(0, 0),
     labels = label_dollar(),
     position = "top"
   ) +
   labs(
-    title = "Monthly housing costs for core workforce households by AMI",
-    subtitle = fig_subtitle2,
+    title = "Housing costs by workforce status and AMI",
+    x = "Lines show range containing 50% of typical housing costs",
+    subtitle = fig_subtitle,
     caption = pums_cap
   ) +
   theme_hda(
-    panel.grid.major.y = element_blank(),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    panel.spacing.y = unit(1, "lines"),
-    strip.text = element_markdown(margin = margin(t = 3, b = 2))
+    flip_gridlines = T,
+    axis.text.y = element_text(size = rel(1.2)),
+    axis.title.x = element_text(margin = margin(b = 5))
   )
 
 ```
@@ -541,6 +465,8 @@ pums_faar_hh |>
 ...
 
 ```{r}
+#| label: fig-wf-cb
+#| fig-cap: "Housing affordability for core workforce by AMI"
 
 fig_subtitle3 <- paste(
   "Percent of households ",
@@ -691,7 +617,7 @@ fn_tbl_wf_ami("Below 30% AMI")
 
 ```{r}
 #| label: tbl-below-30-occ
-#| tbl-cap: "Five most common core workforce occupations below 30% AMI"
+#| tbl-cap: "Ten most common core workforce occupations below 30% AMI"
 
 pums_wf_occ <- pums_faar |> 
   filter(pow_label == "Fredericksburg area") |> 
@@ -703,21 +629,37 @@ pums_wf_occ <- pums_faar |>
   mutate(
     pct = n/sum(n)
   ) |>
-  ungroup() |> 
-  slice_max(pct, n = 5, by = ami_faar) |> 
+  group_by(ami_faar) |> 
+  slice_max(pct, n = 10, with_ties = F) |> 
   mutate(
-    n = comma(n, digits = 0),
-    pct = percent(pct, digits = 0)
+    rank = row_number(desc(n)),
+    col = case_when(
+      rank < 6 ~ "A",
+      .default = "B"
+    )
+  ) |> 
+  ungroup() |> 
+  mutate(
+    soc = paste0(rank, ". ", str_remove(soc, "^.*?-"))
   ) 
 
 fn_tbl_wf_occ <- function(level){
   
   pums_wf_occ |> 
     filter(ami_faar == level) |> 
-    select(2:3) |> 
+    select(1, 2, 7) |> 
+    group_by(col) |> 
+    mutate(pos = row_number()) |> 
+    ungroup() |> 
+    pivot_wider(
+      names_from = col,
+      values_from = soc,
+      id_cols = pos
+    ) |> 
+    select(-1) |> 
     kbl(
-      col.names = c("Occupation", "Workers"),
-      align = "lc"
+      col.names = c("Ten Most Common Occupations", ""),
+      align = "ll"
     ) |> 
     kable_styling(c("condensed", "striped"))
 
@@ -739,6 +681,16 @@ fn_tbl_wf_ami("30-50% AMI")
 
 ```
 
+...
+
+```{r}
+#| label: tbl-30-50-occ
+#| tbl-cap: "Ten most common core workforce occupations between 30-50% AMI"
+
+fn_tbl_wf_occ("30-50% AMI")
+
+```
+
 ## 50-80% AMI
 
 ...
@@ -748,6 +700,16 @@ fn_tbl_wf_ami("30-50% AMI")
 #| tbl-cap: "Three most common core workforce household types between 50-80% AMI"
 
 fn_tbl_wf_ami("50-80% AMI")
+
+```
+
+...
+
+```{r}
+#| label: tbl-50-80-occ
+#| tbl-cap: "Ten most common core workforce occupations between 50-80% AMI"
+
+fn_tbl_wf_occ("50-80% AMI")
 
 ```
 
@@ -763,6 +725,16 @@ fn_tbl_wf_ami("80-100% AMI")
 
 ```
 
+...
+
+```{r}
+#| label: tbl-80-100-occ
+#| tbl-cap: "Ten most common core workforce occupations between 80-100% AMI"
+
+fn_tbl_wf_occ("80-100% AMI")
+
+```
+
 ## 100-120% AMI
 
 ...
@@ -772,6 +744,16 @@ fn_tbl_wf_ami("80-100% AMI")
 #| tbl-cap: "Three most common core workforce household types between 100-120% AMI"
 
 fn_tbl_wf_ami("100-120% AMI")
+
+```
+
+...
+
+```{r}
+#| label: tbl-100-120-occ
+#| tbl-cap: "Ten most common core workforce occupations between 100-120% AMI"
+
+fn_tbl_wf_occ("100-120% AMI")
 
 ```
 
@@ -786,5 +768,17 @@ Couples with no children but multiple earners would include adult, working child
 #| tbl-cap: "Three most common core workforce household types above 120% AMI"
 
 fn_tbl_wf_ami("Above 120% AMI")
+
+```
+
+...
+
+Inclusion of some lower-wage jobs here (e.g. cashiers) implies many live with a second earner who brings in relatively more income
+
+```{r}
+#| label: tbl-120-occ
+#| tbl-cap: "Ten most common core workforce occupations above 120% AMI"
+
+fn_tbl_wf_occ("Above 120% AMI")
 
 ```
