@@ -1,0 +1,55 @@
+---
+title: "needs-current"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+```
+
+# Housing Needs Analysis
+
+This analysis's goal is to show existing housing costs versus the ability of households in the region to afford those housing costs. Along with comparing supply-side factors in the housing market study, this analysis will pinpoint any obstacles or worker shortages in the area and focus on connect supply and demand data. In order to support the working population, this research will conclude with broad estimates and analysis of the region's anticipated needs for the ensuing ten years.
+
+## Major Takeaways
+
+-   skfh
+-   sklsg
+
+## Current Housing Gap
+
+
+```{r}
+
+supply_demand <- read_rds("data/fxburg_supply_demand.rds")
+
+ami_order <- factor(supply_demand$ami, levels = c("30% AMI or below", "31-50% AMI",
+                                           "51-80% AMI", "81-100% AMI", "101-120% AMI",
+                                           "121% AMI and greater"))
+
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region"
+
+
+
+ggplot(supply_demand,
+       aes(x = reorder(ami_order, desc(ami_order)),
+           y = estimate,
+           fill = value)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~tenure) +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  coord_flip() +
+  labs(title = title_text)
+
+
+```
+
+
+### Rental Shortages
