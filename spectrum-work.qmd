@@ -13,7 +13,6 @@ source("_common.R")
 library(tidycensus)
 library(srvyr)
 library(ggridges)
-library(waffle)
 
 # Load PUMS data
 pums_faar <- read_rds("data/pums/pums_faar.rds")
@@ -24,6 +23,7 @@ pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 # Load PUMS data
 pums_wf_hh_types <- read_rds("data/pums/pums_wf_hh_types.rds")
 
+# Source caption for most plots
 pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
 
 ```
@@ -512,73 +512,6 @@ pums_faar_hh |>
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     strip.text = element_markdown(margin = margin(t = 5))
-  )
-
-```
-
-```{r}
-#| eval: false
-
-pums_faar_hh |>
-  filter(hh_income > 0) |> 
-  mutate(
-    wf = case_when(
-      core_workforce == TRUE ~ "Core workforce",
-      hh_earners < 1 ~ "Not in workforce",
-      .default = "Non-core workforce"
-    )
-  ) |> 
-  filter(wf != "Not in workforce") |> 
-  ggplot(aes(x = hh_income, y = wf, fill = wf)) +
-  facet_wrap(~ami_faar, scales = "free_x") +
-  geom_density_ridges2(
-    aes(weight = PWGTP, scale = 2, rel_min_height = 0.01),
-    color = NA,
-    alpha = 0.75,
-    linewidth = 0.75
-  ) +
-  #geom_density_ridges2(
-  #  data = . %>% filter(wf == "Non-core workforce"),
-  #  aes(x = hh_income, y = ami_faar, weight = PWGTP, scale = 1.25, rel_min_height = 0.01),
-  #  fill = NA,
-  #  color = hda_pal[2],
-  #  alpha = 0.5,
-  #  linewidth = 0.5
-  #) +
-  #geom_density_ridges2(
-  #  data = . %>% filter(wf == "Core workforce"),
-  #  aes(x = hh_income, y = ami_faar, weight = PWGTP, scale = 1.25),
-  #  fill = hda_pal[1],
-  #  color = NA,
-  #  alpha = 0.75,
-  #  linewidth = 0.75
-  #) +
-  #geom_text(
-  #  data = ami_wm,
-  #  aes(x = wm, y = ami_faar, label = paste0(label_dollar()(wm), "\n", "|")),
-  #  color = "white",
-  #  size = 3,
-  #  lineheight = 0.8,
-  #  nudge_y = 0.2
-  #) +
-  scale_fill_hda() +
-  scale_y_discrete(expand = c(0, 0)) +
-  scale_x_continuous(
-    #breaks = c(0, 20000, 40000, 60000, 80000),
-    expand = c(0.01, 0),
-    labels = label_dollar(scale = 0.001, suffix = "k"),
-    position = "bottom"
-  ) +
-  labs(
-    title = "Distribution of household incomes by AMI",
-    subtitle = "Median household incomes in white",
-    caption = pums_cap
-  ) +
-  theme_hda(
-    panel.grid.major = element_blank(),
-    legend.position = "top",
-    axis.text.x = element_text(size = 11, vjust = 0, margin = margin(b = 10)),
-    axis.text.y = element_blank()
   )
 
 ```

@@ -44,7 +44,7 @@
     "href": "data-notes.html",
     "title": "2  Data notes",
     "section": "",
-    "text": "2.1 Area Median Income\nThe U.S. Department of Housing and Urban Development (HUD) calculates the Area Median Income (AMI) for every part of the country each year using income estimates from the Census Bureau. Many housing programs managed by HUD, other public agencies, and nonprofit providers use AMIs to limit eligibility to households with low or moderate incomes. Because wages and living costs vary by market, AMIs help ensure housing assistance reaches those with the most needs.",
+    "text": "2.1 Area Median Income\nThis chapter includes important context about certain data sources and methods used throughout the report.\nThe first two sections explain how Area Median Incomes are customized to build the regional housing spectrums found in Chapter 3 and Chapter 4.\nThe U.S. Department of Housing and Urban Development (HUD) calculates the Area Median Income (AMI) for every part of the country each year using income estimates from the Census Bureau. Many housing programs managed by HUD, other public agencies, and nonprofit providers use AMIs to limit eligibility to households with low or moderate incomes. Because wages and living costs vary by market, AMIs help ensure housing assistance reaches those with the most needs.",
     "crumbs": [
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Data notes</span>"
     ]
@@ -74,7 +74,7 @@
     "href": "spectrum-reg.html",
     "title": "3  Regional spectrum",
     "section": "",
-    "text": "3.1 Overview\nWith few exceptions, housing opportunities are primarily limited by how much money a household has available to buy or rent a home. To create a regional housing spectrum, we first need to group households according to their incomes. The categories used here, along with their respective plain-language descriptions, are shown below.\nTable 3.1: Housing spectrum income group categories\n\n\n\n\n \n  \n    Income group (AMI) \n    Description \n  \n \n\n  \n    Above 120% AMI \n    High-income \n  \n  \n    100-120% AMI \n    Above-average income \n  \n  \n    80-100% AMI \n    Moderate-income \n  \n  \n    50-80% AMI \n    Low-income \n  \n  \n    30-50% AMI \n    Very low-income \n  \n  \n    Below 30% AMI \n    Extremely low-income \n  \n  \n    Zero or negative income \n    No income",
+    "text": "3.1 Overview\nThis report outlines the housing spectrum concept and its utility for understanding housing market dynamics. It includes assessments of households in the region by various demographic and socioeconomic characteristics, primarily by wages/income. Special analysis for the region’s core workforce (i.e. persons both living and working within the region) can be found in Chapter 4.\nWith few exceptions, housing opportunities are primarily limited by how much money a household has available to buy or rent a home. To create a regional housing spectrum, we first need to group households according to their incomes. The categories used here, along with their respective plain-language descriptions, are shown below.\nTable 3.1: Housing spectrum income group categories\n\n\n\n\n \n  \n    Income group (AMI) \n    Description \n  \n \n\n  \n    Above 120% AMI \n    High-income \n  \n  \n    100-120% AMI \n    Above-average income \n  \n  \n    80-100% AMI \n    Moderate-income \n  \n  \n    50-80% AMI \n    Low-income \n  \n  \n    30-50% AMI \n    Very low-income \n  \n  \n    Below 30% AMI \n    Extremely low-income \n  \n  \n    Zero or negative income \n    No income",
     "crumbs": [
       "Housing spectrum",
       "<span class='chapter-number'>3</span>  <span class='chapter-title'>Regional spectrum</span>"
@@ -162,7 +162,7 @@
     "href": "spectrum-work.html",
     "title": "4  Core workforce spectrum",
     "section": "",
-    "text": "4.1 Overview",
+    "text": "4.1 Overview\nThis chapter assesses the housing spectrum for the region’s core workforce. This includes all households where at least one member is employed at a job also located within the region.",
     "crumbs": [
       "Housing spectrum",
       "<span class='chapter-number'>4</span>  <span class='chapter-title'>Core workforce spectrum</span>"
