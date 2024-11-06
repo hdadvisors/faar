@@ -154,9 +154,7 @@ ggplot(supply_demand,
 
 ## Incomes vs Housing Costs
 
-
 \[ insert analysis \]
-
 
 ```{r}
 
@@ -300,19 +298,16 @@ More likely though, middle to higher income renting-households are able to take 
 In this chapter, an "affordable rent" is no more than 30 percent of a household's gross monthly income. Any rent amount higher than this level would make the renter cost-burdened.
 :::
 
-Occupation data shows the most common salaries in the region, which influences what individuals can purchase or rent, where they must live depending on their wage, and how their families can effectively expand. In a [previous chapter](spectrum-work.qmd###Common industries and occupations) , the five most common occupation categories in the region were determined from the latest PUMS data.
+Occupation data shows the most common salaries in the region, which influences what individuals can purchase or rent, where they must live depending on their wage, and how their families can effectively expand. In a [previous chapter](spectrum-work.qmd###Common%20industries%20and%20occupations) , the five most common occupation categories in the region were determined from the latest PUMS data.
 
 ```{r}
 #| label: fig-occ-salary
 #| fig.cap: "Median annual salaries for the five most common occupation categories"
 ```
 
+The mismatch in salaries with average rental costs particularly affects workers in sectors such as food preparation, office administration, and some public sector jobs (e.g., teachers in Caroline County, social workers in Stafford and Fredericksburg) who can only afford rents around \$825-\$1,250 per month. Based on the number of homes for sale and rentals with higher monthly costs addressed in the market analysis, the supply of housing is not meeting the needs of over 500,000 regional job holders.
 
-
-The mismatch in salaries with average rental costs particularly affects workers in sectors such as food preparation, office administration, and some public sector jobs (e.g., teachers in Caroline County, social workers in Stafford and Fredericksburg) who can only afford rents around \$825-\$1,250 per month. Based on the number of homes for sale and rentals with higher monthly costs addressed in the market analysis, the supply of housing is not meeting the needs of over 500,000 regional job holders. 
-
-It is reasonable to assume then that many workers in Office and Administrative Support and Food Preparation and Serving Related Occupations are commuting into the region to work and living elsewhere. With affordable rent at \$1,159 and \$825.88 respectively, if these workers do live in the region, they are likely to be cost burdened. 
-
+It is reasonable to assume then that many workers in Office and Administrative Support and Food Preparation and Serving Related Occupations are commuting into the region to work and living elsewhere. With affordable rent at \$1,159 and \$825.88 respectively, if these workers do live in the region, they are likely to be cost burdened.
 
 ```{r}
 
@@ -361,21 +356,28 @@ if (knitr::is_html_output()) {
 
 ```
 
-Fire professions in Stafford, Spotsylvania, and Fredericksburg have the most generous average incomes of the public professions analyzed for this study. Proportionally, this means these workers can afford more generous monthly housing costs, ranging from \$2000 to \$2500 in rent. On the other end of the spectrum, social workers in Stafford and Fredericksburg, as well as teaching professions in Caroline county, can only afford around $1250 per month. 
+Fire professions in Stafford, Spotsylvania, and Fredericksburg have the most generous average incomes of the public professions analyzed for this study. Proportionally, this means these workers can afford more generous monthly housing costs, ranging from \$2000 to \$2500 in rent. On the other end of the spectrum, social workers in Stafford and Fredericksburg, as well as teaching professions in Caroline county, can only afford around \$1250 per month.
 
 ```{r}
 
 ```
 
+From the [previous-chapter](market-rental.qmd#rentalmarket), we know that there are xxx rental units in the region priced at \$1,500 and below.
 
+\[more analysis\]
 
+## Attaining homeownership
 
+::: callout-tip
+To determine how affordable homeownership is at the median renter income, we can calculate the maximum home sales price affordable to a buyer with that income. To make these estimates, we make the following simplified assumptions:
 
+-   5 percent down payment
+-   1.5 percent in closing costs
+-   \$250 per month for property taxes
+-   \$150 per month for insurance and other costs
 
-
-
-
-## Homeownership affordability
+For underwriting purposes, we assume that the monthly mortgage payment plus these costs can not exceed 28 percent of the buyer’s gross income. For example, a renter earning \$50,000 can afford a monthly housing cost no more than \$1,166.67. To determine the maximum principal amount, and the subsequent sales price, we assume a standard 30-year fixed-rate mortgage using the average annual interest rates published by Freddie Mac
+:::
 
 Median regional wages for the most commonly held jobs show a large gap in what purchase prices are affordable between occupations. Between the top five occupations, ranging from food preparation and service positions to management and business occupations, homes would need to be priced below \$100,000 ranging to over \$460,000 to be affordable.
 
