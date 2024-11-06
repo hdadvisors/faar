@@ -53,3 +53,30 @@ b25118_data <- b25118_raw |>
 
 write_rds(b25118_data, "data/b25118.rds")
 
+
+
+
+#b25119 
+
+library(tidycensus)
+library(tidyverse)
+
+cv <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
+
+years <- 2010:2022
+
+b25119_raw <- map_dfr(years, function(yr){
+  b25119_pull <- get_acs(
+    geography = "county",
+    state = "VA",
+    table = "B25119",
+    year = yr,
+    survey = "acs5",
+    cache_table = TRUE
+  ) |> 
+    mutate(year = yr)
+})
+
+b25119_raw <- b25119_raw |> 
+  subset(GEOID %in% cv)
+
