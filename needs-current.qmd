@@ -10,27 +10,130 @@ editor: visual
 #| message: false
 #| warning: false
 
+source("r/affordcalc.R")
+source("_common.R")
+
+
+#| label: income-costs-change
+#| eval: false
+
+costs_income_change <- costs_income |> 
+  group_by(locality) |> 
+  arrange(year, .by_group = TRUE) |> 
+  mutate(rent_chg = (rent - lag(rent)),
+         price_chg = (price - lag(price)),
+         inc_chg = (income - lag(income)),
+         across(.cols = everything(), ~replace_na(.x, 0))) |> 
+  mutate(across(.cols = c(rent_chg, price_chg, inc_chg), ~ cumsum(.x)),
+         rent_pct = rent_chg/first(rent),
+         price_pct = price_chg/first(price),
+         inc_pct = inc_chg/first(income)) |> 
+  select(1,2,9:11) |> 
+  pivot_longer(cols = 3:5,
+               names_to = "type",
+               values_to = "pct_chg") |> 
+  mutate(pct_chg = case_when(
+    year > 2020 & type == "inc_pct" ~ NA_real_,
+    TRUE ~ pct_chg)) |> 
+  mutate(type = case_when(
+    type == "inc_pct" ~ "Income",
+    type == "price_pct" ~ "Home price",
+    type == "rent_pct" ~ "Rent"
+  ))
+
+write_rds(costs_income_change, "data/costs_income_change.rds")
+
+#| label: income-costs-data
+#| eval: false
+
+# Load income data
+
+b25119 <- read_rds("data/b25119.rds")
+
+renter_income <- b25119 |> 
+  filter(tenure == "Renter",
+         NAME %in% pha_names) |> 
+  select(NAME, year, estimate = cdollars, dollars20)
+
+# Load rent data
+
+faar_rent_annual <- faar_rent
+
+# Load sales data
+
+faar_sales_annual <- read_csv("data/rr_annual_sales.csv") |> 
+  pivot_longer(cols = 2:9,
+               names_to = "locality",
+               values_to = "price") |> 
+  clean_names() |> 
+  mutate(locality = str_replace(locality, "City", "city")) |> 
+  filter(locality %in% pha_names) 
+
+# Join rents and sales to incomes
+
+costs_income <- faar_rent_annual |> 
+  left_join(renter_income, by = c("NAME", "year")) |> 
+  mutate(rent = parse_number(rent_current)) |> 
+  filter(NAME %in% pha_names,
+         year > 2015) |> 
+  select(4,1,6,7) |>
+  select(locality=1,2,income=3,4) |> 
+  left_join(rr_sales_annual, by = c("locality", "year"))
+
+# Add affordable rents and sales prices
+
+int_rates <- read_csv("data/fredmac_int_annual.csv")
+
+downpayment <- 0.05 # 5% downpayment
+closingcosts <- 0.015 # 1.5% closing costs
+taxes <- 250 # Assume $250/month for taxes
+ins_fees <- 150 # Assume $150/month for insurance and fees
+
+price_calc <-  function(x, y) {
+  
+  monthly_cost <- x / 12 * 0.28
+  monthly_pmt <- monthly_cost - (taxes + ins_fees)
+  principal <- monthly_pmt * (((1-1/(1+y)^360))/(y/12))
+  loan_amt <- principal/(1-closingcosts)
+  price <- (loan_amt * -1) / ((downpayment) - 1)
+
+  price
+  
+}
+
+costs_income_afford <- costs_income |> 
+  left_join(int_rates, by = "year") |> 
+  mutate(rent_afford = income / 12 * 0.3) |> 
+  mutate(price_afford = price_calc(income, annual_int))
+
+write_rds(costs_income_afford, "data/costs_income_afford.rds")
+
+
+
 ```
 
 # Housing Needs Analysis
 
 This analysis's goal is to show existing housing costs versus the ability of households in the region to afford those housing costs. Along with comparing supply-side factors in the housing market study, this analysis will pinpoint any obstacles or worker shortages in the area and focus on connect supply and demand data. In order to support the working population, this research will conclude with broad estimates and analysis of the region's anticipated needs for the ensuing ten years.
 
-## Major Takeaways
+## Overview
 
 -   skfh
 -   sklsg
 
-## Current Housing Gap
-
+At a glance, we can see supply and demand in the region are not in alignment. There is an excess of supply for \[ XYZ and a lack of supply for XYZ. \]
 
 ```{r}
+remotes::install_github("hdadvisors/hdatools")
+library(hdatools)
+install.packages("gtable")
 
 supply_demand <- read_rds("data/fxburg_supply_demand.rds")
 
 ami_order <- factor(supply_demand$ami, levels = c("30% AMI or below", "31-50% AMI",
                                            "51-80% AMI", "81-100% AMI", "101-120% AMI",
                                            "121% AMI and greater"))
+
 
 
 title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region"
@@ -47,9 +150,235 @@ ggplot(supply_demand,
   scale_fill_hda() +
   coord_flip() +
   labs(title = title_text)
+```
+
+## Incomes vs Housing Costs
+
+
+\[ insert analysis \]
+
+
+```{r}
+
+#| label: fig-costs-inc-change
+#| fig.cap: "Cumulative percent change in median renter income, home prices, and average rent"
+
+cost_plot <- ggplot(costs_income_change,
+       aes(x = year,
+           y = pct_chg,
+           color = type)) +
+  geom_line(size = 1) +
+  geom_point_interactive(
+    aes(data_id = pct_chg,
+        tooltip = percent_format(accuracy = 0.1)(pct_chg)),
+    size = 0.5) + 
+  theme_pha() +
+  scale_color_pha() + 
+  facet_wrap(~locality, nrow = 1) +
+  scale_y_continuous(labels = label_percent()) +
+  labs(title = "Cumulative percent change in median renter income,<br>home prices, and average rent",
+       subtitle ="2016 to 2022 (ACS income data through 2020)",
+       color = "Percent change",
+       caption = "**Sources:** U.S. Census Bureau, American Community Survey, Table B25119;<br>Central Virginia MLS; CoStar Group, Inc.") +
+  theme(legend.position = "bottom")
+
+if (knitr::is_html_output()) {
+  
+  girafe(ggobj = cost_plot,
+         height_svg = 4) 
+  
+} else {
+  
+  cost_plot
+  
+}
+
+costs_income_afford <- read_rds("data/costs_income_afford.rds")
+
+costs_income_change <- read_rds("data/costs_income_change.rds")
+
+```
+
+### Rental housing gap
+
+```{r}
+
+#| label: gap-data
+#| eval: false
+
+tb_18c <- read_csv("data/Table18C_2015to2019.csv")
+
+colnames(tb_18c)[16] <- "Cost"
+
+renter <- tb_18c |>
+  clean_names() |>
+  filter(line_type == "Detail") |>
+  select(county, fips, year, estimate, tenure, cost, household_income) |>
+  group_by(county, fips, year, tenure, cost, household_income) |>
+  summarise(estimate = sum(estimate)) |>
+  filter(fips %in% rr)
+
+tb_18_match <- renter |>
+  filter(tenure == "Renter occupied") |>
+  mutate(cost = case_when(
+    cost == "greater than RHUD30 and less than or equal to RHUD50" ~ "31 to 50 percent AMI",
+    cost == "greater than RHUD50 and less than or equal to RHUD80" ~ "51 to 80 percent AMI",
+    cost == "greater than RHUD80" ~ "80 percent AMI or greater",
+    cost == "less than or equal to RHUD30" ~ "30 percent AMI or below"
+  )) |>
+  mutate(household_income = case_when(
+    household_income == "greater than 100% of HAMFI" ~ "80 percent AMI or greater",
+    household_income == "greater than 80% of HAMFI but less than or equal to 100% of HAMFI" ~ "80 percent AMI or greater",
+    household_income == "greater than 50% of HAMFI but less than or equal to 80% of HAMFI" ~ "51 to 80 percent AMI",
+    household_income == "greater than 30% of HAMFI but less than or equal to 50% of HAMFI" ~ "31 to 50 percent AMI",
+    household_income == "less than or equal to 30% of HAMFI" ~ "30 percent AMI or below"
+  )) |>
+  group_by(county, fips, year, cost, household_income) |>
+  summarise(estimate = sum(estimate))
+
+tb_18_match <- tb_18_match |>
+  mutate(match = case_when(
+    cost == household_income ~ "Affordable",
+    cost == "30 percent AMI or below" & household_income == "31 to 50 percent AMI" ~ "Very affordable",
+    cost == "30 percent AMI or below" & household_income == "51 to 80 percent AMI" ~ "Very affordable",
+    cost == "30 percent AMI or below" & household_income == "80 percent AMI or greater" ~ "Very affordable",
+        cost == "31 to 50 percent AMI" & household_income == "31 to 50 percent AMI" ~ "Affordable",
+    cost == "31 to 50 percent AMI" & household_income == "51 to 80 percent AMI" ~ "Very affordable",
+    cost == "31 to 50 percent AMI" & household_income == "80 percent AMI or greater" ~ "Very affordable",
+        cost == "31 to 50 percent AMI" & household_income == "30 percent AMI or below" ~ "Unaffordable",
+    cost == "51 to 80 percent AMI" & household_income == "30 percent AMI or below" ~ "Unaffordable",
+        cost == "51 to 80 percent AMI" & household_income == "31 to 50 percent AMI" ~ "Unaffordable",
+    cost == "51 to 80 percent AMI" & household_income == "80 percent AMI or greater" ~ "Very affordable",
+    cost == "80 percent AMI or greater" & household_income == "30 percent AMI or below" ~ "Unaffordable",
+    cost == "80 percent AMI or greater" & household_income == "31 to 50 percent AMI" ~ "Unaffordable",
+    cost == "80 percent AMI or greater" & household_income == "51 to 80 percent AMI" ~ "Unaffordable"
+  )) |>
+  mutate(gapcode = case_when(
+    match == "Unaffordable" ~ "Gap",
+    TRUE ~ "Matches or less than income"
+  ))
+
+write_rds(tb_18_match, "data/tb_18_match.rds")
+
+tb_18_match <- read_rds("data/tb_18_match.rds")
+
+gap <- tb_18_match |>
+  filter(fips %in% as.numeric(pha)) |> 
+  group_by(year, household_income, gapcode) |>
+  summarise(estimate = sum(estimate)) |>
+  mutate(estimate = case_when(
+    gapcode == "Gap" ~ estimate * -1,
+    gapcode == "Matches or less than income" ~ estimate
+  )) |>
+  filter(household_income != "80 percent AMI or greater")
+
+write_rds(gap, "data/gap.rds")
+
+```
+
+[Comprehensive Housing Affordability Strategy (CHAS)](https://www.huduser.gov/portal/datasets/cp.html) data provided by the Department of Housing and Urban Development (HUD) allows us to understand the cost of housing in relation to household incomes. For renters making less than 80% AMI across the region, there has been little change in the gap in affordable rental housing.
+
+```{r}
+#| label: fig-gap-plot
+#| fig.cap: "Rental housing gap by AMI"
+
 
 
 ```
 
+The current rental supply shows a large gap of units available for under \$1,000 a month, with only 5,000 units at that price point. The vast majority of rental units (over 18,000) cost more than \$1,500 per month, representing 57% of the total rental supply.
 
-### Rental Shortages
+The limited availability of rental units for households who can afford \$2000 monthly could indicate that many higher income households are instead buying in that price point, where there are more units available, further driving demand for ownership units priced at \$2000 monthly (reflected in the number of ownership units at that price point).
+
+More likely though, middle to higher income renting-households are able to take advantage of the greater availability of units priced between \$1000 and \$1999 (18,000 units compared with 7,500 for \$2,000 monthly). This creates increased competition for the “middle-priced” units on the regional rental market, driving cost-burden on low income households and opportunity for savings for higher income households.
+
+## Rental affordability
+
+::: callout-tip
+#### Calculating rental affordability
+
+In this chapter, an "affordable rent" is no more than 30 percent of a household's gross monthly income. Any rent amount higher than this level would make the renter cost-burdened.
+:::
+
+Occupation data shows the most common salaries in the region, which influences what individuals can purchase or rent, where they must live depending on their wage, and how their families can effectively expand. In a [previous chapter](spectrum-work.qmd###Common industries and occupations) , the five most common occupation categories in the region were determined from the latest PUMS data.
+
+```{r}
+#| label: fig-occ-salary
+#| fig.cap: "Median annual salaries for the five most common occupation categories"
+```
+
+
+
+The mismatch in salaries with average rental costs particularly affects workers in sectors such as food preparation, office administration, and some public sector jobs (e.g., teachers in Caroline County, social workers in Stafford and Fredericksburg) who can only afford rents around \$825-\$1,250 per month. Based on the number of homes for sale and rentals with higher monthly costs addressed in the market analysis, the supply of housing is not meeting the needs of over 500,000 regional job holders. 
+
+It is reasonable to assume then that many workers in Office and Administrative Support and Food Preparation and Serving Related Occupations are commuting into the region to work and living elsewhere. With affordable rent at \$1,159 and \$825.88 respectively, if these workers do live in the region, they are likely to be cost burdened. 
+
+
+```{r}
+
+#| label: fig-rent-afford
+#| fig.cap: "Average rents versus affordable rents for median renter income"
+
+rent_afford <- costs_income_afford |> 
+  select(1, 2, 4, 7) |> 
+  pivot_longer(cols = 3:4,
+               names_to = "type") |> 
+  mutate(type = case_when(
+    type == "rent" ~ "Average rent",
+    TRUE ~ "Affordable rent"
+  ))
+
+rent_gap <- ggplot(rent_afford,
+       aes(x = year,
+           y = value,
+           fill = type,
+           data_id = value,
+           tooltip = dollar_format()(value))) +
+  geom_col(position = "dodge") +
+  geom_col_interactive(position = "dodge", size = 2) +
+  theme_pha() +
+  scale_fill_pha() +
+  facet_wrap(~locality, nrow = 1) +
+  scale_x_continuous(n.breaks = 7) +
+  scale_y_continuous(labels = label_dollar()) +
+  labs(title = "Average rents versus affordable rents<br>for median renter income",
+       subtitle ="2016 to 2022 (ACS income data through 2020)",
+       caption = "**Sources:** U.S. Census Bureau, American Community Survey, Table B25119; CoStar Group, Inc.") +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
+if (knitr::is_html_output()) {
+  
+  girafe(ggobj = rent_gap,
+         height_svg = 4) 
+  
+} else {
+  
+  rent_gap
+  
+  }
+
+```
+
+Fire professions in Stafford, Spotsylvania, and Fredericksburg have the most generous average incomes of the public professions analyzed for this study. Proportionally, this means these workers can afford more generous monthly housing costs, ranging from \$2000 to \$2500 in rent. On the other end of the spectrum, social workers in Stafford and Fredericksburg, as well as teaching professions in Caroline county, can only afford around $1250 per month. 
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+## Homeownership affordability
+
+Median regional wages for the most commonly held jobs show a large gap in what purchase prices are affordable between occupations. Between the top five occupations, ranging from food preparation and service positions to management and business occupations, homes would need to be priced below \$100,000 ranging to over \$460,000 to be affordable.
+
+Based on the number of homes for sale and rentals with higher monthly costs addressed in the market analysis, the supply of housing is not meeting the needs of over 500,000 regional job holders.
+
+It is reasonable to assume then that many workers in Office and Administrative Support and Food Preparation and Serving Related Occupations are commuting into the region to work and living elsewhere. With affordable rent at \$1,159 and \$825.88 respectively, if these workers do live in the region, they are likely to be cost burdened.

@@ -44,7 +44,6 @@ ggplot(renter_supply,
 
 ```
 
-
 ```{r}
 
 renter_bedroom <- read_rds("data/b25042_region.rds") |> 
@@ -64,7 +63,6 @@ ggplot(renter_bedroom,
        caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
 
 ```
-
 
 ```{r}
 
@@ -120,7 +118,6 @@ ggplot(bps,
 
 ```
 
-
 ```{r}
 #| label: fig-rent-line
 #| fig-cap: "Average asking rent"
@@ -146,8 +143,6 @@ ggplot(rent,
   
 
 ```
-
-
 
 ```{r}
 #| label: fig-growth-bar
@@ -364,8 +359,6 @@ ggplot(subsidy,
 
 ```
 
-
-
 ```{r}
 #| label: fig-nhpd-map
 #| fig-cap: "Assisted rental propeties"
@@ -396,4 +389,3 @@ leaflet(prop) |>
     values =  ~fmr)
 
 ```
-
