@@ -152,6 +152,18 @@ ggplot(supply_demand,
   labs(title = title_text)
 ```
 
+Single-family homes dominate both the rental and ownership markets, leaving a gap in diverse housing types such as multifamily and senior-focused housing. There's a particular shortage of housing designed for single-person households, despite demographic trends showing an increase in smaller household sizes.
+
+```{r}
+# unit viz from pp 
+
+
+```
+
+Most housing units are concentrated in Fredericksburg, Stafford, and Spotsylvania, indicating a need for more balanced development across all localities in the region.
+
+Rural areas and smaller communities in the region may be particularly under-served in terms of diverse and affordable housing options.
+
 ## Incomes vs Housing Costs
 
 \[ insert analysis \]
@@ -359,8 +371,13 @@ if (knitr::is_html_output()) {
 Fire professions in Stafford, Spotsylvania, and Fredericksburg have the most generous average incomes of the public professions analyzed for this study. Proportionally, this means these workers can afford more generous monthly housing costs, ranging from \$2000 to \$2500 in rent. On the other end of the spectrum, social workers in Stafford and Fredericksburg, as well as teaching professions in Caroline county, can only afford around \$1250 per month.
 
 ```{r}
+# affordable rents for public sector salaries viz from pp 
 
 ```
+
+::: callout-tip
+Note the Bureau of Labor Statistics does not differentiate where workers live, or their locality of origin. These data outline only where the profession is based.
+:::
 
 From the [previous-chapter](market-rental.qmd#rentalmarket), we know that there are xxx rental units in the region priced at \$1,500 and below.
 
@@ -379,8 +396,111 @@ To determine how affordable homeownership is at the median renter income, we can
 For underwriting purposes, we assume that the monthly mortgage payment plus these costs can not exceed 28 percent of the buyer’s gross income. For example, a renter earning \$50,000 can afford a monthly housing cost no more than \$1,166.67. To determine the maximum principal amount, and the subsequent sales price, we assume a standard 30-year fixed-rate mortgage using the average annual interest rates published by Freddie Mac
 :::
 
+```{r}
+#| label: fig-price-afford
+#| fig.cap: "Median sales price versus maximum home price affordable to median renter income"
+
+price_afford <- costs_income_afford |> 
+  select(1, 2, 5, 8) |> 
+  pivot_longer(cols = 3:4,
+               names_to = "type") |> 
+  mutate(type = case_when(
+    type == "price" ~ "Median sales price",
+    TRUE ~ "Maximum affordable home price"
+  ))
+
+slgap <- ggplot(price_afford,
+       aes(x = year,
+           y = value,
+           fill = type,
+           data_id = value,
+           tooltip = dollar_format()(value))) +
+  geom_col(position = "dodge") +
+  geom_col_interactive(position = "dodge", size = 2) +
+  theme_hda() +
+  scale_fill_hda() +
+  facet_wrap(~locality, nrow = 1) +
+  scale_x_continuous(n.breaks = 7) +
+  scale_y_continuous(labels = label_dollar()) +
+  labs(title = "Median sales price versus <br>maximum home price affordable to median renter income",
+       subtitle ="2016 to 2022 (ACS income data through 2020)",
+       caption = "**Sources:** U.S. Census Bureau, American Community Survey,<br>Table B25119 and CVR MLS.") +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+if (knitr::is_html_output()) {
+  
+  girafe(ggobj = slgap,
+         height_svg = 4) 
+  
+} else {
+  
+  slgap
+  
+  }
+```
+
+There is a lack of affordable starter homes, with few units available at price points accessible to median-income workers in the region.
+
+\[more analysis\]
+
+### Homeownership Gaps
+
+The existing supply skews towards larger, more expensive single-family homes, with sixty two percent of homeownership units cost more than \$1500 per month, and over 45,000 units have monthly costs exceeding \$2,000. In order to keep housing costs at 30% and below of income, a household would need to make at least \$80,000 per year to afford \$2000 in housing costs.
+
+Only about 15,000 units in the region cost less than \$599 per month.
+
+```{r}
+
+#| label: fig-occ-price
+#| fig.cap: "Maximum affordable home price by occupation versus median sales prices"
+
+job_own <- ggplot(occ_locality_afford,
+                   aes(y = reorder(group, price, decreasing = F),
+                       x = price,
+                       fill = type,
+                       data_id = price,
+                       tooltip = label_dollar()(price))) +
+  geom_col() +
+  geom_col_interactive(size = 2) +
+  facet_grid(rows = vars(fct_rev(type)),
+             scales = "free_y",
+             switch = "y",
+             space = "free_y") +
+  scale_fill_hda() +
+  scale_x_continuous(labels = label_dollar(), expand = expansion(mult = 0)) +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 24)) +
+  labs(title = "Most workers cannot buy a home on their own",
+       subtitle = "Maximum affordable home price by occupation<br>versus median sales prices",
+       caption = "**Sources:** U.S. Bureau of Labor Statistics, Occupational Employment and Wage Statistics;<br>CVR MLS.") +
+  theme_hda() +
+  add_zero_line(axis = "x") +
+  flip_gridlines() +
+  theme(strip.text.y = element_blank())
+
+if (knitr::is_html_output()) {
+  
+  girafe(ggobj = job_own,
+         height_svg = 4) 
+  
+} else {
+  
+  job_own
+  
+  }
+
+```
+
 Median regional wages for the most commonly held jobs show a large gap in what purchase prices are affordable between occupations. Between the top five occupations, ranging from food preparation and service positions to management and business occupations, homes would need to be priced below \$100,000 ranging to over \$460,000 to be affordable.
 
-Based on the number of homes for sale and rentals with higher monthly costs addressed in the market analysis, the supply of housing is not meeting the needs of over 500,000 regional job holders.
+Even for higher-paid public sector workers like firefighters, who could afford homes up to \$250,000 (assuming a 20% down payment), the options are limited as the market favors much higher-priced homes. The median home prices in the region far exceed what's affordable for many workers.
 
-It is reasonable to assume then that many workers in Office and Administrative Support and Food Preparation and Serving Related Occupations are commuting into the region to work and living elsewhere. With affordable rent at \$1,159 and \$825.88 respectively, if these workers do live in the region, they are likely to be cost burdened.
+```{r}
+# insert affordable home purchase price for public sector salary viz from pp 
+```
+
+For public sector workers to buy homes, they will likely need to move out of the region or pair up their incomes to increase their purchasing power. Using LEHD Origin-Destination Employment Statistics (LODES) data from the Census Bureau, commuter patterns can be seen for the region. This data allows for comparison between a respondent’s “origin” or residence, and their employment destination. In this analysis, commuters are individuals that travel outside of the county for work. Spotsylvania and Stafford have the highest number of commuters.
+
+```{r}
+# insert LODES viz
+```
