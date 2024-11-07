@@ -152,71 +152,60 @@ ggplot(supply_demand,
   labs(title = title_text)
 ```
 
-Single-family homes dominate both the rental and ownership markets, leaving a gap in diverse housing types such as multifamily and senior-focused housing. There's a particular shortage of housing designed for single-person households, despite demographic trends showing an increase in smaller household sizes.
+As discussed in the market analysis, single-family homes dominate both the rental and ownership markets, leaving a gap in diverse housing types such as multifamily and senior-focused housing. There's a particular shortage of smaller housing designed for single-person households, despite demographic trends showing an increase in smaller household sizes.
 
 ```{r}
-install.packages("ggplot2")
-library(ggplot2)
 
-#| label: BPS-over-time
-#| fig.cap: "Building Permits by Unit (2000-2020)"
 
-years <- rep(seq(2000, 2020, by = 1), 3)
-unit_type <- rep(c("1-unit", "2-4 units", "5+ units"), each = 21)
+```
 
-values <- c(
-  # 1-unit values
-  2800, 3800, 4000, 3800, 3800, 4500, 3000, 1900, 900, 1000, 1000,
-  1200, 1600, 2100, 1400, 1900, 2200, 1900, 2200, 2500, 1000,
-  # 2-4 units values
-  0, 0, 0, 0, 150, 100, 50, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0,
-  # 5+ units values
-  0, 0, 500, 300, 200, 300, 200, 0, 0, 0, 0, 200, 300, 0, 300, 500, 800, 600, 700, 1300, 1000
-)
+Most new housing units are concentrated in Stafford, and Spotsylvania, indicating a need for more balanced development across all localities in the region.  
 
-permits_data <- faar_cbps |> 
+```{r}
+# BPS data for location 
+
+permits_data_location <- faar_cbps |> 
   rename(
     years = year,
+    Name = NAMELSAD,
     unit_type = type,
   ) |> 
-  select(years, unit_type, units)
+  select(years, Name, unit_type, units)
 
-head(permits_data)
-names(permits_data)
-
-permits_data <- permits_data |>
-  mutate(
+permits_data_location <- permits_data_location |>
+mutate(
     unit_type = case_when(
       unit_type %in% c("2-units", "3-4 units") ~ "2-4 units",
       TRUE ~ unit_type
     )
+  ) 
+
+permits_by_location <- permits_data_location |>
+  group_by(Name, unit_type) |>
+  summarise(
+    avg_units = mean(units, na.rm = TRUE),
+    .groups = 'drop'
   ) |>
-  group_by(years, unit_type) |>
-  summarise(units = sum(units), .groups = 'drop')
+  group_by(unit_type) |>
+  slice_max(order_by = avg_units, n = 10)  # Get top 10 for each unit type
 
-
-## Need help cleaning this up 
-
-ggplot(permits_data, 
-       aes(x = years, y = units, fill = unit_type)) +
+# Create bar plot
+ggplot(permits_by_location, 
+       aes(x = reorder(Name, avg_units), 
+           y = avg_units, 
+           fill = unit_type)) +
   geom_col() +
-  facet_wrap(~unit_type, scales = "free_y", nrow = 1) +
+  facet_wrap(~unit_type, scales = "free_y") +
+  coord_flip() +  # Flip coordinates for better label readability
   scale_fill_manual(values = c("1-unit" = "#4169E1", 
                               "2-4 units" = "#98AFC7", 
                               "5+ units" = "#DAA520")) +
-  scale_x_continuous(breaks = seq(2000, 2020, by = 5),
-                    labels = scales::number_format(accuracy = 1),
-                    expand = expansion(mult = 0.1)) +
-  scale_y_continuous(labels = scales::number_format(accuracy = 1),
-                    breaks = function(x) pretty(x, n = 5)) +
-  labs(title = "Building Permits by Unit (2000-2020)",
+  labs(title = "Top Locations by Average Building Permits",
        x = "",
-       y = "",
-       caption = "Source: Census Building Permits Survey") 
+       y = "Average Number of Permits",
+       fill = "Unit Type") 
 
 ```
-
-Most housing units are concentrated in Fredericksburg, Stafford, and Spotsylvania, indicating a need for more balanced development across all localities in the region.
 
 Rural areas and smaller communities in the region may be particularly under-served in terms of diverse and affordable housing options.
 
