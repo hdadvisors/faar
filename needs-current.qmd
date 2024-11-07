@@ -48,18 +48,18 @@ write_rds(costs_income_change, "data/costs_income_change.rds")
 
 # Load income data
 
-b25119 <- read_rds("data/b25119.rds")
+b25119 <- read_rds("data/b25119_vars.rds")
 
 renter_income <- b25119 |> 
-  filter(tenure == "Renter",
-         NAME %in% pha_names) |> 
-  select(NAME, year, estimate = cdollars, dollars20)
+  rename(dollars = estimate) |> 
+  filter(tenure == "Renter") |> 
+  select(NAME, year, tenure, dollars)
 
 # Load rent data
 
 faar_rent_annual <- faar_rent
 
-# Load sales data
+# Load sales data ## NEED TO PULL THIS DATA
 
 faar_sales_annual <- read_csv("data/rr_annual_sales.csv") |> 
   pivot_longer(cols = 2:9,
@@ -155,8 +155,64 @@ ggplot(supply_demand,
 Single-family homes dominate both the rental and ownership markets, leaving a gap in diverse housing types such as multifamily and senior-focused housing. There's a particular shortage of housing designed for single-person households, despite demographic trends showing an increase in smaller household sizes.
 
 ```{r}
-# unit viz from pp 
+install.packages("ggplot2")
+library(ggplot2)
 
+#| label: BPS-over-time
+#| fig.cap: "Building Permits by Unit (2000-2020)"
+
+years <- rep(seq(2000, 2020, by = 1), 3)
+unit_type <- rep(c("1-unit", "2-4 units", "5+ units"), each = 21)
+
+values <- c(
+  # 1-unit values
+  2800, 3800, 4000, 3800, 3800, 4500, 3000, 1900, 900, 1000, 1000,
+  1200, 1600, 2100, 1400, 1900, 2200, 1900, 2200, 2500, 1000,
+  # 2-4 units values
+  0, 0, 0, 0, 150, 100, 50, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0,
+  # 5+ units values
+  0, 0, 500, 300, 200, 300, 200, 0, 0, 0, 0, 200, 300, 0, 300, 500, 800, 600, 700, 1300, 1000
+)
+
+permits_data <- faar_cbps |> 
+  rename(
+    years = year,
+    unit_type = type,
+  ) |> 
+  select(years, unit_type, units)
+
+head(permits_data)
+names(permits_data)
+
+permits_data <- permits_data |>
+  mutate(
+    unit_type = case_when(
+      unit_type %in% c("2-units", "3-4 units") ~ "2-4 units",
+      TRUE ~ unit_type
+    )
+  ) |>
+  group_by(years, unit_type) |>
+  summarise(units = sum(units), .groups = 'drop')
+
+
+## Need help cleaning this up 
+
+ggplot(permits_data, 
+       aes(x = years, y = units, fill = unit_type)) +
+  geom_col() +
+  facet_wrap(~unit_type, scales = "free_y", nrow = 1) +
+  scale_fill_manual(values = c("1-unit" = "#4169E1", 
+                              "2-4 units" = "#98AFC7", 
+                              "5+ units" = "#DAA520")) +
+  scale_x_continuous(breaks = seq(2000, 2020, by = 5),
+                    labels = scales::number_format(accuracy = 1),
+                    expand = expansion(mult = 0.1)) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1),
+                    breaks = function(x) pretty(x, n = 5)) +
+  labs(title = "Building Permits by Unit (2000-2020)",
+       x = "",
+       y = "",
+       caption = "Source: Census Building Permits Survey") 
 
 ```
 
