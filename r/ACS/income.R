@@ -80,3 +80,16 @@ b25119_raw <- map_dfr(years, function(yr){
 b25119_raw <- b25119_raw |> 
   subset(GEOID %in% cv)
 
+
+
+b25119_vars <- b25119_raw |> 
+  mutate(tenure = case_when(
+    variable == "B25119_001" ~ "Total",
+    variable == "B25119_002" ~ "Homeowner",
+    variable == "B25119_003" ~ "Renter",
+    TRUE ~ NA_character_
+  )) |>
+  select(-variable)
+
+
+write_rds(b25119_vars, "b25119_vars.rds")

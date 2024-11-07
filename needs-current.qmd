@@ -209,7 +209,7 @@ costs_income_change <- read_rds("data/costs_income_change.rds")
 
 ```
 
-### Rental housing gap
+### Rental Housing Gap
 
 ```{r}
 
@@ -302,7 +302,7 @@ The limited availability of rental units for households who can afford \$2000 mo
 
 More likely though, middle to higher income renting-households are able to take advantage of the greater availability of units priced between \$1000 and \$1999 (18,000 units compared with 7,500 for \$2,000 monthly). This creates increased competition for the “middle-priced” units on the regional rental market, driving cost-burden on low income households and opportunity for savings for higher income households.
 
-## Rental affordability
+## Rental Affordability
 
 ::: callout-tip
 #### Calculating rental affordability
@@ -383,7 +383,7 @@ From the [previous-chapter](market-rental.qmd#rentalmarket), we know that there 
 
 \[more analysis\]
 
-## Attaining homeownership
+## Attaining Homeownership
 
 ::: callout-tip
 To determine how affordable homeownership is at the median renter income, we can calculate the maximum home sales price affordable to a buyer with that income. To make these estimates, we make the following simplified assumptions:
