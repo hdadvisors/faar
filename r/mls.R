@@ -1,120 +1,123 @@
+# Setup
+
 library(tidyverse)
 library(janitor)
 library(tidygeocoder)
 library(fredr)
-library(zoo)
 library(lubridate)
 
+# Download BrightMLS data for the study area
+# (Closed home sales from 1.1.2020 to 5.1.2024)
 
+# List all MLS csv files
+files <- list.files(
+  path = "data/raw",
+  pattern = "_mls\\.csv$",  # Match files ending with _mls.csv
+  full.names = TRUE         # Get full file paths
+)
 
-# Download BrightMLS data for the study area. Pull closed home sales from 1.1.2020 to 5.1.2024
+# Create empty list to store dataframes
+geocoded_dfs <- list()
 
-fburg <- read_csv("data/raw/fburg_mls.csv")
-kg <- read_csv("data/raw/kg_mls.csv")
-caro <- read_csv("data/raw/caroline_mls.csv")
-orange <- read_csv("data/raw/orange_mls.csv")
-spots1 <- read_csv("data/raw/spots1_mls.csv")
-spots2 <- read_csv("data/raw/spots2_mls.csv")
-spots3 <- read_csv("data/raw/spots3_mls.csv")
-spots4 <- read_csv("data/raw/spots4_mls.csv")
-spots5 <- read_csv("data/raw/spots5_mls.csv")
-
-staff1 <- read_csv("data/raw/staff1_mls.csv")
-staff2 <- read_csv("data/raw/staff2_mls.csv")
-staff3 <- read_csv("data/raw/staff3_mls.csv")
-staff4 <- read_csv("data/raw/staff4_mls.csv")
-staff5 <- read_csv("data/raw/staff5_mls.csv")
-
-
-faar_mls <- rbind(fburg, kg, orange, caro, spots1, spots2, spots3, spots4, spots5,
-                  staff1, staff2, staff3, staff4, staff5) |>
-  clean_names() |>
-  mutate(zip_code = as.character(zip_code))
-
-
-max_rows <- 9999
-num_chunks <- ceiling(nrow(faar_mls)/max_rows)
-chunks <- rep(1:num_chunks, each = max_rows)[1:nrow(faar_mls)]
-
-list_of_dfs <- split(faar_mls, chunks)
-
-faar_mls1 <- data.frame(list_of_dfs[1])
-faar_mls2 <- data.frame(list_of_dfs[2])
-faar_mls3 <- data.frame(list_of_dfs[3])
-faar_mls4 <- data.frame(list_of_dfs[4])
-
-
-
-colnames(faar_mls1) <- sub("^X1\\.", "", colnames(faar_mls1))
-colnames(faar_mls2) <- sub("^X2\\.", "", colnames(faar_mls2))
-colnames(faar_mls3) <- sub("^X3\\.", "", colnames(faar_mls3))
-colnames(faar_mls4) <- sub("^X4\\.", "", colnames(faar_mls4))
-
-
-
-parts <- c(faar_mls1, faar_mls2, faar_mls3, faar_mls4)
-
-
-faar_mls_address <- faar_mls1 |>
-  mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
-  geocode(address = full_address,
-          method = 'google',
-          lat = latitude,
-          long = longitude,
-          full_results = TRUE)
-
-faar_mls_address1 <- faar_mls2 |>
-  mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
-  geocode(address = full_address,
-          method = 'google',
-          lat = latitude,
-          long = longitude,
-          full_results = TRUE)
-
-faar_mls_address2 <- faar_mls3 |>
-  mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
-  geocode(address = full_address,
-          method = 'google',
-          lat = latitude,
-          long = longitude,
-          full_results = TRUE)
-
-faar_mls_address3 <- faar_mls4 |>
-  mutate(full_address = paste(address, county, zip_code, sep = ",")) |>
-  geocode(address = full_address,
-          method = 'google',
-          lat = latitude,
-          long = longitude,
-          full_results = TRUE)
-
-faar_geocode <- rbind(faar_mls_address, faar_mls_address1, faar_mls_address2, faar_mls_address3)
-
-# faar_geocode <- read_rds("data/faar_mls.rds")
-# write_rds(faar_geocode, "data/faar_mls_google.rds")
-faar_geocode <- read_rds("data/faar_mls_google.rds")
-
-cpi_sales <- cpi_rent <- fredr(
-  series_id = "CUUR0000SA0L2" 
-) |> 
-  mutate(quarter = as.yearqtr(date)) |> 
-  mutate(year = year(quarter)) |> 
-  filter(year >= 2019) |> 
-  group_by(quarter) |> 
-  summarise(cpi = mean(value))
+# Import each file and geocode addresses
+for (file in files) {
   
-faar_geocode_cpi <- faar_geocode |> 
-  mutate(close_price = as.numeric(gsub("[\\$,]", "", close_price))) |> 
-  mutate(list_price = as.numeric(gsub("[\\$,]", "", list_price))) |>  
-  mutate(sale_date = as.Date(close_date, format = "%m/%d/%y")) |> 
-  mutate(quarter = as.yearqtr(sale_date)) |> 
-  mutate(year = year(quarter)) |> 
-  filter(year >= 2019) |> 
-  left_join(cpi_sales, by = "quarter") |> 
-  mutate(adj_sales = (284.2240/cpi) * close_price)
+  # Extract the name before the underscore
+  obj_name <- str_extract(basename(file), "^[^_]+")
+  
+  # Read in the CSV file and assign to the extracted name
+  current_df <- read_csv(file) |>
+    clean_names() |> 
+    select(!c(2, 3, 12, 26, 27)) |>
+    mutate(
+      county = str_remove_all(county, ", VA"),
+      zip_code = as.character(zip_code),
+      full_address = paste(address, county, "VA", zip_code, sep = ", ")
+    ) |> 
+    geocode(
+      address = full_address,
+      method = 'geocodio',
+      lat = latitude,
+      long = longitude
+    )
+  
+  # Store the dataframe in our list with its name
+  geocoded_dfs[[obj_name]] <- current_df
 
+}
 
-# write_rds(faar_geocode_cpi, "data/faar_mls_cpi.rds")
-write_rds(faar_geocode_cpi, "data/faar_mls_cpi_google.rds")
+# Combine all dataframes into one
+faar_geocode <- bind_rows(geocoded_dfs)
 
-# write_rds(faar_geocode, "data/faar_mls.rds")
+# Get monthly CPI
+cpi_sales <- fredr(
+    series_id = "CUUR0000SA0L2",
+    observation_start = as.Date("2020-01-01"),
+    observation_end = as.Date("2024-05-01")
+  ) |> 
+  select(month = 1, cpi = 3)
+
+cpi_latest <- tail(cpi_sales$cpi, 1)
+
+# Adjust prices by CPI
+faar_cpi <- faar_geocode |> 
+  mutate(
+    close_date = as_date(close_date, format = "%m/%d/%y"),
+    across(11:12, ~as.numeric(gsub("[\\$,]", "", .x)))
+  ) |> 
+  mutate(
+    month = floor_date(close_date, "month"),
+    .after = close_date
+  ) |> 
+  left_join(cpi_sales, by = "month") |> 
+  mutate(
+    adj_list = cpi_latest/cpi * list_price,
+    adj_close = cpi_latest/cpi * close_price,
+    .after = close_price
+  )
+
+# Reconfigure columns and fix missing/wrong data entries
+faar_mls <- faar_cpi |> 
+  select(
+    county,
+    full_address,
+    zip = zip_code,
+    close_date,
+    close_month = month,
+    dom,
+    cdom,
+    structure_type,
+    year_built,
+    nc = new_construction_yn,
+    fin_sqft = total_finished_sqft,
+    beds,
+    br_full = bathrooms_full,
+    br_half = bathrooms_half,
+    lot_size = lot_size_acres,
+    year_reno = year_major_reno_remodel,
+    property_condition,
+    list_price,
+    close_price,
+    adj_list,
+    adj_close,
+    sale_type,
+    close_sale_type,
+    buyer_financing,
+    latitude,
+    longitude
+  ) |> 
+  mutate(
+    county = str_remove_all(county, " City"), # Shorten to Fredericksburg
+    br_half = replace_na(br_half, 0), # Replace NAs with 0
+    year_reno = replace(year_reno, year_reno == 2033, 2023), # Fix typo in data
+    year_built = case_when(
+      year_built == 2922 ~ 2022, # Fix typo in data
+      year_built %in% c(0, 9999) & nc == "No" ~ NA, # Replace invalid dates with NA
+      year_built == 0 & nc == "Yes" ~ year(close_date), # Assign year_built for NC homes when data = 0
+      is.na(year_built) & nc == "Yes" ~ year(close_date), # Assign year_built for NC homes when data is NA
+      .default = year_built
+    )
+  )
+
+write_rds(faar_mls, "data/faar_mls.rds")
   

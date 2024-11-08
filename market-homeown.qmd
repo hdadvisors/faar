@@ -6,19 +6,11 @@
 #| message: false
 #| warning: false
 
-install.packages("rmarkdown")
-install.packages("tidyverse")
-install.packages("knitr")
-
+# Load common script
 source("_common.R")
 
-
 # Load packages other than tidyverse and hdatools
-#
-library(scales)
 library(sf)
-library(ggtext)
-library(hdatools)
 
 ```
 
@@ -37,7 +29,14 @@ There are far fewer ownership units that cost less than $1,500 per month than th
 
 
 # Read in the selected monthly housing cost data for homeowners.
-owner_supply <- read_rds("data/b25094_region.rds") 
+owner_supply <- read_rds("data/b25094_region.rds") |> 
+  mutate(
+    monthly = fct_relevel(
+      monthly,
+      c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+        "$1,500 to $1,999", "More than $2,000")
+    )
+  )
 
 # sum(owner_supply$adj_estimate)
 
@@ -47,17 +46,23 @@ owner_supply <- read_rds("data/b25094_region.rds")
 # units based on the distribution by cost.
 
 # Create a custom order to arrange the monthly cost values appropriately.
-custom_order <- factor(owner_supply$monthly, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
-                                                         "$1,500 to $1,999", "More than $2,000"))
+#custom_order <- factor(
+#  owner_supply$monthly,
+#  levels = c(
+#    "Less than $599", "$600 to $999", "$1,000 to $1,499",
+#    "$1,500 to $1,999", "More than $2,000"
+#    )
+#  )
 
-ggplot(owner_supply,
-       aes(x = custom_order,
-           y = adj_estimate)) +
-  geom_col(stat = "identity", fill = "#445ca9") +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Existing homeowner supply by monthly cost",
-       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25094.")
+ggplot(owner_supply, aes(x = monthly, y = adj_estimate)) +
+  geom_col(fill = hda_pal[1]) +
+  theme_hda() +
+  scale_y_continuous(labels = label_comma()) +
+  add_zero_line() +
+  labs(
+    title = "Existing homeowner supply by monthly cost",
+    caption = "**Source:** U.S. Census Bureau, 5-Year American Community Survey, Table B25094."
+  )
 
 ```
 
@@ -74,9 +79,6 @@ Additionally, as these data incorporate market trends from the last four years, 
 
 
 ```
-
-
-
 
 
 ```{r}
