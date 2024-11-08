@@ -397,11 +397,6 @@ In this chapter, an "affordable rent" is no more than 30 percent of a household'
 
 Occupation data shows the most common salaries in the region, which influences what individuals can purchase or rent, where they must live depending on their wage, and how their families can effectively expand. In a [previous chapter](spectrum-work.qmd###Common%20industries%20and%20occupations) , the five most common occupation categories in the region were determined from the latest PUMS data.
 
-```{r}
-#| label: fig-occ-salary
-#| fig.cap: "Median annual salaries for the five most common occupation categories"
-```
-
 The mismatch in salaries with average rental costs particularly affects workers in sectors such as food preparation, office administration, and some public sector jobs (e.g., teachers in Caroline County, social workers in Stafford and Fredericksburg) who can only afford rents around \$825-\$1,250 per month. Based on the number of homes for sale and rentals with higher monthly costs addressed in the market analysis, the supply of housing is not meeting the needs of over 500,000 regional job holders.
 
 It is reasonable to assume then that many workers in Office and Administrative Support and Food Preparation and Serving Related Occupations are commuting into the region to work and living elsewhere. With affordable rent at \$1,159 and \$825.88 respectively, if these workers do live in the region, they are likely to be cost burdened.
