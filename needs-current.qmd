@@ -344,6 +344,39 @@ write_rds(gap, "data/gap.rds")
 #| label: fig-gap-plot
 #| fig.cap: "Rental housing gap by AMI"
 
+gap |>
+  mutate(gapcode = case_when(
+    gapcode == "Gap" ~ "Unaffordable",
+    TRUE ~ "Affordable"
+  ))
+
+gap_plot <- ggplot(gap,
+       aes(x = year, 
+           y = estimate,
+           fill = str_wrap(gapcode, 25),
+           data_id = estimate,
+           tooltip = label_comma()(estimate))) +
+  geom_col() + 
+  facet_grid(~household_income) + 
+  theme_hda() +
+  scale_fill_hda() + 
+  scale_y_continuous(labels = label_comma()) +
+  labs(title = "Rental housing gap by AMI",
+       subtitle = "2015 to 2019",
+       caption = "**Source:** U.S Department of Housing and Urban Development,<br>Comprehensive Housing Affordability Strategy (CHAS), Table 18C.") +
+  theme(legend.position = "bottom") +
+  add_zero_line("y")
+
+if (knitr::is_html_output()) {
+  
+  girafe(ggobj = gap_plot,
+         height_svg = 4) 
+  
+} else {
+  
+  gap_plot
+  
+  }
 
 
 ```
