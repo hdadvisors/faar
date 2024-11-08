@@ -9,77 +9,21 @@
 # Load common script
 source("_common.R")
 
-# Load packages other than tidyverse and hdatools
+# Load other packages other than tidyverse and hdatools
 library(sf)
+library(leaflet)
+library(geojsonio)
+library(classInt)
+library(htmltools)
+library(htmlwidgets)
 
 ```
 
 ### Existing Supply 
 
-There are a little over 101,000 homeownership units throughout the region.[^1] On the farthest ends of the homeownership spectrum, about 15,000 units cost less than $599 per month, whereas there are over 45,000 units with more than $2,000 in monthly costs. This indicates that there are fewer units affordable to low to middle income homeowners and buyers. In order to keep housing costs at 30% and below of income, a household would need to make at least $80,000 per year to afford $2000 in housing costs.
+There are a little over 101,000 homeownership units throughout the region.[^1] 
 
-There are far fewer ownership units that cost less than $1,500 per month than the total number of units that cost more than $2000 monthly. Sixty two percent of homeownership units, in fact, cost more than $1500 per month. While these estimates encompass homeowner households without mortgages, this suggests that low-cost homeownership opportunities are few and far between, favoring larger, higher cost homes.
-
-
-[^1]:  This estimate includes units that are vacant, but “For sale only” and “Sold, not occupied”. These units are distributed across rental units based on the distribution by cost.
-
-```{r}
-#| label: fig-owner-supply
-#| fig-cap: "Existing homeowner supply by monthly housing costs"
-
-
-# Read in the selected monthly housing cost data for homeowners.
-owner_supply <- read_rds("data/b25094_region.rds") |> 
-  mutate(
-    monthly = fct_relevel(
-      monthly,
-      c("Less than $599", "$600 to $999", "$1,000 to $1,499",
-        "$1,500 to $1,999", "More than $2,000")
-    )
-  )
-
-# sum(owner_supply$adj_estimate)
-
-# The data visualization below shows the distribution of owner-occupied housing
-# based on monthly housing costs in 2022. This viz is focused on the entire region. It 
-# accounts for vacant housing units by applying an equal distribution of vacant 
-# units based on the distribution by cost.
-
-# Create a custom order to arrange the monthly cost values appropriately.
-#custom_order <- factor(
-#  owner_supply$monthly,
-#  levels = c(
-#    "Less than $599", "$600 to $999", "$1,000 to $1,499",
-#    "$1,500 to $1,999", "More than $2,000"
-#    )
-#  )
-
-ggplot(owner_supply, aes(x = monthly, y = adj_estimate)) +
-  geom_col(fill = hda_pal[1]) +
-  theme_hda() +
-  scale_y_continuous(labels = label_comma()) +
-  add_zero_line() +
-  labs(
-    title = "Existing homeowner supply by monthly cost",
-    caption = "**Source:** U.S. Census Bureau, 5-Year American Community Survey, Table B25094."
-  )
-
-```
-
-Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024.[^2] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
-
-[^2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
-
-```{r}
-#| label: fig-owner-costs
-#| fig-cap: "Monthly Owner Costs and Interest Rates"
-
-
-
-
-
-```
-
+[^1]: This estimate includes units that are vacant, but “For sale only” and “Sold, not occupied”.
 
 ```{r}
 #| label: fig-owner-bedroom
@@ -109,6 +53,7 @@ ggplot(owner_bedroom,
 
 ```
 
+. . .
 
 ```{r}
 #| label: fig-owner-type
@@ -147,6 +92,11 @@ ggplot(owner_type,
 
 ```
 
+
+### Building Trends
+
+. . .
+
 ```{r}
 #| label: fig-bps-chart
 #| fig-cap: "Building Permits"
@@ -183,18 +133,101 @@ ggplot(bps,
 ```
 
 
+### Market Trends
+
+`update with new text`
+
+What all current homeowners are paying...
+
+```{r}
+#| label: fig-owner-supply
+#| fig-cap: "Owner-occupied homes by monthly housing costs"
+
+# Read in the selected monthly housing cost data for homeowners.
+owner_supply <- read_rds("data/b25094_region.rds") |> 
+  mutate(
+    monthly = fct_relevel(
+      monthly,
+      c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+        "$1,500 to $1,999", "More than $2,000")
+    )
+  )
+
+# sum(owner_supply$adj_estimate)
+
+ggplot(
+  owner_supply,
+  aes(x = monthly, y = adj_estimate, label = label_comma()(adj_estimate))
+  ) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", nudge_y = -1500) +
+  scale_y_continuous(labels = label_comma()) +
+  theme_hda() +
+  add_zero_line() +
+  labs(
+    title = "Owner-occupied homes by monthly housing costs",
+    subtitle = "Inludes mortgage payments, property taxes, insurance, and basic utilities",
+    caption = acs_cap("B25094")
+  )
+
+```
+
+The market that buyers face...
+
+```{r}
+#| label: fig-price-line
+#| fig-cap: "Median sales price"
+
+mls_msp <- read_rds("data/faar_mls.rds") 
+  #filter(county != "Orange") |> 
+  select(quarter, type, adj_sales) |> 
+  st_drop_geometry() |> 
+  group_by(quarter, type) |> 
+  summarise(med_sales = median(adj_sales))
+
+
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
+
+ggplot(sales_price,
+       aes(x = quarter,
+           y = med_sales,
+           color = type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_color_hda() + 
+  theme_hda(base_size = 10) +
+  labs(title = title_text,
+       subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
+  scale_y_continuous(labels = dollar_format())
+
+```
+
+
+Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024.[^2] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
+
+[^2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
+
+```{r}
+#| label: fig-owner-costs
+#| fig-cap: "Monthly Owner Costs and Interest Rates"
+
+
+```
+
+
+
+
+
+
+
 ```{r}
 #| label: fig-sales-map-nc
 #| fig-cap: "Map of total new construction home sales from 2020 through April 2024"
 
 # Create a hex grid map showing home sale concentrations in FAAR region.
 
-library(leaflet)
-library(sf)
-library(geojsonio)
-library(classInt)
-library(htmltools)
-library(htmlwidgets)
+
 
 # sales <- read_rds("data/faar_mls_cpi_google.rds") |>
 #   mutate(longitude = case_when(
@@ -388,42 +421,7 @@ m <- leaflet(hex_count) |>
 ```
 
 
-```{r}
-#| label: fig-price-line
-#| fig-cap: "Median sales price"
 
-# The data visualization below shows median home sales price for new construction and resale
-# homes in the FAAR region in 2024 Q2 dollars. 
-
-sales_price <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |>  
-  select(quarter, type, adj_sales) |> 
-  st_drop_geometry() |> 
-  group_by(quarter, type) |> 
-  summarise(med_sales = median(adj_sales))
-
-
-title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
-
-ggplot(sales_price,
-       aes(x = quarter,
-           y = med_sales,
-           color = type)) +
-  geom_line(size = 1) +
-  geom_point() +
-  scale_color_hda() + 
-  theme_hda(base_size = 10) +
-  labs(title = title_text,
-       subtitle = "In 2024 Q2 inflation-adjusted dollars",
-       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
-  scale_y_continuous(labels = dollar_format())
-
-```
 
 
 ```{r}

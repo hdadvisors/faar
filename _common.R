@@ -42,6 +42,18 @@ cb_pal <- c(
 
 faar_fips <- c("51033", "51099", "51137", "51177", "51179", "51630")
 
+# Shortcut function for captions on plots with ACS data
+
+acs_cap <- function(table, year = "2018-2022") {
+  paste0(
+    "**Source:** U.S. Census Bureau, ",
+    year,
+    " American Community Survey 5-year estimates, Table ",
+    table,
+    "."
+  )  
+}
+
 # Set plot rendering options
 
 if (knitr::is_html_output()) {
