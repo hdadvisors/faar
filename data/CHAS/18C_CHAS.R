@@ -23,7 +23,7 @@ renter <- tb_18c |>
   select(county, fips, year, estimate, tenure, cost, household_income) |>
   group_by(county, fips, year, tenure, cost, household_income) |>
   summarise(estimate = sum(estimate)) |>
-  filter(fips %in% rr)
+  filter(fips %in% faar)
 
 tb_18_match <- renter |>
   filter(tenure == "Renter occupied") |>

@@ -118,8 +118,7 @@ This analysis's goal is to show existing housing costs versus the ability of hou
 
 ## Overview
 
--   skfh
--   sklsg
+[adding in JTK's new text and spectrum pieces]
 
 At a glance, we can see supply and demand in the region are not in alignment. There is an excess of supply for \[ XYZ and a lack of supply for XYZ. \]
 
@@ -128,7 +127,11 @@ remotes::install_github("hdadvisors/hdatools")
 library(hdatools)
 install.packages("gtable")
 
-supply_demand <- read_rds("data/fxburg_supply_demand.rds")
+supply_demand <- read_rds("data/fxburg_supply_demand.rds")|>
+
+
+supply_demand |> group_by(ami)|> summarise(tenure = sum(Homeowner, Renter, na.rm = TRUE))
+  
 
 ami_order <- factor(supply_demand$ami, levels = c("30% AMI or below", "31-50% AMI",
                                            "51-80% AMI", "81-100% AMI", "101-120% AMI",
@@ -261,7 +264,11 @@ costs_income_change <- read_rds("data/costs_income_change.rds")
 #| label: gap-data
 #| eval: false
 
-tb_18c <- read_csv("data/Table18C_2015to2019.csv")
+library(janitor)
+faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
+  
+  
+tb_18c <- read_csv("data/Table18C_2019to2020.csv")
 
 colnames(tb_18c)[16] <- "Cost"
 
@@ -271,7 +278,7 @@ renter <- tb_18c |>
   select(county, fips, year, estimate, tenure, cost, household_income) |>
   group_by(county, fips, year, tenure, cost, household_income) |>
   summarise(estimate = sum(estimate)) |>
-  filter(fips %in% rr)
+  filter(fips %in% faar)
 
 tb_18_match <- renter |>
   filter(tenure == "Renter occupied") |>
@@ -318,7 +325,7 @@ write_rds(tb_18_match, "data/tb_18_match.rds")
 tb_18_match <- read_rds("data/tb_18_match.rds")
 
 gap <- tb_18_match |>
-  filter(fips %in% as.numeric(pha)) |> 
+  filter(fips %in% as.numeric(faar)) |> 
   group_by(year, household_income, gapcode) |>
   summarise(estimate = sum(estimate)) |>
   mutate(estimate = case_when(
