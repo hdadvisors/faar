@@ -145,6 +145,12 @@ locality_wages <- read_csv("data/faar_locality_wages.csv") |>
     !(locality == "Orange" & job_actual == "Social Assistance")
   )
 
+
+rate <- 0.065  # 6.5% annual interest rate
+tax_ins <- 0.25  # Property tax and insurance as percentage of monthly payment (25%)
+dp <- 0.20  # Down payment percentage (20%)
+
+
 local_wages_cty <- locality_wages |> 
   summarize(
     salary = mean(salary), .by = locality
@@ -153,7 +159,7 @@ local_wages_cty <- locality_wages |>
     aff_rent = salary/12*0.3,
     aff_own = 
       (salary/12*0.28) /
-      ((rate/12 * (1+rate/12)^360) /
+      ((rate/12 * (1 + rate/12)^360) /
          ((1+rate/12)^360 - 1) /
          (1-(tax_ins/12)) /
          (1-dp))

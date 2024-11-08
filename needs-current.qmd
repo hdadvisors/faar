@@ -118,7 +118,7 @@ This analysis's goal is to show existing housing costs versus the ability of hou
 
 ## Overview
 
-[adding in JTK's new text and spectrum pieces]
+\[adding in JTK's new text and spectrum pieces\]
 
 At a glance, we can see supply and demand in the region are not in alignment. There is an excess of supply for \[ XYZ and a lack of supply for XYZ. \]
 
@@ -162,51 +162,11 @@ As discussed in the market analysis, single-family homes dominate both the renta
 
 ```
 
-Most new housing units are concentrated in Stafford, and Spotsylvania, indicating a need for more balanced development across all localities in the region.  
+Most new housing units are concentrated in Stafford, and Spotsylvania, indicating a need for more balanced development across all localities in the region.
 
 ```{r}
-# BPS data for location 
+# Comparing household size trends with supply 
 
-permits_data_location <- faar_cbps |> 
-  rename(
-    years = year,
-    Name = NAMELSAD,
-    unit_type = type,
-  ) |> 
-  select(years, Name, unit_type, units)
-
-permits_data_location <- permits_data_location |>
-mutate(
-    unit_type = case_when(
-      unit_type %in% c("2-units", "3-4 units") ~ "2-4 units",
-      TRUE ~ unit_type
-    )
-  ) 
-
-permits_by_location <- permits_data_location |>
-  group_by(Name, unit_type) |>
-  summarise(
-    avg_units = mean(units, na.rm = TRUE),
-    .groups = 'drop'
-  ) |>
-  group_by(unit_type) |>
-  slice_max(order_by = avg_units, n = 10)  # Get top 10 for each unit type
-
-# Create bar plot
-ggplot(permits_by_location, 
-       aes(x = reorder(Name, avg_units), 
-           y = avg_units, 
-           fill = unit_type)) +
-  geom_col() +
-  facet_wrap(~unit_type, scales = "free_y") +
-  coord_flip() +  # Flip coordinates for better label readability
-  scale_fill_manual(values = c("1-unit" = "#4169E1", 
-                              "2-4 units" = "#98AFC7", 
-                              "5+ units" = "#DAA520")) +
-  labs(title = "Top Locations by Average Building Permits",
-       x = "",
-       y = "Average Number of Permits",
-       fill = "Unit Type") 
 
 ```
 
@@ -260,6 +220,7 @@ costs_income_change <- read_rds("data/costs_income_change.rds")
 ### Rental Housing Gap
 
 ```{r}
+## NEED TO UPDATE TO ADD MORE YEARS
 
 #| label: gap-data
 #| eval: false
@@ -341,6 +302,9 @@ write_rds(gap, "data/gap.rds")
 [Comprehensive Housing Affordability Strategy (CHAS)](https://www.huduser.gov/portal/datasets/cp.html) data provided by the Department of Housing and Urban Development (HUD) allows us to understand the cost of housing in relation to household incomes. For renters making less than 80% AMI across the region, there has been little change in the gap in affordable rental housing.
 
 ```{r}
+
+## UPDATE AS ABOVE
+
 #| label: fig-gap-plot
 #| fig.cap: "Rental housing gap by AMI"
 
@@ -377,7 +341,6 @@ if (knitr::is_html_output()) {
   gap_plot
   
   }
-
 
 ```
 
@@ -451,7 +414,55 @@ if (knitr::is_html_output()) {
 Fire professions in Stafford, Spotsylvania, and Fredericksburg have the most generous average incomes of the public professions analyzed for this study. Proportionally, this means these workers can afford more generous monthly housing costs, ranging from \$2000 to \$2500 in rent. On the other end of the spectrum, social workers in Stafford and Fredericksburg, as well as teaching professions in Caroline county, can only afford around \$1250 per month.
 
 ```{r}
-# affordable rents for public sector salaries viz from pp 
+
+locality_wages <- read_csv("data/faar_locality_wages.csv") |> 
+  filter(
+    job_actual != "Fire Protection",
+    !(locality == "Orange" & job_actual == "Social Assistance")
+  )
+
+
+rate <- 0.065  # 6.5% annual interest rate
+tax_ins <- 0.25  # Property tax and insurance as percentage of monthly payment (25%)
+dp <- 0.20  # Down payment percentage (20%)
+
+
+local_wages_cty <- locality_wages |> 
+  summarize(
+    salary = mean(salary), .by = locality
+  ) |> 
+  mutate(
+    aff_rent = salary/12*0.3,
+    aff_own = 
+      (salary/12*0.28) /
+      ((rate/12 * (1 + rate/12)^360) /
+         ((1+rate/12)^360 - 1) /
+         (1-(tax_ins/12)) /
+         (1-dp))
+  )
+
+local_wages_cty |> 
+  ggplot(aes(x = aff_rent, y = fct_reorder(locality, aff_rent), label = label_dollar(accuracy = 1)(aff_rent))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", hjust = 0.5, nudge_x = -100) +
+  geom_vline(xintercept = 1620) +
+  geom_vline(xintercept = 1812) +
+  geom_text(
+    aes(x = 1620, y = "King George", label = "Average\n1-bed\nrent:\n$1,620"), vjust = 0.6, hjust = 0, nudge_x = 20
+  ) +
+  geom_text(
+    aes(x = 1812, y = "King George", label = "Average\n2-bed\nrent:\n$1,812"), vjust = 0.6, hjust = 0, nudge_x = 20
+  ) +
+  scale_x_continuous(limits = c(0, 1950), expand = c(0.01, 0.01), labels = label_dollar()) +
+  scale_y_discrete(expand = c(0.1, 0)) +
+  add_zero_line("x") +
+  labs(
+    title = "Affordable rents for public sector salaries",
+    subtitle = "Based on average wages for police, fire, and teacher jobs",
+    caption = "**Sources:** HDAdvisors calculations of local government salary data; CoStar Group, Inc."
+  ) +
+  theme_hda(flip_gridlines = T)
+
 
 ```
 
@@ -576,7 +587,29 @@ Median regional wages for the most commonly held jobs show a large gap in what p
 Even for higher-paid public sector workers like firefighters, who could afford homes up to \$250,000 (assuming a 20% down payment), the options are limited as the market favors much higher-priced homes. The median home prices in the region far exceed what's affordable for many workers.
 
 ```{r}
-# insert affordable home purchase price for public sector salary viz from pp 
+
+local_wages_cty |> 
+  ggplot(aes(x = aff_own, y = fct_reorder(locality, aff_own), label = label_dollar(accuracy = 1)(aff_own))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", hjust = 0.5, nudge_x = -15000) +
+  #geom_vline(xintercept = 1620) +
+  #geom_vline(xintercept = 1812) +
+  #geom_text(
+  #  aes(x = 1620, y = "King George", label = "Average\n1-bed\nrent:\n$1,620"), vjust = 0.6, hjust = 0, nudge_x = 20
+  #) +
+  #geom_text(
+  #  aes(x = 1812, y = "King George", label = "Average\n2-bed\nrent:\n$1,812"), vjust = 0.6, hjust = 0, nudge_x = 20
+  #) +
+  scale_x_continuous(expand = c(0.01, 0.01), labels = label_dollar(accuracy = 1)) +
+  scale_y_discrete(expand = c(0.1, 0)) +
+  add_zero_line("x") +
+  labs(
+    title = "Affordable home purchase prices for public sector salaries",
+    subtitle = "Based on average wages for police, fire, and teacher jobs",
+    caption = "**Sources:** HDAdvisors calculations of local government salary data"
+  ) +
+  theme_hda(flip_gridlines = T)
+
 ```
 
 For public sector workers to buy homes, they will likely need to move out of the region or pair up their incomes to increase their purchasing power. Using LEHD Origin-Destination Employment Statistics (LODES) data from the Census Bureau, commuter patterns can be seen for the region. This data allows for comparison between a respondent’s “origin” or residence, and their employment destination. In this analysis, commuters are individuals that travel outside of the county for work. Spotsylvania and Stafford have the highest number of commuters.
