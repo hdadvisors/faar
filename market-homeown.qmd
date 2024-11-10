@@ -60,6 +60,15 @@ ggplot(
 
 ```
 
+```{r}
+#| label: fig-owner-costs
+#| fig-cap: "Monthly Owner Costs and Interest Rates"
+
+
+```
+
+
+
 Most homes in the existing supply are single family units with three to four bedrooms, units that could easily accommodate households with upwards of four people and more. Around 15,000 units in the region have five bedrooms or more, and less than 10,000 homes in the region are sized for families of two people or fewer. This may indicate a market priority to larger and higher-income households who can afford both higher interest rates and increased bedroom sizes.
 
 ```{r}
@@ -183,47 +192,6 @@ ggplot(bps,
 The regional for-sale market is relatively strong, with core hot spots present where resales happen most quickly. Most single family home sales in the past four years have been along the 95 Corridor in Fredericksburg City and in Spotsylvania and Stafford counties. The map below shows the number of residential home sales between January 2020 through April 2024, with dark hexagons representing a higher number of home sales.
 
 ```{r}
-
-#| label: fig-price-line
-#| fig-cap: "Median sales price"
-
-mls_msp <- read_rds("data/faar_mls.rds") 
-  #filter(county != "Orange") |> 
-  select(quarter, type, adj_sales) |> 
-  st_drop_geometry() |> 
-  group_by(quarter, type) |> 
-  summarise(med_sales = median(adj_sales))
-
-
-title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
-
-ggplot(sales_price,
-       aes(x = quarter,
-           y = med_sales,
-           color = type)) +
-  geom_line(size = 1) +
-  geom_point() +
-  scale_color_hda() + 
-  theme_hda(base_size = 10) +
-  labs(title = title_text,
-       subtitle = "In 2024 Q2 inflation-adjusted dollars",
-       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
-  scale_y_continuous(labels = dollar_format())
-
-```
-
-Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023 and settled around 6.95% as of July 2024.[^market-homeown-3] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.
-
-[^market-homeown-3]: FreddieMac Primary Mortgage Market Survey as of July 2024.
-
-```{r}
-#| label: fig-owner-costs
-#| fig-cap: "Monthly Owner Costs and Interest Rates"
-
-
-```
-
-```{r}
 #| label: fig-sales-map-nc
 #| fig-cap: "Map of total new construction home sales from 2020 through April 2024"
 
@@ -320,107 +288,9 @@ leaflet(hex_count) |>
 
 ```
 
-```{r}
-#| label: fig-sales-map-resale
-#| fig-cap: "Map of total homes resales from 2020 through April 2024"
+Single-family homes account for the vast majority of all these housing transactions, with little to no variation in building type represented in the for sale market. While manufactured housing development saw an increase in the decades between 1980-2000, this has trended downward between 2000-2020 and seems to have fallen especially following the COVID-19 pandemic. 
 
-# Create a hex grid map showing home sale concentrations in FAAR region.
-
-library(leaflet)
-library(sf)
-library(geojsonio)
-library(classInt)
-library(htmltools)
-library(htmlwidgets)
-
-# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
-#   mutate(longitude = case_when(
-#     mls_number == "630778" ~ -78.329369,
-#     TRUE ~ longitude)) |>
-#   mutate(latitude = case_when(
-#     mls_number == "630778" ~ 38.214775,
-#     TRUE ~ latitude)) |>
-#   mutate(longitude = case_when(
-#     mls_number == "VAOR2002600" ~ -78.181042,
-#     TRUE ~ longitude)) |>
-#   mutate(latitude = case_when(
-#     mls_number == "VAOR2002600" ~ 38.137717,
-#     TRUE ~ latitude)) |>
-#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
-#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-# 
-# 
-# write_rds(sales, "data/faar_mls_check.rds")
-# geojson_write(sales, file = "data/mls.geojson")
-# 
-
-
-sales <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  filter(new_construction_yn != "Yes")
-
-# leaflet(sales) |> 
-#   addProviderTiles(providers$CartoDB.Positron) |> 
-#   addCircleMarkers()
-
-hex_grid <- st_make_grid(sales, n = c(50,50),
-                         what = "polygons", square = FALSE)
-
-hex_grid_sf <- st_sf(hex_grid) %>% 
-  mutate(grid_id = 1:length(lengths(hex_grid)))
-
-hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
-
-hex_count <- filter(hex_grid_sf, n_pts > 0)
-
-# Define the base color
-base_color <- "#445ca9"
-
-# Create a color palette function based on the base color
-color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
-
-# Number of bins (adjust as needed)
-bins <- 9
-
-# Generate the color palette for the bins
-palette_colors <- color_palette(bins)
-
-# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
-
-
-# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
-
-quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
-palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
-
-
-m <- leaflet(hex_count) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addPolygons(
-    fillColor = ~palette_quantiles(n_pts),
-    fillOpacity = 0.7,
-    opacity = 1,
-    weight = 1,
-    color='white',
-    label = ~as.character(n_pts),  # Show n_pts value when hovered over
-    highlightOptions = highlightOptions(
-      weight = 3,
-      color = '#666',
-      fillOpacity = 0.7,
-      bringToFront = TRUE
-    ),
-    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
-  ) |> 
-  addLegend(
-    pal = palette_quantiles,
-    values = ~n_pts,
-    title = "Number of Sales",
-    position = "bottomleft"
-  )
-
-
-```
+Supply and permitting trends skew towards higher-cost ownership units, such as single family units that can accommodate larger families. Residential sales for new construction and resales both overwhelmingly favor single family also reflects this trend. Townhomes take the largest share of regional resales following single family units, with resale of all home types staying on the market for less than the median 30 days for the last 4 years. New construction sales are far more limited in number and also offer a smaller range of housing diversity.
 
 ```{r}
 #| label: type-bar
@@ -461,6 +331,43 @@ ggplot(sales_type,
   scale_y_continuous(labels = number_format(big.mark = ","))
 
 ```
+Median sales prices for new construction versus resales varies, and overall sales pricing for both have consistently increased over the last four years, especially for resales. An in-depth view of recent new construction and resale pricing reflects the pressures that changing interest rates, inflation, and building material shortages place on the sales market. New construction pricing peaked in 2021 and 2023, reflecting peaks in interest rates in 2023 and construction and material shortages that in turn raise costs for builders and ultimately buyers. 
+
+Resale market pricing has crept up more stably than new construction, with peaks in 2021, 2022, and 2023, demonstrating that the resale market is stronger than the new construction market in the face of the same interest rate and inflationary pressures. The resale market is certainly affected by interest rate spikes and changes, which can also affect homeowner decision making about when it is time to sell and move. The regional resale market still follows a conventional sales cycle with increased activity and competition, driving prices, in the spring and summer. 
+
+
+```{r}
+
+#| label: fig-price-line
+#| fig-cap: "Median sales price"
+
+mls_msp <- read_rds("data/faar_mls.rds") 
+  #filter(county != "Orange") |> 
+  select(quarter, type, adj_sales) |> 
+  st_drop_geometry() |> 
+  group_by(quarter, type) |> 
+  summarise(med_sales = median(adj_sales))
+
+
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
+
+ggplot(sales_price,
+       aes(x = quarter,
+           y = med_sales,
+           color = type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_color_hda() + 
+  theme_hda(base_size = 10) +
+  labs(title = title_text,
+       subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
+  scale_y_continuous(labels = dollar_format())
+
+```
+
+
+Since 2021, new construction days on the market have climbed, reaching a median-high near 100 days in the first quarter of 2023. With new construction homes priced above \$500,000 since 2021, the buyer pool for new construction has undoubtedly decreased significantly, likely as a result of increased interest rates and builder costs driving up purchase prices. Home resales in the region have been rapid in recent quarters, frequently on the market for fewer than 30 days. This reflects a high demand for homes priced below \$500,000, potentially driving competition for moderately priced housing in well-established communities. To that end, infill construction in older neighborhoods could meet the demand for resales among households at varying incomes.
 
 ```{r}
 #| label: dom-bar
@@ -492,6 +399,9 @@ ggplot(sales_dom,
   labs(title = title_text,
        caption = "Source: BrightMLS")
 ```
+
+Resales with three and four bedrooms are overrepresented in the sales market. Roughly 18,000 units with three to four bedrooms in the region were sold in the last four years, with comparatively very few new construction sales with similar size. Smaller resales with 3 and 4 bedrooms, compared with new construction with much fewer overall permits and sales (see Graph on sales by sales type and structure type), are selling more quickly despite the relative availability of new construction homes with greater square footage and the same number of bedrooms.
+
 
 ```{r}
 #| label: bed-plot
@@ -542,6 +452,49 @@ ggplot(beds,
 
 ```
 
+Furthermore, lot sizes for both new construction sales and resales skew smaller across the region, regardless of the square footage or number of bedrooms of the improvement. New construction sales square footage leans more above 2,000 square feet per home, while resale units have more homes skewing toward the 1,000 to 1,500 square feet range. 
+
+```{r}
+#| label: lot-plot
+#| fig-cap: "Lot Size"
+
+# Create a data viz that shows the distribution of home sales based on lot size.
+# Density plot more easily handles outliers.
+
+sales_lot <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  select(lot_size_acres, type) |> 
+  filter(lot_size_acres != 0) |> 
+  filter(lot_size_acres < 10)
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+ggplot(sales_lot, 
+       aes(x = lot_size_acres,
+           fill = type)) +
+  geom_density(
+    alpha = 0.6,
+    color = "white"
+  ) +
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Lot Size",
+       subtitle = subtitle_text,
+       x = "Acres",
+       y = "Density",
+       caption = "Source: BrightMLS, excludes listings where lot size is listed as zero or above 10 acres.") +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format())
+
+```
+
+With resales skewing towards 3 bedrooms, and selling far faster than new construction, we can see the regional market preference towards smaller, more moderately priced homes that can sleep bigger households than new construction with greater square footage and 4 bedrooms.  Similarly sized households appear to buy units based on purchase price, or affordability. There seems to be obvious increased sales competition for resales based on purchase price, as the square footage is less for the same number of bedrooms and resales are consistently on the market for less than 25 days. 
+
+
 ```{r}
 #| label: sf-plot
 #| fig-cap: "Square Footage"
@@ -582,40 +535,5 @@ ggplot(sales_sf,
 
 ```
 
-```{r}
-#| label: lot-plot
-#| fig-cap: "Lot Size"
 
-# Create a data viz that shows the distribution of home sales based on lot size.
-# Density plot more easily handles outliers.
 
-sales_lot <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  select(lot_size_acres, type) |> 
-  filter(lot_size_acres != 0) |> 
-  filter(lot_size_acres < 10)
-
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
-
-ggplot(sales_lot, 
-       aes(x = lot_size_acres,
-           fill = type)) +
-  geom_density(
-    alpha = 0.6,
-    color = "white"
-  ) +
-  theme_hda(base_size = 10) +
-  labs(title = "Distribution of Lot Size",
-       subtitle = subtitle_text,
-       x = "Acres",
-       y = "Density",
-       caption = "Source: BrightMLS, excludes listings where lot size is listed as zero or above 10 acres.") +
-  scale_fill_hda() +
-  scale_y_continuous(labels = number_format())
-
-```
