@@ -225,3 +225,22 @@ write_rds(faar_mls_sf, "data/faar_mls_sf.rds")
 
 # Save without geometry
 faar_mls_sf |> st_drop_geometry() |> write_rds("data/faar_mls.rds")
+
+
+
+
+## Remove all categories but Name, Closing Date, Closing Price
+
+faar_mls_annual <- faar_mls |> select(county, close_date, close_price)
+
+
+## Rename to match values for further joins in needs qmd 
+
+faar_mls_annual <- faar_mls_annual |> rename( locality = county,
+                                              price = close_price,
+                                              year = close_date
+)
+
+# Save
+
+write_rds(faar_mls_annual, "data/faar_mls_annual.rds")

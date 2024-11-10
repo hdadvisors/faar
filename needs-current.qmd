@@ -12,6 +12,7 @@ editor: visual
 
 source("r/affordcalc.R")
 source("_common.R")
+library(lubridate)
 
 
 #| label: income-costs-change
@@ -51,34 +52,58 @@ write_rds(costs_income_change, "data/costs_income_change.rds")
 b25119 <- read_rds("data/b25119_vars.rds")
 
 renter_income <- b25119 |> 
-  rename(dollars = estimate) |> 
+  rename(dollars = estimate,
+         locality = NAME) |> 
+  mutate(locality = str_remove(locality, ", Virginia")) |>
   filter(tenure == "Renter") |> 
-  select(NAME, year, tenure, dollars)
+  select(locality, year, tenure, dollars) 
+
 
 # Load rent data
 
-faar_rent_annual <- faar_rent
+faar_rent_annual <- read_rds("data/faar_rent_ann.rds") |>
+  filter(locality %in% c("Stafford County", 
+                        "Spotsylvania County", 
+                        "City of Fredericksburg", 
+                        "King George County", 
+                        "Caroline County",
+                        "Orange County"))
 
-# Load sales data ## NEED TO PULL THIS DATA
+# Load sales data 
 
-faar_sales_annual <- read_csv("data/rr_annual_sales.csv") |> 
-  pivot_longer(cols = 2:9,
-               names_to = "locality",
-               values_to = "price") |> 
-  clean_names() |> 
-  mutate(locality = str_replace(locality, "City", "city")) |> 
-  filter(locality %in% pha_names) 
+faar_mls_annual <- read_rds("data/faar_mls_annual.rds") |>
+  mutate(year = year(year), 
+    locality = str_remove(locality, ", Virginia"),
+    locality = case_when(
+      locality == "Caroline" ~ "Caroline County",
+      locality == "King George" ~ "King George County",
+      locality == "Orange" ~ "Orange County",
+      locality == "Spotsylvania" ~ "Spotsylvania County",
+      locality == "Stafford" ~ "Stafford County",
+      locality == "Fredericksburg" ~ "City of Fredericksburg",
+      TRUE ~ locality  # keeps original value for any unmatched cases
+    )
+    ) |>
+  group_by(locality, year) |>
+  summarize(
+    avg_price = mean(price, na.rm = TRUE),
+    .groups = "drop"
+  )
 
 # Join rents and sales to incomes
 
 costs_income <- faar_rent_annual |> 
-  left_join(renter_income, by = c("NAME", "year")) |> 
-  mutate(rent = parse_number(rent_current)) |> 
-  filter(NAME %in% pha_names,
-         year > 2015) |> 
-  select(4,1,6,7) |>
-  select(locality=1,2,income=3,4) |> 
-  left_join(rr_sales_annual, by = c("locality", "year"))
+  mutate(
+    locality = str_remove(locality, ", Virginia"),
+    rent = avg_price  # simplified since avg_price is already numeric
+  ) |>
+  left_join(renter_income, by = c("locality", "year")) |> 
+  filter(year > 2015) |>
+  select(locality, year, dollars, rent) |>
+  rename(income = dollars) |>
+  left_join(faar_mls_annual, by = c("locality", "year"))
+
+
 
 # Add affordable rents and sales prices
 
@@ -127,23 +152,29 @@ remotes::install_github("hdadvisors/hdatools")
 library(hdatools)
 install.packages("gtable")
 
-supply_demand <- read_rds("data/fxburg_supply_demand.rds")|>
+supply_demand <- read_rds("data/fxburg_supply_demand.rds")
 
+colnames(supply_demand)
+glimpse(supply_demand)
 
-supply_demand |> group_by(ami)|> summarise(tenure = sum(Homeowner, Renter, na.rm = TRUE))
+supply_demand_renter <- supply_demand |>
+  group_by(ami, value) |>
+  summarize(
+    estimate = sum(estimate),
+    .groups = "drop"
+  )
   
 
-ami_order <- factor(supply_demand$ami, levels = c("30% AMI or below", "31-50% AMI",
+ami_order <- factor(supply_demand_combined$ami, levels = c("30% AMI or below", "31-50% AMI",
                                            "51-80% AMI", "81-100% AMI", "101-120% AMI",
                                            "121% AMI and greater"))
-
 
 
 title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region"
 
 
 
-ggplot(supply_demand,
+ggplot(supply_demand_combined,
        aes(x = reorder(ami_order, desc(ami_order)),
            y = estimate,
            fill = value)) +

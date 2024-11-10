@@ -48,3 +48,22 @@ costar_adj <- costar |>
 
 
 write_rds(costar_adj, "data/faar_costar.rds")
+
+
+## Clean columns for join in needs qmd 
+
+
+faar_rent_ann <- faar_costar |> select(asking_rent_per_unit, locality, year)
+
+faar_rent_ann <- faar_rent_ann |> rename(price = asking_rent_per_unit) 
+
+faar_rent_ann <- faar_rent_ann |>
+  group_by(locality, year) |>
+  summarize(
+    avg_price = mean(price, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+write_rds(faar_rent_ann, "data/faar_rent_ann.rds")
+
+## Getting different values from Eric's in faar_rent_annual ?
