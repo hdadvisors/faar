@@ -18,31 +18,13 @@ library(ggiraph)
 
 ```
 
-. . .
+### Existing Supply
 
-```{r}
+There are an estimated 35,090 rental units in the FAAR region\[\^market-rental-1\]. The vast majority of these rentals cost over \$1,000 a month, with over 18,000 units that cost over \$1,500 monthly (57%) of total units. Similarly to trends in the homeownership market, most of the existing rental supply is made up of single family housing. Of all types of rental housing, there are roughly 20,000 rental units with two or three bedrooms.
 
-renter_supply <- read_rds("data/b25063_region.rds") 
+The prominence of two and three bedrooms (20,000 units), compared with studios/efficiencies and one bedrooms (5,000 units) and four and five and more bedrooms (4,500 units) could indicate that regional rental pricing does not necessarily correspond with the number of bedrooms or size of the households being rented. Rental pricing is far more likely to correspond with location or community characteristics that impact desirability and increase competition in the rental market.
 
-# The data visualization below shows the distribution of renter-occupied housing based on gross monthly rent. This viz is focused on the entire region. It accounts for vacant housing units by applying an equal distribution of vacant units based on the distribution by cost.
-
-custom_order <- factor(renter_supply$rent, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
-                                                         "$1,500 to $1,999", "More than $2,000"))
-
-sum(renter_supply$adj_estmate)
-
-ggplot(renter_supply,
-       aes(x = custom_order,
-           y = estimate)) +
-  geom_col(stat = "identity", fill = "#445ca9") +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Existing renter supply by gross monthly rent",
-       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25063.")
-
-
-
-```
+\[\^market-rental-1: This estimate includes units that are vacant, but “For rent” and “Rented, not occupied”. These units are distributed across rental units based on the distribution by cost.\]
 
 ```{r}
 
@@ -63,6 +45,10 @@ ggplot(renter_bedroom,
        caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
 
 ```
+
+Single family homes, inclusive of attached-style rentals like townhomes, remain the most prominent rental type, with more diversity in housing type available in multifamily buildings. The reliance on single-family rental units has had an influence on the rental and home sales sector, as well. While multi-family dwelling types have risen in popularity over the previous two decades, they have not surpassed the number of single-family rental units. This trend can be attributed to a demand for this type of product type (i.e., larger, more private rental housing), but it can also point to the lack of diverse multifamily supply regionally.
+
+The single-family rental market can exacerbate for-sale supply challenges. Single-family rentals are often more modest homes that may be priced more affordably if sold instead. With current interest rates ultimately raising monthly mortgage and housing costs for owners, the region may see increased activity in the rental market as those priced out of mortgages continue to seek out rentals. This type of interplay between the rental and homeownership market further accentuates the importance of having a balanced supply of not only homeownership units, but also rental units.
 
 ```{r}
 
@@ -90,6 +76,36 @@ ggplot(renter_type,
 ```
 
 ```{r}
+
+renter_supply <- read_rds("data/b25063_region.rds") 
+
+# The data visualization below shows the distribution of renter-occupied housing based on gross monthly rent. This viz is focused on the entire region. It accounts for vacant housing units by applying an equal distribution of vacant units based on the distribution by cost.
+
+custom_order <- factor(renter_supply$rent, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+                                                         "$1,500 to $1,999", "More than $2,000"))
+
+sum(renter_supply$adj_estmate)
+
+ggplot(renter_supply,
+       aes(x = custom_order,
+           y = estimate)) +
+  geom_col(stat = "identity", fill = "#445ca9") +
+  theme_hda(base_size = 10) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = "Existing renter supply by gross monthly rent",
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25063.")
+
+
+
+```
+
+## Building Trends
+
+Since the Census Building Permit Survey is unable to disaggregate building permits by tenure, five plus unit building permits often serve as a proxy for rental construction level trends. The years between 2015 and 2020 show increased permitting for 5+ family units, which includes units like for-sale condominiums, as well as multifamily rentals.
+
+While rental multi-family construction activity has increased over time, it is still at a far reduced rate compared with single family permitting. 2018 appears to be the year with the greatest multifamily development in the region, with about 1,500 permits filed regionally. Permitting did not surpass 300 for five plus units in 2017, so there may have been local indicators or funding that would have influenced the increased development of units in that time period.
+
+```{r}
 #| label: fig-bps-chart-mf
 #| fig-cap: "Building Permits"
 
@@ -112,11 +128,16 @@ ggplot(bps,
   facet_wrap(~type, nrow = 1) +
   scale_fill_hda() +
   theme_hda(base_size = 10) +
-  labs(title = "Residential construction permits by type",
+  labs(title = "The region has still not recovered to pre-Great Recession construction levels",
+       subtitle = "However, <span style='color:#e9ab3f'>Larger multifamily</span> construction is on the rise",
        caption = "Source: Census Building Permits Survey")
   
 
 ```
+
+## Market Trends
+
+The market rate for monthly rent has been inconsistent post pandemic, steadily increasing over the last four years with a peak in costs in 2021. Following a dip in overall monthly costs in 2023, where rents were \$1,675 on average, rents have risen back to \$1,775 by April 2024.
 
 ```{r}
 #| label: fig-rent-line
@@ -143,6 +164,10 @@ ggplot(rent,
   
 
 ```
+
+This cycle of average asking rents changing roughly \$150 from 2021 to 2023 perhaps reflects the influence of COVID-era rental support systems and eviction prevention measures that were available in Virginia. These programs were largely phased out by 2023, with following years showing increased eviction rates and market rents rising. As these subsidies phased out, overall rents have steadily risen, almost back to their peak in 2021.
+
+The reduction in rent from 2021 to 2023 could also be attributed to population migration and the rise of remote work in the pandemic era. Many households doubled up, with singles finding roommates or living with family, or households moving from urban areas to rural communities where they can still work remotely and afford rent. As demand reduced for rentals from 2021 to 2023 as a result, increased vacancy rates and reduced competition for units would drive down rents accordingly.
 
 ```{r}
 #| label: fig-growth-bar
@@ -172,6 +197,8 @@ ggplot(growth,
   theme_hda(base_size = 10)
   
 ```
+
+Vacancy rates give information about the rental market's supply-demand balance and the general health of the rental market. Low rental vacancy rates constrain the rental market, making it more difficult for low-income tenants to compete for homes as there are net fewer apartments available. Declining vacancy rates have significant consequences for home affordability, and can highlight supply and demand mismatches.
 
 ```{r}
 #| label: fig-vac-line
@@ -203,111 +230,16 @@ ggplot(vac,
 
 ```
 
-```{r}
-#| label: fig-prop-class
-#| fig-cap: "Rental property by class"
+Through the COVID-19 pandemic era, rental vacancy rates across the country, including the FAAR region, reached historic lows. The region has hovered around 6% vacancy rate since the pandemic, showing its position within the state as a rural-small market blend among the counties and growing exurbs.
 
+A deeper examination at the year-to-year percent fluctuations reveals that, while the rental market loosened marginally in 2022 and 2023, with greater availability of rentals at decreasing prices. The most recent signs indicate the market tightening again, with the rental vacancy rate trending downward in 2024 with an estimated percent change in vacancy rate at -0.5%.
 
-props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
-  janitor::clean_names() 
+With the rental vacancy rate sitting near 6% currently, but a decreasing trend in the last four quarters, the region is likely seeing increasing monthly rental costs, as well as decreasing availability of units. This is also a factor that drives rental pricing up.
 
-props_sf <- sf::st_as_sf(props, coords = c("longitude", "latitude"), crs = 4326)
+### Dedicated Affordable Supply
 
-pal <- colorFactor(palette = c("#445ca9", "#e9ab3f", "#8baeaa", "#50787e"), 
-                   domain = c("A", "B", "C", "F"))
+The amount of subsidy gained and attached to a property during development is also a determinant in overall monthly rents. The region’s overwhelming source of subsidy for affordable rentals has been Low-Income Tax Credits (LIHTC), followed by Section 8 (housing vouchers) and HUD-Insured projects. 
 
-leaflet(props_sf) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addCircleMarkers(
-    fillColor = ~pal(building_class),  # Use the palette to set the color
-    radius = 5, 
-    stroke = TRUE,
-    color = "white",
-    weight = 1,
-    fillOpacity = 0.9,
-    popup = ~building_class
-  ) |> 
-  addLegend("bottomright", pal = pal, values = ~building_class, 
-            title = "Building Class",
-            opacity = 1)
-  
-
-
-```
-
-```{r}
-#| label: fig-prop-class-str
-#| fig-cap: "Rental property by class"
-
-# The below data visualization shows distribution of rental properties via CoStar in the FAAR region by property class and structure type.
-
-
-props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
-  janitor::clean_names() 
-
-pal <- colorFactor(palette = c("#445ca9", "#e9ab3f", "#8baeaa", "#50787e"), 
-                   domain = c("A", "B", "C", "F"))
-
-fill_values <- c("A" = "#445ca9", "B" = "#e9ab3f", "C" = "#8baeaa", "F" = "#50787e")
-
-type_class <- props |> 
-  group_by(building_class, county_name, style) |> 
-  summarise(count = n(),
-            units = sum(number_of_units)) |> 
-  ungroup() |> 
-  filter(!is.na(units)) |> 
-  group_by(style) |> 
-  mutate(sum = sum(units)) |> 
-  filter(!is.na(style))
-
-
-
-ggplot(type_class,
-       aes(x = reorder(style,-sum),
-           y = units, 
-           fill = building_class)) +
-  geom_col(stat = "identity", position = "stack") +
-  # facet_wrap(~county_name, nrow = 1) +
-  scale_fill_manual(values = fill_values) +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  theme_hda(base_size = 10) +
-  theme(legend.position = "right") +
-  labs(title = "Rental units by building class",
-       caption = "Source: CoStar Group, Inc.")
-
-
-```
-
-```{r}
-#| label: fig-ask-rent
-#| fig-cap: "Rental property by asking rent"
-
-# The below data visualization shows a map of rental properties via CoStar by asking rent.
-
-props <- read_excel("data/raw/faar_costar_prop.xlsx") |> 
-  janitor::clean_names() 
-
-props_sf <- sf::st_as_sf(props, coords = c("longitude", "latitude"), crs = 4326)
-
-pal <- colorNumeric(
-  palette = "YlGnBu", # You can choose any palette from RColorBrewer
-  domain = props$avg_asking_unit # The numeric values to base the color on
-)
-
-leaflet(props_sf) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addCircleMarkers(
-    color = ~pal(avg_asking_unit),  # Use the palette to set the color
-    radius = 5, 
-    stroke = FALSE,
-    fillOpacity = 0.9,
-    popup = ~as.character(paste0("$", avg_asking_unit))
-  ) |> 
-  addLegend("bottomright", pal = pal, values = ~avg_asking_unit, 
-            title = "Asking Rent",
-            opacity = 1)
-  
-```
 
 ```{r}
 #| label: fig-subsidy-type
@@ -334,6 +266,47 @@ ggplot(subsidy,
 
 ```
 
+[analysis ]
+
+
+```{r}
+#| label: fig-nhpd-map
+#| fig-cap: "Assisted rental propeties"
+
+prop <- read_rds("data/nhpd_properties.rds") |> 
+  filter(county != "Orange") |> 
+  filter(!is.na(fmr))
+
+prop <- sf::st_as_sf(prop, coords = c("long", "lat"), crs = 4326)
+
+pal <- colorNumeric(
+  palette = "YlGnBu", # You can choose any palette from RColorBrewer
+  domain = prop$fmr, # The numeric values to base the color on
+  na.color = "grey"
+)
+
+leaflet(prop) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addCircleMarkers(
+    color = ~pal(fmr),
+    radius = 5, 
+    stroke = FALSE,
+    fillOpacity = 0.9,
+    popup = ~fmr
+  ) |> 
+  addLegend(
+    "bottomright",
+    pal = pal,
+    values =  ~fmr)
+
+```
+
+
+These typical sources of affordable housing subsidies include time limits that prevent property owners from collecting market rate rents for a specified period of time. Keeping inventory of these projects is an important consideration when evaluating the overall affordability of the region in the near-term. 
+
+By 2040, **more than half of all subsidized housing in the region, approximately 1,600 units,** will surpass their affordability limitation period, allowing buildings to raise rents in otherwise affordable units and affecting tenants who rely on stable rents in an increasingly competitive market. 
+
+
 ```{r}
 #| label: fig-subsidy-risk
 #| fig-cap: "Rental subsidy duration"
@@ -359,33 +332,4 @@ ggplot(subsidy,
 
 ```
 
-```{r}
-#| label: fig-nhpd-map
-#| fig-cap: "Assisted rental propeties"
 
-prop <- read_rds("data/nhpd_properties.rds") |> 
-  filter(county != "Orange")
-
-prop <- sf::st_as_sf(prop, coords = c("long", "lat"), crs = 4326)
-
-pal <- colorNumeric(
-  palette = "YlGnBu", # You can choose any palette from RColorBrewer
-  domain = prop$fmr, # The numeric values to base the color on
-  na.color = "grey"
-)
-
-leaflet(prop) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addCircleMarkers(
-    color = ~pal(fmr),
-    radius = 5, 
-    stroke = FALSE,
-    fillOpacity = 0.9,
-    popup = ~fmr
-  ) |> 
-  addLegend(
-    "bottomright",
-    pal = pal,
-    values =  ~fmr)
-
-```
