@@ -15,35 +15,6 @@ source("_common.R")
 library(lubridate)
 
 
-#| label: income-costs-change
-#| eval: false
-
-costs_income_change <- costs_income |> 
-  group_by(locality) |> 
-  arrange(year, .by_group = TRUE) |> 
-  mutate(rent_chg = (rent - lag(rent)),
-         price_chg = (price - lag(price)),
-         inc_chg = (income - lag(income)),
-         across(.cols = everything(), ~replace_na(.x, 0))) |> 
-  mutate(across(.cols = c(rent_chg, price_chg, inc_chg), ~ cumsum(.x)),
-         rent_pct = rent_chg/first(rent),
-         price_pct = price_chg/first(price),
-         inc_pct = inc_chg/first(income)) |> 
-  select(1,2,9:11) |> 
-  pivot_longer(cols = 3:5,
-               names_to = "type",
-               values_to = "pct_chg") |> 
-  mutate(pct_chg = case_when(
-    year > 2020 & type == "inc_pct" ~ NA_real_,
-    TRUE ~ pct_chg)) |> 
-  mutate(type = case_when(
-    type == "inc_pct" ~ "Income",
-    type == "price_pct" ~ "Home price",
-    type == "rent_pct" ~ "Rent"
-  ))
-
-write_rds(costs_income_change, "data/costs_income_change.rds")
-
 #| label: income-costs-data
 #| eval: false
 
@@ -136,6 +107,49 @@ write_rds(costs_income_afford, "data/costs_income_afford.rds")
 
 
 
+#| label: income-costs-change
+#| eval: false
+
+costs_income_change <- costs_income |> 
+  group_by(locality) |> 
+  arrange(year, .by_group = TRUE) |> 
+  mutate(
+    rent_chg = (rent - lag(rent)),
+    price_chg = (avg_price - lag(avg_price)),
+    inc_chg = (income - lag(income))
+  ) |> 
+  mutate(
+    across(.cols = c(rent_chg, price_chg, inc_chg), ~replace_na(.x, 0))
+  ) |> 
+  mutate(
+    across(.cols = c(rent_chg, price_chg, inc_chg), ~cumsum(.x)),
+    rent_pct = rent_chg/first(rent),
+    price_pct = price_chg/first(avg_price),
+    inc_pct = inc_chg/first(income)
+  ) |> 
+  select(locality, year, rent_pct, price_pct, inc_pct) |>
+  pivot_longer(
+    cols = c(rent_pct, price_pct, inc_pct),
+    names_to = "type",
+    values_to = "pct_chg"
+  ) |> 
+  mutate(
+    pct_chg = case_when(
+      year > 2020 & type == "inc_pct" ~ NA_real_,
+      TRUE ~ pct_chg
+    ),
+    type = case_when(
+      type == "inc_pct" ~ "Income",
+      type == "price_pct" ~ "Home price",
+      type == "rent_pct" ~ "Rent",
+      TRUE ~ type
+    )
+  )
+
+
+write_rds(costs_income_change, "data/costs_income_change.rds")
+
+
 ```
 
 # Housing Needs Analysis
@@ -210,8 +224,16 @@ Rural areas and smaller communities in the region may be particularly under-serv
 
 ```{r}
 
+costs_income_afford <- read_rds("data/costs_income_afford.rds")
+costs_income_change <- read_rds("data/costs_income_change.rds")
+
+library(ggiraph)
+library(scales)
+library(ggplot2)
+
 #| label: fig-costs-inc-change
 #| fig.cap: "Cumulative percent change in median renter income, home prices, and average rent"
+#| 
 
 cost_plot <- ggplot(costs_income_change,
        aes(x = year,
@@ -243,9 +265,6 @@ if (knitr::is_html_output()) {
   
 }
 
-costs_income_afford <- read_rds("data/costs_income_afford.rds")
-
-costs_income_change <- read_rds("data/costs_income_change.rds")
 
 ```
 
