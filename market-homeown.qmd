@@ -19,11 +19,48 @@ library(htmlwidgets)
 
 ```
 
-### Existing Supply 
+### Existing Supply
 
-There are a little over 101,000 homeownership units throughout the region.[^1] 
+There are a little over 101,000 homeownership units throughout the region.[^market-homeown-1] This data incorporates market trends from the last four years and the for-sale housing market has changed drastically in that time. Interest rates, which have the greatest potential to influence monthly mortgage payments, peaked at 7.79% in October 2023 and settled around 6.95% as of July 2024[^market-homeown-2]. While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, more recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs higher for all ownership units.
 
-[^1]: This estimate includes units that are vacant, but “For sale only” and “Sold, not occupied”.
+[^market-homeown-1]: This estimate includes units that are vacant, but “For sale only” and “Sold, not occupied”.
+
+[^market-homeown-2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
+
+```{r}
+#| label: fig-owner-supply
+#| fig-cap: "Owner-occupied homes by monthly housing costs"
+
+# Read in the selected monthly housing cost data for homeowners.
+owner_supply <- read_rds("data/b25094_region.rds") |> 
+  mutate(
+    monthly = fct_relevel(
+      monthly,
+      c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+        "$1,500 to $1,999", "More than $2,000")
+    )
+  )
+
+# sum(owner_supply$adj_estimate)
+
+ggplot(
+  owner_supply,
+  aes(x = monthly, y = adj_estimate, label = label_comma()(adj_estimate))
+  ) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", nudge_y = -1500) +
+  scale_y_continuous(labels = label_comma()) +
+  theme_hda() +
+  add_zero_line() +
+  labs(
+    title = "Owner-occupied homes by monthly housing costs",
+    subtitle = "Inludes mortgage payments, property taxes, insurance, and basic utilities",
+    caption = acs_cap("B25094")
+  )
+
+```
+
+Most homes in the existing supply are single family units with three to four bedrooms, units that could easily accommodate households with upwards of four people and more. Around 15,000 units in the region have five bedrooms or more, and less than 10,000 homes in the region are sized for families of two people or fewer. This may indicate a market priority to larger and higher-income households who can afford both higher interest rates and increased bedroom sizes.
 
 ```{r}
 #| label: fig-owner-bedroom
@@ -55,6 +92,10 @@ ggplot(owner_bedroom,
 
 . . .
 
+### Building Trends
+
+The region offers very little diversity of housing type, as single-family homes dominate both the rental and ownership markets. Of the existing ownership units region-wide, Stafford, Spotsylvania, and Fredericksburg respectively hold the largest shares of non-single family ownership units. Construction and current sales both overwhelmingly favor single family homes, and thus the existing supply reflects these trends in cost and size over time.
+
 ```{r}
 #| label: fig-owner-type
 #| fig-cap: "Existing homeowner supply by type and year built"
@@ -63,8 +104,6 @@ ggplot(owner_bedroom,
 # units by structure type and year built in 2022. This viz is focused on the entire region. It 
 # accounts for vacant housing units by applying an equal distribution of vacant 
 # units based on the distribution of units by structure and year.
-# 
-# Table B25136 could have been possibly used by the break out of structure type doesn't align.
 
 # Read in the tenure by structure and yearbuilt data and filter for only homeowners.
 owner_type <- read_rds("data/b25127_region.rds") |> 
@@ -92,8 +131,13 @@ ggplot(owner_type,
 
 ```
 
+*Note: This graph only shows homeownership units.*
 
-### Building Trends
+Single-family construction has dominated over the past two decades, but the post-Great Recession recovery for the region has been slow. Permitting and construction data shows that the region has yet to recover to pre-Recession building levels with its height in 2005 for both rental and ownership unit development.
+
+Construction appears to have been impacted by increasing interest rates and other inflationary pressures felt nation-wide in recent years, as permitting for single units has slowed following 2020. With a peak in single unit development in 2022 with about 2,500 permits that year, single family construction has decreased since then.
+
+2024 may result in greater single family construction, to show recovery after interest rate increases in 2023, as the first quarter of 2024 shows about 1000 regional permits. If development continues steadily at this pace, construction for new single family units will nearly surpass pre-Great Recession levels.
 
 . . .
 
@@ -132,49 +176,14 @@ ggplot(bps,
 
 ```
 
+*Note: This table includes permitting for both rental and ownership units.*
 
 ### Market Trends
 
-`update with new text`
-
-What all current homeowners are paying...
+The regional for-sale market is relatively strong, with core hot spots present where resales happen most quickly. Most single family home sales in the past four years have been along the 95 Corridor in Fredericksburg City and in Spotsylvania and Stafford counties. The map below shows the number of residential home sales between January 2020 through April 2024, with dark hexagons representing a higher number of home sales.
 
 ```{r}
-#| label: fig-owner-supply
-#| fig-cap: "Owner-occupied homes by monthly housing costs"
 
-# Read in the selected monthly housing cost data for homeowners.
-owner_supply <- read_rds("data/b25094_region.rds") |> 
-  mutate(
-    monthly = fct_relevel(
-      monthly,
-      c("Less than $599", "$600 to $999", "$1,000 to $1,499",
-        "$1,500 to $1,999", "More than $2,000")
-    )
-  )
-
-# sum(owner_supply$adj_estimate)
-
-ggplot(
-  owner_supply,
-  aes(x = monthly, y = adj_estimate, label = label_comma()(adj_estimate))
-  ) +
-  geom_col(fill = hda_pal[1]) +
-  geom_text(color = "white", nudge_y = -1500) +
-  scale_y_continuous(labels = label_comma()) +
-  theme_hda() +
-  add_zero_line() +
-  labs(
-    title = "Owner-occupied homes by monthly housing costs",
-    subtitle = "Inludes mortgage payments, property taxes, insurance, and basic utilities",
-    caption = acs_cap("B25094")
-  )
-
-```
-
-The market that buyers face...
-
-```{r}
 #| label: fig-price-line
 #| fig-cap: "Median sales price"
 
@@ -203,10 +212,9 @@ ggplot(sales_price,
 
 ```
 
+Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023 and settled around 6.95% as of July 2024.[^market-homeown-3] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.
 
-Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024.[^2] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
-
-[^2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
+[^market-homeown-3]: FreddieMac Primary Mortgage Market Survey as of July 2024.
 
 ```{r}
 #| label: fig-owner-costs
@@ -214,12 +222,6 @@ Additionally, as these data incorporate market trends from the last four years, 
 
 
 ```
-
-
-
-
-
-
 
 ```{r}
 #| label: fig-sales-map-nc
@@ -420,10 +422,6 @@ m <- leaflet(hex_count) |>
 
 ```
 
-
-
-
-
 ```{r}
 #| label: type-bar
 #| fig-cap: "Total sales"
@@ -464,7 +462,6 @@ ggplot(sales_type,
 
 ```
 
-
 ```{r}
 #| label: dom-bar
 #| fig-cap: "Days on Market"
@@ -495,7 +492,6 @@ ggplot(sales_dom,
   labs(title = title_text,
        caption = "Source: BrightMLS")
 ```
-
 
 ```{r}
 #| label: bed-plot
@@ -546,7 +542,6 @@ ggplot(beds,
 
 ```
 
-
 ```{r}
 #| label: sf-plot
 #| fig-cap: "Square Footage"
@@ -587,7 +582,6 @@ ggplot(sales_sf,
 
 ```
 
-
 ```{r}
 #| label: lot-plot
 #| fig-cap: "Lot Size"
@@ -625,7 +619,3 @@ ggplot(sales_lot,
   scale_y_continuous(labels = number_format())
 
 ```
-
-
-
-
