@@ -103,6 +103,7 @@ costs_income <- faar_rent_annual |>
   rename(income = dollars) |>
   left_join(faar_mls_annual, by = c("locality", "year"))
 
+## Missing MLS data from 2016-2020 and income data 2023-2024
 
 
 # Add affordable rents and sales prices
