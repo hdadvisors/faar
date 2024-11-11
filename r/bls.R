@@ -42,7 +42,8 @@ cpi <- cpi |>
 
 qcew_data_cpi <- qcew_data |> 
   left_join(cpi, by = 'year') |> 
-  transform(adj_pay = ((311.8802/priceindex)*avg_annual_pay))
+  transform(adj_pay = ((311.8802/priceindex)*avg_annual_pay)) |>
+write_rds("qcew_data_cpi.rds")
 
 cnty_names <- data.frame(
   fips = as.integer(cnty),
@@ -57,6 +58,8 @@ qcew_data |>
   ) |> 
   left_join(cnty_names) |> 
   write_rds("data/qcew_data.rds")
+
+
 
 qcew_plot <- read_rds("data/qcew_data.rds") |> 
   group_by(year) |> 

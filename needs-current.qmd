@@ -20,7 +20,7 @@ library(lubridate)
 
 # Load income data
 
-b25119 <- read_rds("data/b25119_vars.rds")
+Incomes <- read_rds("data/qcew_data.rds")
 
 renter_income <- b25119 |> 
   rename(dollars = estimate,
@@ -49,19 +49,16 @@ faar_mls_annual <- read_rds("data/faar_mls.rds") |>
   summarise(
     msp = median(close_price),
     .by = c(locality, year)
+  ) |> 
+  mutate( locality = case_when(
+  locality == "Caroline" ~ "Caroline County",
+  locality == "King George" ~ "King George County",
+  locality == "Orange" ~ "Orange County",
+  locality == "Spotsylvania" ~ "Spotsylvania County",
+  locality == "Stafford" ~ "Stafford County",
+  locality == "Fredericksburg" ~ "City of Fredericksburg"
   )
-
-# Add this if you need to rename localities
-  #mutate( 
-  #  locality = case_when(
-  #    locality == "Caroline" ~ "Caroline County",
-  #    locality == "King George" ~ "King George County",
-  #    locality == "Orange" ~ "Orange County",
-  #    locality == "Spotsylvania" ~ "Spotsylvania County",
-  #    locality == "Stafford" ~ "Stafford County",
-  #    locality == "Fredericksburg" ~ "City of Fredericksburg"
-  #  )
-  #)
+  )
 
 
 # Join rents and sales to incomes
@@ -72,12 +69,10 @@ costs_income <- faar_rent_annual |>
     rent = avg_price  # simplified since avg_price is already numeric
   ) |>
   left_join(renter_income, by = c("locality", "year")) |> 
-  filter(year > 2015) |>
+  filter(year > 2020) |>
   select(locality, year, dollars, rent) |>
   rename(income = dollars) |>
   left_join(faar_mls_annual, by = c("locality", "year"))
-
-## Missing MLS data from 2016-2020 and income data 2023-2024
 
 
 # Add affordable rents and sales prices
@@ -261,7 +256,7 @@ cost_plot <- ggplot(costs_income_change,
   facet_wrap(~locality, nrow = 1) +
   scale_y_continuous(labels = label_percent()) +
   labs(title = "Cumulative percent change in median renter income,<br>home prices, and average rent",
-       subtitle ="2016 to 2022 (ACS income data through 2020)",
+       subtitle ="2020 to 2024 (ACS income data through 2020)",
        color = "Percent change",
        caption = "**Sources:** U.S. Census Bureau, American Community Survey, Table B25119;<br>Central Virginia MLS; CoStar Group, Inc.") +
   theme(legend.position = "bottom")
