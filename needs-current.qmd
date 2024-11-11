@@ -172,7 +172,10 @@ supply_demand <- read_rds("data/fxburg_supply_demand.rds")
 colnames(supply_demand)
 glimpse(supply_demand)
 
+## Separate Renter and Homeowner S/D
+
 supply_demand_renter <- supply_demand |>
+  filter(tenure == "Renter") |>
   group_by(ami, value) |>
   summarize(
     estimate = sum(estimate),
@@ -180,25 +183,57 @@ supply_demand_renter <- supply_demand |>
   )
   
 
-ami_order <- factor(supply_demand_combined$ami, levels = c("30% AMI or below", "31-50% AMI",
-                                           "51-80% AMI", "81-100% AMI", "101-120% AMI",
-                                           "121% AMI and greater"))
+supply_demand_homeowner <- supply_demand |>
+  filter(tenure == "Homeowner") |>
+  group_by(ami, value) |>
+  summarize(
+    estimate = sum(estimate),
+    .groups = "drop"
+  )
+  
 
 
-title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region"
+ami_levels <- c("30% AMI or below", "31-50% AMI",
+              "51-80% AMI", "81-100% AMI", "101-120% AMI",
+              "121% AMI and greater")
 
 
+# Add the factor directly to your filtered data
+supply_demand_renter <- supply_demand_renter |>
+  mutate(ami_order = factor(ami, levels = ami_levels))
 
-ggplot(supply_demand_combined,
-       aes(x = reorder(ami_order, desc(ami_order)),
+supply_demand_homeowner <- supply_demand_homeowner |> 
+  mutate(ami_order = factor(ami, levels = ami_levels))
+
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for Renters"
+
+
+ggplot(supply_demand_renter,
+       aes(x = ami_order,
            y = estimate,
            fill = value)) +
   geom_col(position = "dodge") +
-  facet_wrap(~tenure) +
   theme_hda(base_size = 10) +
   scale_fill_hda() +
   coord_flip() +
   labs(title = title_text)
+
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for Homeowners"
+
+ggplot(supply_demand_homeowner,
+       aes(x = ami_order,
+           y = estimate,
+           fill = value)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  coord_flip() +
+  labs(title = title_text)
+
+
+
 ```
 
 As discussed in the market analysis, single-family homes dominate both the rental and ownership markets, leaving a gap in diverse housing types such as multifamily and senior-focused housing. There's a particular shortage of smaller housing designed for single-person households, despite demographic trends showing an increase in smaller household sizes.
