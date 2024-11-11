@@ -35,11 +35,10 @@ Incomes <- Incomes |>
 
 
 average_annual <- Incomes |> 
-  rename(dollars = estimate,
-         locality = NAME) |> 
-  mutate(locality = str_remove(locality, ", Virginia")) |>
-  filter(tenure == "Renter") |> 
-  select(locality, year, annual_avg_wkly_wage, avg_annual_pay) 
+  rename(Average_Weekly_Wage = annual_avg_wkly_wage, 
+         Average_Annual_Salary = avg_annual_pay) |> 
+  select(locality, year, Average_Weekly_Wage, Average_Annual_Salary) |>
+  filter(year >= 2020)
 
 
 # Load rent data
@@ -74,16 +73,16 @@ faar_mls_annual <- read_rds("data/faar_mls.rds") |>
 
 
 # Join rents and sales to incomes
+names(faar_rent_annual)
 
 costs_income <- faar_rent_annual |> 
   mutate(
     locality = str_remove(locality, ", Virginia"),
-    rent = avg_price  # simplified since avg_price is already numeric
+    rent = avg_price  
   ) |>
-  left_join(renter_income, by = c("locality", "year")) |> 
-  filter(year > 2020) |>
-  select(locality, year, dollars, rent) |>
-  rename(income = dollars) |>
+  left_join(average_annual, by = c("locality", "year")) |> 
+  filter(year >= 2020) |>
+  select(locality, year, Average_Weekly_Wage, Average_Annual_Salary, rent) |>
   left_join(faar_mls_annual, by = c("locality", "year"))
 
 
