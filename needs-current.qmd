@@ -22,12 +22,24 @@ library(lubridate)
 
 Incomes <- read_rds("data/qcew_data_cpi.rds")
 
+Incomes <- Incomes |> 
+  mutate(locality = case_when(
+    area_fips == "51033" ~ "Caroline County",
+    area_fips == "51099" ~ "King George County",
+    area_fips == "51137" ~ "Orange County",
+    area_fips == "51177" ~ "Spotsylvania County",
+    area_fips == "51179" ~ "Stafford County",
+    area_fips == "51630" ~ "City of Fredericksburg",
+    TRUE ~ as.character(area_fips)  
+  ))
+
+
 average_annual <- Incomes |> 
   rename(dollars = estimate,
          locality = NAME) |> 
   mutate(locality = str_remove(locality, ", Virginia")) |>
   filter(tenure == "Renter") |> 
-  select(locality, year, tenure, dollars) 
+  select(locality, year, annual_avg_wkly_wage, avg_annual_pay) 
 
 
 # Load rent data
