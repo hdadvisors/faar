@@ -79,7 +79,7 @@ costs_income <- faar_rent_annual |>
 
 # Add affordable rents and sales prices
 
-int_rates <- read_csv("data/fredmac_int_annual.csv")
+int_rates <- fredmac_int_annual
 
 downpayment <- 0.05 # 5% downpayment
 closingcosts <- 0.015 # 1.5% closing costs
