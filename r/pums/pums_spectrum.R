@@ -21,7 +21,6 @@ pums_faar_hh <- pums_faar |> filter(SPORDER == 1)
 pums_hh_types <- pums_faar_hh |> 
   filter(hh_income > 0) |>
   mutate(
-    minors = case_when(
       minors == 0 ~ "No",
       minors > 0 ~ "Yes"
     )

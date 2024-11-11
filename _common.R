@@ -54,6 +54,12 @@ acs_cap <- function(table, year = "2018-2022") {
   )  
 }
 
+# Special function to apply str_wrap() to ordered factors
+
+fct_wrap <- function(f, width) {
+  fct_relabel(f, ~ str_wrap(., width = width))
+}
+
 # Set plot rendering options
 
 if (knitr::is_html_output()) {

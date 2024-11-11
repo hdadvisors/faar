@@ -3,7 +3,6 @@ library(tigris)
 
 faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
-
 bps_years <- 2000:2023
 
 header_rows <- read_csv("https://www2.census.gov/econ/bps/County/co2020a.txt", 
@@ -33,9 +32,9 @@ cbps_raw <- map_df(bps_years, ~{
 })
 
 
-# Read in latest 2024 cumulative data (thru July)
+# Read in latest 2024 cumulative data (thru September)
 
-cbps_ytd <- read_csv("https://www2.census.gov/econ/bps/County/co2408y.txt", 
+cbps_ytd <- read_csv("https://www2.census.gov/econ/bps/County/co2409y.txt", 
                      col_names = FALSE,
                      skip = 2) |> 
   select(X1:X18) |> 

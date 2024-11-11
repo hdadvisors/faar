@@ -35,7 +35,7 @@ b25042_vars_cleaned <- b25042_vars |>
 
 b25042_raw <- b25042_raw |> 
   right_join(b25042_vars_cleaned, by = "variable") |> 
-  select(NAME, GEOID, year, tenure, br, estimate)
+  select(NAME, GEOID, year, tenure, br, estimate) |> 
+  mutate(NAME = str_remove_all(NAME, ", Virginia"))
 
-
-write_rds(b25042_raw, "data/b20542.rds")
+write_rds(b25042_raw, "data/b25042.rds")
