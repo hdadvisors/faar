@@ -40,26 +40,29 @@ faar_rent_annual <- read_rds("data/faar_rent_ann.rds") |>
                         "Caroline County",
                         "Orange County"))
 
-# Load sales data 
 
-faar_mls_annual <- read_rds("data/faar_mls_annual.rds") |>
-  mutate(year = year(year), 
-    locality = str_remove(locality, ", Virginia"),
-    locality = case_when(
-      locality == "Caroline" ~ "Caroline County",
-      locality == "King George" ~ "King George County",
-      locality == "Orange" ~ "Orange County",
-      locality == "Spotsylvania" ~ "Spotsylvania County",
-      locality == "Stafford" ~ "Stafford County",
-      locality == "Fredericksburg" ~ "City of Fredericksburg",
-      TRUE ~ locality  # keeps original value for any unmatched cases
-    )
-    ) |>
-  group_by(locality, year) |>
-  summarize(
-    avg_price = mean(price, na.rm = TRUE),
-    .groups = "drop"
+# Load sales data and summarize median prices by locality and year
+
+faar_mls_annual <- read_rds("data/faar_mls.rds") |> 
+  mutate(year = as.numeric(year(close_date))) |> 
+  rename(locality = county) |> 
+  summarise(
+    msp = median(close_price),
+    .by = c(locality, year)
   )
+
+# Add this if you need to rename localities
+  #mutate( 
+  #  locality = case_when(
+  #    locality == "Caroline" ~ "Caroline County",
+  #    locality == "King George" ~ "King George County",
+  #    locality == "Orange" ~ "Orange County",
+  #    locality == "Spotsylvania" ~ "Spotsylvania County",
+  #    locality == "Stafford" ~ "Stafford County",
+  #    locality == "Fredericksburg" ~ "City of Fredericksburg"
+  #  )
+  #)
+
 
 # Join rents and sales to incomes
 
@@ -227,7 +230,6 @@ ggplot(supply_demand,
 
 ```
 
-
 ## Incomes vs Housing Costs
 
 \[ insert analysis \]
@@ -296,11 +298,6 @@ ggplot(supply_demand_renter,
   coord_flip() +
   labs(title = title_text)
 ```
-
-
-
-
-
 
 ```{r}
 ## NEED TO UPDATE TO ADD MORE YEARS
@@ -636,9 +633,6 @@ ggplot(supply_demand_homeowner,
   labs(title = title_text)
 
 ```
-
-
-
 
 The existing supply skews towards larger, more expensive single-family homes, with sixty two percent of homeownership units cost more than \$1500 per month, and over 45,000 units have monthly costs exceeding \$2,000. In order to keep housing costs at 30% and below of income, a household would need to make at least \$80,000 per year to afford \$2000 in housing costs.
 
