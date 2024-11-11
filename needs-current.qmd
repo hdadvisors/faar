@@ -227,14 +227,7 @@ ggplot(supply_demand,
 
 ```
 
-As discussed in the market analysis, single-family homes dominate both the rental and ownership markets, leaving a gap in diverse housing types such as multifamily and senior-focused housing. There's a particular shortage of smaller housing designed for single-person households, despite demographic trends showing an increase in smaller household sizes.
 
-```{r}
-#b25010 decade region vs supply 
-
-```
-
-Most new housing units are concentrated in Stafford, and Spotsylvania, indicating a need for more balanced development across all localities in the region.
 
 ```{r}
 # Comparing household size trends with supply 
