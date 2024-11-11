@@ -33,6 +33,10 @@ Incomes <- Incomes |>
     TRUE ~ as.character(area_fips)  
   ))
 
+# Add in 2024 Data 
+
+
+# Modify function to get annual data 
 
 average_annual <- Incomes |> 
   rename(Average_Weekly_Wage = annual_avg_wkly_wage, 
