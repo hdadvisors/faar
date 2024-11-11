@@ -392,8 +392,25 @@ ggplot(b25127_locality,
            y = estimate,
            fill = structure)) +
   geom_col() +
+  # Add clear labels
+  labs(
+    title = "Housing Structure Types by Year Built in Virginia Counties",
+    subtitle = "Homeowner-Occupied Units, 2022",
+    x = "Year Built",
+    y = "Number of Housing Units",
+    fill = "Structure Type"
+  ) +
+  # Improve x-axis text angle for better readability
   theme_hda(base_size = 10) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    panel.spacing = unit(1, "lines")
+  ) +
   scale_fill_hda(direction = -1) +
+  # Format y-axis with comma notation
+  scale_y_continuous(labels = scales::comma) +
+  # Adjust facet layout
   facet_wrap(~NAME, nrow = 1)
 
 

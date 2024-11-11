@@ -182,7 +182,6 @@ supply_demand_renter <- supply_demand |>
     .groups = "drop"
   )
   
-
 supply_demand_homeowner <- supply_demand |>
   filter(tenure == "Homeowner") |>
   group_by(ami, value) |>
@@ -191,7 +190,7 @@ supply_demand_homeowner <- supply_demand |>
     .groups = "drop"
   )
   
-
+# Set factors for AMIs
 
 ami_levels <- c("30% AMI or below", "31-50% AMI",
               "51-80% AMI", "81-100% AMI", "101-120% AMI",
@@ -199,6 +198,9 @@ ami_levels <- c("30% AMI or below", "31-50% AMI",
 
 
 # Add the factor directly to your filtered data
+supply_demand <- supply_demand |>
+  mutate(ami_order = factor(ami, levels = ami_levels))
+
 supply_demand_renter <- supply_demand_renter |>
   mutate(ami_order = factor(ami, levels = ami_levels))
 
@@ -206,32 +208,21 @@ supply_demand_homeowner <- supply_demand_homeowner |>
   mutate(ami_order = factor(ami, levels = ami_levels))
 
 
-title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for Renters"
+# Plot 
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for the Past X Years"
 
 
-ggplot(supply_demand_renter,
+ggplot(supply_demand,
        aes(x = ami_order,
            y = estimate,
            fill = value)) +
   geom_col(position = "dodge") +
+  facet_wrap(~tenure) +
   theme_hda(base_size = 10) +
   scale_fill_hda() +
   coord_flip() +
   labs(title = title_text)
-
-
-title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for Homeowners"
-
-ggplot(supply_demand_homeowner,
-       aes(x = ami_order,
-           y = estimate,
-           fill = value)) +
-  geom_col(position = "dodge") +
-  theme_hda(base_size = 10) +
-  scale_fill_hda() +
-  coord_flip() +
-  labs(title = title_text)
-
 
 
 ```
@@ -247,6 +238,29 @@ Most new housing units are concentrated in Stafford, and Spotsylvania, indicatin
 
 ```{r}
 # Comparing household size trends with supply 
+
+# Pulling supply data from general S/D
+
+supply <- supply_demand |>
+  filter(value == "Supply")|>
+  group_by(ami, value) |>
+  summarize(
+    estimate = sum(estimate),
+    .groups = "drop"
+  )
+
+ami_levels <- c("30% AMI or below", "31-50% AMI",
+              "51-80% AMI", "81-100% AMI", "101-120% AMI",
+              "121% AMI and greater")
+
+supply <- supply |>
+  mutate(ami = factor(ami, levels = ami_levels)) |>
+  arrange(ami)
+
+
+hh_trends <- read_rds("data/fxburg_supply_demand.rds")
+
+
 
 
 ```
@@ -304,6 +318,28 @@ if (knitr::is_html_output()) {
 ```
 
 ### Rental Housing Gap
+
+```{r}
+## Supply and Demand Renters by AMI 
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for Renters"
+
+
+ggplot(supply_demand_renter,
+       aes(x = ami_order,
+           y = estimate,
+           fill = value)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  coord_flip() +
+  labs(title = title_text)
+```
+
+
+
+
+
 
 ```{r}
 ## NEED TO UPDATE TO ADD MORE YEARS
@@ -622,6 +658,26 @@ There is a lack of affordable starter homes, with few units available at price p
 \[more analysis\]
 
 ### Homeownership Gaps
+
+```{r}
+## Homeownership Supply/Demand 
+
+title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region for Homeowners"
+
+ggplot(supply_demand_homeowner,
+       aes(x = ami_order,
+           y = estimate,
+           fill = value)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  coord_flip() +
+  labs(title = title_text)
+
+```
+
+
+
 
 The existing supply skews towards larger, more expensive single-family homes, with sixty two percent of homeownership units cost more than \$1500 per month, and over 45,000 units have monthly costs exceeding \$2,000. In order to keep housing costs at 30% and below of income, a household would need to make at least \$80,000 per year to afford \$2000 in housing costs.
 
