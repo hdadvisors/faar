@@ -1,0 +1,696 @@
+# Homeownership market {#sec-market-homeown}
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+# Load common script
+source("_common.R")
+
+# Load other packages other than tidyverse and hdatools
+library(sf)
+library(leaflet)
+library(geojsonio)
+library(classInt)
+library(htmltools)
+library(htmlwidgets)
+
+faar_mls <- read_rds("data/faar_mls.rds")
+
+faar_mls_sf <- read_rds("data/faar_mls_sf.rds")
+
+```
+
+### Existing Supply 
+
+There are a little over 101,000 homeownership units throughout the region.[^1] 
+
+[^1]: This estimate includes units that are vacant, but “For sale only” and “Sold, not occupied”.
+
+```{r}
+#| label: fig-owner-bedroom
+#| fig-cap: "Existing homeowner supply by bedrooms"
+
+# The data visualization below shows the distribution of homeowner occupied housing
+# units by the number of bedrooms in 2022. This viz is focused on the entire region. It 
+# accounts for vacant housing units by applying an equal distribution of vacant 
+# units based on the distribution of bedrooms.
+
+# Read in the tenure by bedrooms data and filter for only homeowners.
+owner_bedroom <- read_rds("data/b25042_region.rds") |> 
+  filter(tenure == "Homeowner")
+
+# Create a custom order to arrange the monthly cost values appropriately.
+custom_order <- factor(owner_bedroom$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
+                                                    "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
+ggplot(owner_bedroom,
+       aes(x = custom_order,
+           y = adj_estimate)) +
+  geom_col(position = "dodge", fill = "#445ca9") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = "Existing homeowner supply by bedrooms",
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
+
+```
+
+. . .
+
+```{r}
+#| label: fig-owner-type
+#| fig-cap: "Existing homeowner supply by type and year built"
+
+# The data visualization below shows the distribution of homeowner occupied housing
+# units by structure type and year built in 2022. This viz is focused on the entire region. It 
+# accounts for vacant housing units by applying an equal distribution of vacant 
+# units based on the distribution of units by structure and year.
+# 
+# Table B25136 could have been possibly used by the break out of structure type doesn't align.
+
+# Read in the tenure by structure and yearbuilt data and filter for only homeowners.
+owner_type <- read_rds("data/b25127_region.rds") |> 
+  filter(tenure == "Homeowner")
+
+# Create a title text object with html/css for styling
+title_text <- "<span style = 'color:#445ca9'><b>Single-family</b></span> housing has dominated construction"
+
+# Create a title text object with html/css for styling
+subtitle_text <- "<span style = 'color:#cce0ce'><b>Other</b></span> housing like manufactured housing follows, but still pales in comparison"
+
+ggplot(owner_type,
+       aes(x = yrbuilt,
+           y = adj_estimate,
+           fill = structure)) +
+  geom_col() +
+  theme_hda(base_size = 10) +
+  scale_fill_hda(direction = -1) +
+  scale_y_continuous(labels = number_format(big.mark = ",")) +
+  labs(title = title_text,
+       subtitle = subtitle_text,
+       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25127.")
+
+
+
+```
+
+
+### Building Trends
+
+. . .
+
+```{r}
+#| label: fig-bps-chart
+#| fig-cap: "Building Permits"
+
+# The data visualization below shows building trends broken out by type of housing in the FAAR region.
+
+bps <- read_rds("data/faar_cbps.rds") |> 
+  filter(NAMELSAD != "Orange County") |> 
+  mutate(type = case_when(
+    type == "2-units" ~ "2-4 units",
+    type == "3-4 units" ~ "2-4 units",
+    TRUE ~ type
+  )) |> 
+  group_by(year, type) |> 
+  summarise(units = sum(units)) 
+
+
+
+subtitle_text <- "However, <span style = 'color: #e9ab3f'><b>larger multifamily</b></span> construction has been on the rise."
+
+ggplot(bps, 
+       aes(x = year,
+           y = units,
+           fill = type)) +
+  geom_col() +
+  facet_wrap(~type, nrow = 1) +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(title = "The region has still not recovered to pre-Great Recession construction levels",
+       subtitle = subtitle_text,
+       caption = "Source: Census Building Permits Survey")
+  
+
+```
+
+
+### Market Trends
+
+`update with new text`
+
+What all current homeowners are paying...
+
+```{r}
+#| label: fig-owner-supply
+#| fig-cap: "Owner-occupied homes by monthly housing costs"
+
+# Read in the selected monthly housing cost data for homeowners.
+owner_supply <- read_rds("data/b25094_region.rds") |> 
+  mutate(
+    monthly = fct_relevel(
+      monthly,
+      c("Less than $599", "$600 to $999", "$1,000 to $1,499",
+        "$1,500 to $1,999", "More than $2,000")
+    )
+  )
+
+# sum(owner_supply$adj_estimate)
+
+ggplot(
+  owner_supply,
+  aes(x = monthly, y = adj_estimate, label = label_comma()(adj_estimate))
+  ) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", nudge_y = -1500) +
+  scale_y_continuous(labels = label_comma()) +
+  theme_hda() +
+  add_zero_line() +
+  labs(
+    title = "Owner-occupied homes by monthly housing costs",
+    subtitle = "Inludes mortgage payments, property taxes, insurance, and basic utilities",
+    caption = acs_cap("B25094")
+  )
+
+```
+
+The market that buyers face...
+
+```{r}
+#| label: fig-price-line
+#| fig-cap: "Median sales price"
+
+mls_msp <- read_rds("data/faar_mls.rds") |> 
+  filter(close_month != "2024-05-01") |> 
+  mutate(
+    year = year(close_date),
+    month = month(close_date, label = T),
+    qtr = quarter(close_date),
+    yrqtr = floor_date(close_date, "quarter")
+  ) |> 
+  group_by(year, month) |> 
+  summarise(
+    msp = median(close_price),
+    msp_adj = median(adj_close)
+  ) |> 
+  ungroup()
+
+d_ends <- mls_msp |> 
+  group_by(year) |> 
+  slice_max(month, n = 1)
+
+ggplot(mls_msp, aes(x = month, y = msp, alpha = year, group = year)) +
+  #facet_wrap(~fct_reorder(county, msp), nrow = 1) +
+  geom_line() +
+  geom_text(
+    data = d_ends,
+    aes(x = month, y = msp, label = year),
+    nudge_x = 0.3
+  ) +
+  scale_y_continuous(
+    limits = c(205000, 500000),
+    breaks = seq(250000, 500000, 50000),
+    labels = label_currency(scale = 0.001, suffix = "k")
+  ) +
+  add_zero_line() +
+  theme_hda()
+
+ggplot(mls_msp, aes(x = yrqtr, y = msp, color = county)) +
+  facet_wrap(~fct_reorder(county, msp), nrow = 1) +
+  geom_line(alpha = 0.4) +
+  geom_smooth(se = FALSE) +
+  scale_color_hda() +
+  scale_x_date(date_breaks = "2 years", date_labels = "%y %Q") +
+  scale_y_continuous(
+    limits = c(150000, 540000),
+    breaks = seq(0, 500000, 100000),
+    labels = label_currency(scale = 0.001, suffix = "k")
+  ) +
+  add_zero_line() +
+  theme_hda()
+
+
+ |> 
+  filter(close_month != "2024-05-01") |>
+  ggplot(
+    aes(x = close_date, y = close_price, color = county)
+  ) +
+  facet_wrap(~fct_reorder(county, close_price, median), nrow = 1) +
+  geom_smooth(se = FALSE) +
+  geom_point(alpha = 0.05, shape = 20, size = 1.5, stroke = NA) +
+  scale_color_hda() +
+  coord_cartesian(ylim=c(0, 560000)) +
+  scale_y_continuous(
+    breaks = seq(0, 1000000, 100000),
+    labels = label_currency(scale = 0.001, suffix = "k")
+  ) +
+  add_zero_line() +
+  theme_hda()
+
+
+
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
+
+ggplot(sales_price,
+       aes(x = quarter,
+           y = med_sales,
+           color = type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_color_hda() + 
+  theme_hda(base_size = 10) +
+  labs(title = title_text,
+       subtitle = "In 2024 Q2 inflation-adjusted dollars",
+       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
+  scale_y_continuous(labels = dollar_format())
+
+```
+
+
+Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024.[^2] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
+
+[^2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
+
+```{r}
+#| label: fig-owner-costs
+#| fig-cap: "Monthly Owner Costs and Interest Rates"
+
+
+```
+
+
+
+
+
+
+
+```{r}
+#| label: fig-sales-map-nc
+#| fig-cap: "Map of total new construction home sales from 2020 through April 2024"
+
+# Create a hex grid map showing home sale concentrations in FAAR region.
+
+
+
+# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
+#   mutate(longitude = case_when(
+#     mls_number == "630778" ~ -78.329369,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "630778" ~ 38.214775,
+#     TRUE ~ latitude)) |>
+#   mutate(longitude = case_when(
+#     mls_number == "VAOR2002600" ~ -78.181042,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "VAOR2002600" ~ 38.137717,
+#     TRUE ~ latitude)) |>
+#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
+#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+# 
+# 
+# write_rds(sales, "data/faar_mls_check.rds")
+# geojson_write(sales, file = "data/mls.geojson")
+# 
+
+
+sales <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  filter(new_construction_yn == "Yes")
+
+# leaflet(sales) |> 
+#   addProviderTiles(providers$CartoDB.Positron) |> 
+#   addCircleMarkers()
+
+hex_grid <- st_make_grid(sales, n = c(50,50),
+                         what = "polygons", square = FALSE)
+
+hex_grid_sf <- st_sf(hex_grid) %>% 
+  mutate(grid_id = 1:length(lengths(hex_grid)))
+
+hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
+
+hex_count <- filter(hex_grid_sf, n_pts > 0)
+
+# Define the base color
+base_color <- "#445ca9"
+
+# Create a color palette function based on the base color
+color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
+
+# Number of bins (adjust as needed)
+bins <- 9
+
+# Generate the color palette for the bins
+palette_colors <- color_palette(bins)
+
+# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
+
+
+# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
+
+quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
+palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
+
+
+leaflet(hex_count) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addPolygons(
+    fillColor = ~palette_quantiles(n_pts),
+    fillOpacity = 0.7,
+    opacity = 1,
+    weight = 1,
+    color='white',
+    label = ~as.character(n_pts),  # Show n_pts value when hovered over
+    highlightOptions = highlightOptions(
+      weight = 3,
+      color = '#666',
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
+  ) |> 
+  addLegend(
+    pal = palette_quantiles,
+    values = ~n_pts,
+    title = "Number of Sales",
+    position = "bottomleft"
+  )
+
+
+```
+
+```{r}
+#| label: fig-sales-map-resale
+#| fig-cap: "Map of total homes resales from 2020 through April 2024"
+
+# Create a hex grid map showing home sale concentrations in FAAR region.
+
+library(leaflet)
+library(sf)
+library(geojsonio)
+library(classInt)
+library(htmltools)
+library(htmlwidgets)
+
+# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
+#   mutate(longitude = case_when(
+#     mls_number == "630778" ~ -78.329369,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "630778" ~ 38.214775,
+#     TRUE ~ latitude)) |>
+#   mutate(longitude = case_when(
+#     mls_number == "VAOR2002600" ~ -78.181042,
+#     TRUE ~ longitude)) |>
+#   mutate(latitude = case_when(
+#     mls_number == "VAOR2002600" ~ 38.137717,
+#     TRUE ~ latitude)) |>
+#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
+#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+# 
+# 
+# write_rds(sales, "data/faar_mls_check.rds")
+# geojson_write(sales, file = "data/mls.geojson")
+# 
+
+
+sales <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  filter(new_construction_yn != "Yes")
+
+# leaflet(sales) |> 
+#   addProviderTiles(providers$CartoDB.Positron) |> 
+#   addCircleMarkers()
+
+hex_grid <- st_make_grid(sales, n = c(50,50),
+                         what = "polygons", square = FALSE)
+
+hex_grid_sf <- st_sf(hex_grid) %>% 
+  mutate(grid_id = 1:length(lengths(hex_grid)))
+
+hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
+
+hex_count <- filter(hex_grid_sf, n_pts > 0)
+
+# Define the base color
+base_color <- "#445ca9"
+
+# Create a color palette function based on the base color
+color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
+
+# Number of bins (adjust as needed)
+bins <- 9
+
+# Generate the color palette for the bins
+palette_colors <- color_palette(bins)
+
+# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
+
+
+# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
+
+quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
+palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
+
+
+m <- leaflet(hex_count) |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addPolygons(
+    fillColor = ~palette_quantiles(n_pts),
+    fillOpacity = 0.7,
+    opacity = 1,
+    weight = 1,
+    color='white',
+    label = ~as.character(n_pts),  # Show n_pts value when hovered over
+    highlightOptions = highlightOptions(
+      weight = 3,
+      color = '#666',
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
+  ) |> 
+  addLegend(
+    pal = palette_quantiles,
+    values = ~n_pts,
+    title = "Number of Sales",
+    position = "bottomleft"
+  )
+
+
+```
+
+
+
+
+
+```{r}
+#| label: type-bar
+#| fig-cap: "Total sales"
+
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_type <- read_rds("data/faar_mls_check.rds")|> 
+  filter(county != "Orange, VA") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  mutate(structure_type = case_when(
+    structure_type == "End of Row/Townhouse" ~ "Townhouse",
+    structure_type == "Interior Row/Townhouse" ~ "Townhouse",
+    structure_type == "Penthouse Unit/Flat/Apartment" ~ "Unit/Flat/Apartment",
+    structure_type == "Mobile Pre 1976" ~ "Other",
+    TRUE ~ structure_type
+  )) |> 
+  group_by(structure_type, type, quarter) |> 
+  summarise(count = n_distinct(mls_number))
+
+# title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span> by quarter"
+
+ggplot(sales_type,
+       aes(x = quarter,
+           y = count,
+           fill = reorder(structure_type, -count))) +
+  geom_col(position = "stack") +
+  facet_wrap(~type) +
+  scale_fill_hda() +
+  theme_hda(base_size = 10) +
+  labs(title = "Residential sales by sale type and structure type",
+       caption = "Source: BrightMLS") +
+  theme(legend.position = "right") +
+  scale_y_continuous(labels = number_format(big.mark = ","))
+
+```
+
+
+```{r}
+#| label: dom-bar
+#| fig-cap: "Days on Market"
+
+# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
+
+sales_dom <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |>
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  select(quarter, cdom, type) |> 
+  filter(cdom != 0) |> 
+  group_by(quarter, type) |> 
+  summarise(med_dom = median(cdom))
+
+title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span> median days on market"
+
+ggplot(sales_dom,
+       aes(x = quarter,
+           y = med_dom,
+           fill = type)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  scale_fill_hda() +
+  labs(title = title_text,
+       caption = "Source: BrightMLS")
+```
+
+
+```{r}
+#| label: bed-plot
+#| fig-cap: "Bedrooms"
+
+# Create a data viz that shows the distribution of home sales based on bedroom count.
+
+
+beds <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> # Filter out Orange County
+  mutate(type = case_when( # Create a label for New Construction and Resale
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space", # Remove garage and parking space sales
+         beds != 0) |>  # Remove home sales wherein there are no bedrooms listed due to incomplete entries
+  mutate(beds = case_when( # Group bedrooms of 5 or more
+    beds > 5 ~ 5, 
+    TRUE ~ beds
+  )) |> 
+  mutate(beds = as.character(beds)) |> # Transform beds into character rather than a numeric
+  mutate(beds = case_when( # Transform the 5 count to "5 or more"
+    beds == "5" ~ "5 or more",
+    TRUE ~ beds
+  )) |> 
+  mutate(count = 1) |> # Create a column to help calculate a sum
+  group_by(type, beds) |> 
+  summarise(sum = sum(count)) |> 
+  ungroup() |>
+  group_by(type) |> 
+  mutate(pct = sum/sum(sum))
+
+
+ggplot(beds, 
+       aes(x = beds,
+           y = pct,
+           fill = type)) +
+  geom_col(position = "dodge") +
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Bedrooms",
+       subtitle = "Percent of total by sales type",
+       caption = "Source: BrightMLS, excludes listings where bedrooms are listed as zero.") +
+  facet_wrap(~type, nrow = 1) +
+  scale_fill_hda() +
+  scale_y_continuous(labels = percent_format())
+
+
+
+```
+
+
+```{r}
+#| label: sf-plot
+#| fig-cap: "Square Footage"
+
+# Create a data viz that shows the distribution of home sales based on square footage.
+# Density plot more easily handles outliers.
+
+sales_sf <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  select(total_finished_sqft, type) |> 
+  filter(total_finished_sqft != 0) |> 
+  filter(total_finished_sqft < 5000)
+
+subtitle_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
+
+
+ggplot(sales_sf, 
+       aes(x = total_finished_sqft,
+           fill = type)) +
+  geom_density(
+    alpha = 0.6,
+    color = "white"
+  ) +
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Square Footage",
+       subtitle = subtitle_text,
+       x = "Square Footage",
+       y = "Density",
+       caption = "Source: BrightMLS, excludes listings where sq. ft. is listed as zero or above 5,000.") +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format())
+
+
+```
+
+
+```{r}
+#| label: lot-plot
+#| fig-cap: "Lot Size"
+
+# Create a data viz that shows the distribution of home sales based on lot size.
+# Density plot more easily handles outliers.
+
+sales_lot <- read_rds("data/faar_mls_check.rds") |> 
+  filter(county != "Orange, VA") |> 
+  mutate(type = case_when(
+    new_construction_yn == "Yes" ~ "New Construction",
+    TRUE ~ "Resale"
+  )) |> 
+  filter(structure_type != "Garage/Parking Space") |> 
+  select(lot_size_acres, type) |> 
+  filter(lot_size_acres != 0) |> 
+  filter(lot_size_acres < 10)
+
+title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
+
+ggplot(sales_lot, 
+       aes(x = lot_size_acres,
+           fill = type)) +
+  geom_density(
+    alpha = 0.6,
+    color = "white"
+  ) +
+  theme_hda(base_size = 10) +
+  labs(title = "Distribution of Lot Size",
+       subtitle = subtitle_text,
+       x = "Acres",
+       y = "Density",
+       caption = "Source: BrightMLS, excludes listings where lot size is listed as zero or above 10 acres.") +
+  scale_fill_hda() +
+  scale_y_continuous(labels = number_format())
+
+```
+
+
+
+
