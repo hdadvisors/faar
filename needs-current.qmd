@@ -20,9 +20,9 @@ library(lubridate)
 
 # Load income data
 
-Incomes <- read_rds("data/qcew_data.rds")
+Incomes <- read_rds("data/qcew_data_cpi.rds")
 
-renter_income <- b25119 |> 
+average_annual <- Incomes |> 
   rename(dollars = estimate,
          locality = NAME) |> 
   mutate(locality = str_remove(locality, ", Virginia")) |>
