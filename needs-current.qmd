@@ -228,38 +228,6 @@ ggplot(supply_demand,
 ```
 
 
-
-```{r}
-# Comparing household size trends with supply 
-
-# Pulling supply data from general S/D
-
-supply <- supply_demand |>
-  filter(value == "Supply")|>
-  group_by(ami, value) |>
-  summarize(
-    estimate = sum(estimate),
-    .groups = "drop"
-  )
-
-ami_levels <- c("30% AMI or below", "31-50% AMI",
-              "51-80% AMI", "81-100% AMI", "101-120% AMI",
-              "121% AMI and greater")
-
-supply <- supply |>
-  mutate(ami = factor(ami, levels = ami_levels)) |>
-  arrange(ami)
-
-
-hh_trends <- read_rds("data/fxburg_supply_demand.rds")
-
-
-
-
-```
-
-Rural areas and smaller communities in the region may be particularly under-served in terms of diverse and affordable housing options.
-
 ## Incomes vs Housing Costs
 
 \[ insert analysis \]
