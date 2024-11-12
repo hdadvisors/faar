@@ -92,6 +92,8 @@ costs_income <- faar_rent_annual |>
 
 # Add affordable rents and sales prices
 
+# Manually import freddie mac interest rates data set in sales and csvs folder of data github 
+
 int_rates <- fredmac_int_annual
 
 downpayment <- 0.05 # 5% downpayment
@@ -113,8 +115,8 @@ price_calc <-  function(x, y) {
 
 costs_income_afford <- costs_income |> 
   left_join(int_rates, by = "year") |> 
-  mutate(rent_afford = income / 12 * 0.3) |> 
-  mutate(price_afford = price_calc(income, annual_int))
+  mutate(rent_afford = Average_Annual_Salary / 12 * 0.3) |> 
+  mutate(price_afford = price_calc(Average_Annual_Salary, annual_int))
 
 write_rds(costs_income_afford, "data/costs_income_afford.rds")
 
