@@ -4,7 +4,6 @@ library(tidyverse)
 library(janitor)
 library(tidygeocoder)
 library(fredr)
-library(lubridate)
 library(sf)
 library(mapview)
 
@@ -212,19 +211,64 @@ faar_mls_sf <- faar_fix |>
   mutate(county = NAMELSAD) |> 
     
   # Remove homes not actually in region
-  filter(county != "Essex")
+  filter(county != "Essex") |> 
+  
+  # Add year and quarter columns
+  mutate(
+    year = year(close_date),
+    qtr = quarter(close_date)
+  ) |> 
+    
+  # Final column arrangement
+  select(
+    name = county, fips = GEOID, year, qtr, 2:25
+  )
 
 # Test map views
-#faar_mls_sf |> mapview()
+faar_mls_sf |> mapview()
 
-  
-## Save MLS data as rds files -------------------
-  
+
+## Save complete MLS data as rds files ----------
+
 # Save with geometry
 write_rds(faar_mls_sf, "data/faar_mls_sf.rds")
 
 # Save without geometry
 faar_mls_sf |> st_drop_geometry() |> write_rds("data/faar_mls.rds")
+
+
+## Annual and quarterly summary sales data ------
+
+# Annual
+faar_mls_a <- read_rds("data/faar_mls.rds") |> 
+  summarise(
+    med_price = median(close_price),
+    avg_price = mean(close_price),
+    adj_med_price = median(adj_close),
+    adj_avg_price = mean(adj_close),
+    .by = c(name, year)
+  ) |> 
+  mutate(qtr = NA, .after = year) |> 
+  mutate(period = "annual", .before = 1)
+
+# Quarterly
+faar_mls_q <- read_rds("data/faar_mls.rds") |> 
+  summarise(
+    med_price = median(close_price),
+    avg_price = mean(close_price),
+    adj_med_price = median(adj_close),
+    adj_avg_price = mean(adj_close),
+    .by = c(name, year, qtr)
+  ) |> 
+  mutate(period = "quarterly", .before = 1)
+
+# Combine
+faar_sales <- bind_rows(
+  faar_mls_a,
+  faar_mls_q
+)
+
+write_rds(faar_sales, "data/faar_sales.rds")
 
 
 

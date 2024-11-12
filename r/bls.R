@@ -5,7 +5,6 @@
 library(tidyverse)
 library(glue)
 library(fredr)
-library(zoo)
 
 # Set parameters
 
@@ -17,7 +16,6 @@ names <- data.frame(
   area_fips = as.integer(cnty),
   name = c("Fredericksburg", "Caroline", "King George", "Spotsylvania", "Stafford", "Orange")
 )
-
 
 
 ## Create QCEW data pull function --------------------
@@ -92,7 +90,9 @@ qcew_q <- bind_rows(
 )
 
 
-## CPI ---
+## Get CPI All Items ---------------------------------
+
+# https://fred.stlouisfed.org/series/CPIAUCSL
 
 # Get quarterly CPI
 cpi_q <- fredr(
@@ -128,6 +128,10 @@ cpi_latest <- fredr(
 ) |> 
   slice_max(date, n = 1) |> 
   pull(3)
+
+# As of 11/12/2024
+# Most recent release: Sept 2024
+# CPIAUCSL value: 314.686
 
 
 ## Prepare data for analysis -------------------------

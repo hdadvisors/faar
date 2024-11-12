@@ -12,72 +12,41 @@ editor: visual
 
 source("r/affordcalc.R")
 source("_common.R")
-library(lubridate)
 
+```
 
+```{r}
 #| label: income-costs-data
-#| eval: false
 
-# Load income data
+# Common var names used in these datasets:
+# `name` – Name of city/county
+# `year` – 4-digit numeric
+# `qtr` – 1-digit numeric
 
-Incomes <- read_rds("data/qcew_data_cpi.rds")
+# Load wage data
 
-Incomes <- Incomes |> 
-  mutate(locality = case_when(
-    area_fips == "51033" ~ "Caroline County",
-    area_fips == "51099" ~ "King George County",
-    area_fips == "51137" ~ "Orange County",
-    area_fips == "51177" ~ "Spotsylvania County",
-    area_fips == "51179" ~ "Stafford County",
-    area_fips == "51630" ~ "City of Fredericksburg",
-    TRUE ~ as.character(area_fips)  
-  ))
+faar_wages_yr <- read_rds("data/faar_qcew.rds") |> 
+  filter(period == "annual")
 
-# Add in 2024 Data 
-
-
-# Modify function to get annual data 
-
-average_annual <- Incomes |> 
-  rename(Average_Weekly_Wage = annual_avg_wkly_wage, 
-         Average_Annual_Salary = avg_annual_pay) |> 
-  select(locality, year, Average_Weekly_Wage, Average_Annual_Salary) |>
-  filter(year >= 2020)
-
+faar_wages_qtr <- read_rds("data/faar_qcew.rds") |> 
+  filter(period == "quarterly")
 
 # Load rent data
 
-faar_rent_annual <- read_rds("data/faar_rent_ann.rds") |>
-  filter(locality %in% c("Stafford County", 
-                        "Spotsylvania County", 
-                        "City of Fredericksburg", 
-                        "King George County", 
-                        "Caroline County",
-                        "Orange County"))
+faar_rent_qtr <- read_rds("data/faar_costar.rds") |>
+  select(1:3, 7:8) |> 
+  filter(name != "Region")
 
+# Load sales data
 
-# Load sales data and summarize median prices by locality and year
+faar_sales_yr <- read_rds("data/faar_sales.rds") |> 
+  filter(period == "annual")
 
-faar_mls_annual <- read_rds("data/faar_mls.rds") |> 
-  mutate(year = as.numeric(year(close_date))) |> 
-  rename(locality = county) |> 
-  summarise(
-    msp = median(close_price),
-    .by = c(locality, year)
-  ) |> 
-  mutate( locality = case_when(
-  locality == "Caroline" ~ "Caroline County",
-  locality == "King George" ~ "King George County",
-  locality == "Orange" ~ "Orange County",
-  locality == "Spotsylvania" ~ "Spotsylvania County",
-  locality == "Stafford" ~ "Stafford County",
-  locality == "Fredericksburg" ~ "City of Fredericksburg"
-  )
-  )
+faar_sales_qtr <- read_rds("data/faar_sales.rds") |> 
+  filter(period == "quarterly")
 
 
 # Join rents and sales to incomes
-
 
 costs_income <- faar_rent_annual |> 
   mutate(
