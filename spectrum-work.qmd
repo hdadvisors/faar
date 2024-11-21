@@ -34,13 +34,17 @@ This chapter assesses the housing spectrum for the region's *core workforce*. Th
 ### Defining the "core workforce"
 
 For every record of an employed person, the Public Use Microdata Sample (PUMS) includes a variable for the place-of-work Public Use Microdata Area ("POWPUMA"). Households with at least one person who has worked in the last 12 months *and* whose POWPUMA values correspond to the Fredericksburg area (Planning District 16) were designated as members of the core workforce.
+
+Employed persons who work from home are included in this group.
 :::
 
 ## Overview
 
 ### Identifying the core workforce
 
-Overall commuting trends --- 2/3 of all workers are in core workforce
+Based on this definition, 125,312 workers are both employed and live in the region. This means that two-thirds of all workers who live in the region also work within Planning District 16, versus communities outside of the region.
+
+Additionally, this data considers those who work remotely from their homes as commuting within the Fredericksburg region. Only 37,711 workers (20% of job holders) travel to Northern Virginia or Washington D.C. for work. 
 
 ```{r}
 #| label: fig-pow-jobs
@@ -97,7 +101,7 @@ pums_faar |>
 
 ```
 
-When sorted into their respective households --- most households are part of core workforce (79,545, 60.2%)
+When considering whole households, most are members in the region’s core workforce: 79,545 households (60.2%) have at least one earner who works around Fredericksburg. Only 23.2% of households in the region consist of both earners leaving for work outside Planning District 16. A smaller share (16.7%), composed mostly of retirees, have no active workers.
 
 ```{r}
 #| label: fig-wf-hh
@@ -163,7 +167,7 @@ pums_faar_hh |>
 
 ### Common industries and occupations
 
-Most workers employed at private for-profit businesses in the region
+This core workforce is also primarily represented by people who work at private, for-profit businesses in the region (59.3% of workers). Smaller shares of the core workforce work for government entities, are self employed, or work at non-profits.
 
 ```{r}
 #| label: fig-wkr-class
@@ -212,7 +216,7 @@ pums_faar |>
 
 ```
 
-Most common industries where core workforce is employed
+Regionally, 36,834 workers are employed in the Retail and Wholesale (15%) and Professional Services (15%) industries. Healthcare and Social Assistance, as well as Public Administration and Military follow behind, and paint a picture for the kind of incomes the core workforce earns.
 
 ```{r}
 #| label: tbl-wf-ind
@@ -244,7 +248,7 @@ pums_faar |>
 
 ```
 
-Most common job types of core workforce --- across all industries
+Across all industries, the most common professions include Administrative and Clerical Support work, along with Leadership and Management. Jobs in the region that involve sales, healthcare, and logistics are also commonly held by workers who live in the area.
 
 ```{r}
 #| label: tbl-wf-occ
@@ -276,7 +280,7 @@ pums_faar |>
 
 ### Income
 
-Core workforce households more likely to have incomes above 120% AMI, otherwise distribution is similar to households whose workers all have jobs outside of the region
+Core workforce households are slightly more likely to have higher incomes compared to households where all earners have jobs outside of the region. However, more than 13,000 core workforce households (17%) have incomes below 50% AMI. A slightly larger share (18%) have low incomes between 50% and 80% AMI.
 
 ```{r}
 #| label: fig-wf-ami
@@ -347,6 +351,8 @@ pums_faar_hh |>
   ) +
   theme_hda(
     legend.position = "top",
+    legend.justification.top = "left",
+    legend.location = "plot",
     panel.grid.major.y = element_blank(),
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = rel(1.25))
@@ -354,10 +360,84 @@ pums_faar_hh |>
 
 ```
 
-
 ### Household characteristics
 
-Most households in core workforce are headed by couples who both hold jobs in the region
+Core workforce households have similar rates of homeownership compared to non-core workforce households.
+
+```{r}
+#| label: fig-wf-tenure
+#| fig-cap: "Tenure by workforce status"
+
+fig_tenure_subtitle <- paste(
+  "Percent who are",
+  "<span style='color: #445ca9'><b>homeowners</b> (with mortgage)</span>,",
+  "<span style='color: #8baeaa'><b>homeowners</b> (no mortgage)</span>, or",
+  "<span style='color: #e9ab3f'><b>renters</b></span>"
+)
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
+  mutate(tenure_detail = str_remove_all(tenure_detail, " \\(no rent\\)")) |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "At least one earner in core workforce",
+      hh_earners < 1 ~ "No earners",
+      .default = "All earners work outside region"
+    )
+  ) |>
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(wf, tenure_detail) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  ungroup() |> 
+  mutate(
+    wf = fct_relevel(
+      wf,
+      "At least one earner in core workforce",
+      "All earners work outside region",
+      "No earners"
+    )
+  ) |> 
+  ggplot(aes(x = pct, y = fct_rev(wf), fill = tenure_detail, group = fct_rev(tenure_detail))) +
+  geom_col(
+    aes(alpha = wf)
+  ) +
+  geom_text(
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_fill_hda() +
+  scale_alpha_manual(
+    values = c(
+      "At least one earner in core workforce" = 1,
+      "All earners work outside region" = 0.55,
+      "No earners" = 0.55
+    ),
+    guide = "none"
+  ) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_discrete(labels = label_wrap(16)) +
+  labs(
+    title = "Tenure by workforce status",
+    subtitle = fig_tenure_subtitle,
+    caption = pums_cap
+  ) +
+  theme_hda(
+    panel.grid.major.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(size = rel(1.25))
+  )
+
+```
+
+Almost half of all core workforce households are headed by couples who both hold jobs in the region. A large share of those (and 20% of all core workforce households) do not have children under 18. These "Dual-Income No Kids" households (DINKs) often have strong purchasing power in the housing market. 
+
+Single workers who live on their own account for 12% of households in the core workforce. Single-earner couples with and without children are also common. Working single parents, however, are just under 5% of the core workforce. 
 
 ```{r}
 #| label: tbl-wf-hh-type
@@ -380,10 +460,79 @@ pums_wf_hh_types |>
 
 ```
 
+Households in the core workforce have lived in their current homes for similar periods as the non-core workforce, with just under half moving within the last four years. Many non-earner households have lived in their homes for much longer, which corresponds to a significant share of those being older retirees.
+
+```{r}
+#| label: fig-wf-moved
+#| fig-cap: "Length of time in current home by workforce status"
+
+pums_faar_hh |> 
+  filter(hh_income > 0) |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "At least one earner in core workforce",
+      hh_earners < 1 ~ "No earners",
+      .default = "All earners work outside region"
+    )
+  ) |>
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(wf, moved) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n)
+  ) |>
+  ungroup() |> 
+  mutate(
+    wf = fct_relevel(
+      wf,
+      "At least one earner in core workforce",
+      "All earners work outside region",
+      "No earners"
+    )
+  ) |> 
+  ggplot(aes(x = pct, y = fct_rev(wf), fill = moved, group = fct_rev(moved))) +
+  geom_col(
+    aes(alpha = wf)
+  ) +
+  geom_text(
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_fill_hda(guide = guide_legend(nrow = 1, reverse = F)) +
+  scale_alpha_manual(
+    values = c(
+      "At least one earner in core workforce" = 1,
+      "All earners work outside region" = 0.55,
+      "No earners" = 0.55
+    ),
+    guide = "none"
+  ) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_discrete(labels = label_wrap(16)) +
+  labs(
+    title = "Length of time in current home by workforce status",
+    subtitle = "Percent of households",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    legend.position = "top",
+    legend.justification.top = "left",
+    legend.location = "plot",
+    panel.grid.major.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(size = rel(1.25))
+  )
+
+```
 
 ### Affordability
 
-...
+The chart below shows the range of typical housing costs for the core workforce compared to other households. Dots represent median values, and lines cover half of all values centered on the median.
+
+For incomes above 100% AMI, core workforce households spend similar amounts on housing compared to the non-core workforce. At most incomes below 100% AMI, the core workforce spends slightly *less* on housing than the non-core workforce.
 
 ```{r}
 #| label: fig-wf-costs
@@ -462,7 +611,7 @@ pums_faar_hh |>
 
 ```
 
-...
+The core workforce experiences housing cost burden in a pattern similar to the regional averages for each income level. High rents paid by households under 50% AMI are the primary driver of this challenge.
 
 ```{r}
 #| label: fig-wf-cb
@@ -516,11 +665,9 @@ pums_faar_hh |>
 
 ```
 
-
-
 ## Below 30% AMI
 
-...
+Most core workforce households living at 30% of AMI spectrum are individual earners with no children. Next is single parents households and then couples with children households with two earners at this income bracket. Overall, 7% of households with at least one earner are ELI households.
 
 ```{r}
 #| label: tbl-below-30
@@ -545,8 +692,7 @@ fn_tbl_wf_ami("Below 30% AMI")
 
 ```
 
-
-...
+Extremely low income earners are the folks that keep the Fredericksburg running: laborers, cashiers, cooks, retail workers, etc. Additionally, it’s important to note that these households almost always have one earner. 
 
 ```{r}
 #| label: tbl-below-30-occ
@@ -604,7 +750,7 @@ fn_tbl_wf_occ("Below 30% AMI")
 
 ## 30-50% AMI
 
-...
+Very low income households in the core workforce are also primarily represented by individual earners without children. Fifteen percent (15%) of VLI earner households are couples with children, then single parent households (13%). Of the core workforce spectrum brackets, VLI core workers hold the greatest share of single parents and the top three most common workforce household types are also households with only one earner. 
 
 ```{r}
 #| label: tbl-30-50
@@ -614,7 +760,7 @@ fn_tbl_wf_ami("30-50% AMI")
 
 ```
 
-...
+VLI households hold similar occupations to the ELI core workforce.
 
 ```{r}
 #| label: tbl-30-50-occ
@@ -626,7 +772,7 @@ fn_tbl_wf_occ("30-50% AMI")
 
 ## 50-80% AMI
 
-...
+Low-income earners in the core workforce are primarily represented by households with two earners and children, followed by individuals and couples without kids. The low-income spectrum is where we start to see two earners in the households represented in the most common workforce types (39%), compared with VLI and ELI households.
 
 ```{r}
 #| label: tbl-50-80
@@ -636,7 +782,7 @@ fn_tbl_wf_ami("50-80% AMI")
 
 ```
 
-...
+Low-income worker occupations overlap some with ELI and VLI households, but also see representation by educational and healthcare occupations like teachers and nurses. Education and Health Services are some of the most common industries in the entire core workforce. 
 
 ```{r}
 #| label: tbl-50-80-occ
@@ -648,7 +794,7 @@ fn_tbl_wf_occ("50-80% AMI")
 
 ## 80-100% AMI
 
-...
+Moderate income core workers are often couples with one or two earners in the household. Most of these households are couples with children (38%). 
 
 ```{r}
 #| label: tbl-80-100
@@ -658,7 +804,7 @@ fn_tbl_wf_ami("80-100% AMI")
 
 ```
 
-...
+Moderate income earners see greater representation from education industries, with elementary and middle school teachers with the most common occupation in this spectrum bracket. The occupations represented for households in this 80-100% AMI bracket appear to be professions with greater educational attainment.
 
 ```{r}
 #| label: tbl-80-100-occ
@@ -670,7 +816,7 @@ fn_tbl_wf_occ("80-100% AMI")
 
 ## 100-120% AMI
 
-...
+Many above-average income households are couples with two earners (37%), with a large share of those having children.
 
 ```{r}
 #| label: tbl-100-120
@@ -680,7 +826,7 @@ fn_tbl_wf_ami("100-120% AMI")
 
 ```
 
-...
+Interestingly, Cashiers are the most common occupation for those with above moderate income in the core workforce. As described below, as the highest share of these households contain two earners, it’s likely that cashiers and retail supervisors live with other high earners, increasing the overall income of the household. Occupations in this category appear less correlated to positions that require higher educational attainment.
 
 ```{r}
 #| label: tbl-100-120-occ
@@ -692,9 +838,7 @@ fn_tbl_wf_occ("100-120% AMI")
 
 ## Above 120% AMI
 
-...
-
-Couples with no children but multiple earners would include adult, working children living with their parents
+Working couples are the most represented household type for high income earners in the core workforce (more than 60%). Couples with no children but multiple earners would include adult-age working children living with their parents. 
 
 ```{r}
 #| label: tbl-120
@@ -704,9 +848,7 @@ fn_tbl_wf_ami("Above 120% AMI")
 
 ```
 
-...
-
-Inclusion of some lower-wage jobs here (e.g. cashiers) implies many live with a second earner who brings in relatively more income
+Much like above moderate income households, the inclusion of some typically lower-wage jobs here (e.g. cashiers) implies that many live with a second earner who brings in relatively more income.
 
 ```{r}
 #| label: tbl-120-occ
