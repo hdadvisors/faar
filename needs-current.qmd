@@ -108,47 +108,44 @@ costs_income_afford <- costs_income |>
 
 write_rds(costs_income_afford, "data/costs_income_afford.rds")
 
+## Affordability summary stats
 
-
+locality_summary <- costs_income_afford %>%
+  group_by(name) %>%
+  summarise(
+    avg_rent_affordability = mean(rent/rent_afford, na.rm = TRUE),
+    avg_price_affordability = mean(Median_Sales_Price/price_afford, na.rm = TRUE),
+    avg_salary = mean(Average_Annual_Salary, na.rm = TRUE),
+    pct_months_unaffordable_rent = mean(rent > rent_afford, na.rm = TRUE) * 100,
+    pct_months_unaffordable_price = mean(Median_Sales_Price > price_afford, na.rm = TRUE) * 100
+  ) %>%
+  arrange(desc(avg_price_affordability))
+    
+   
 #| label: income-costs-change
 #| eval: false
 
-costs_income_change <- costs_income |> 
-  group_by(name) |> 
-  arrange(year, .by_group = TRUE) |> 
+costs_income_change <- costs_income_afford |>
+  group_by(name) |>
+  arrange(year, .by_group = TRUE) |>
   mutate(
-    rent_chg = (rent - lag(rent)),
-    price_chg = (Median_Sales_Price - lag(Median_Sales_Price)),
-    inc_chg = (Average_Annual_Salary - lag(Average_Annual_Salary))
-  ) |> 
-  mutate(
-     across(.cols = c(rent_chg, price_chg, inc_chg), ~replace_na(.x, 0))
-  ) |> 
-  mutate(
-    across(.cols = c(rent_chg, price_chg, inc_chg), ~cumsum(.x)),
-    rent_pct = rent_chg/first(rent),
-    price_pct = price_chg/first(Median_Sales_Price),
-    inc_pct = inc_chg/first(Average_Annual_Salary)
-  ) |> 
- select(name, year, rent_pct, price_pct, inc_pct) |>  
+    home_price_pct = (Median_Sales_Price/first(Median_Sales_Price) - 1) * 100,
+    income_pct = (Average_Annual_Salary/first(Average_Annual_Salary) - 1) * 100,
+    rent_pct = (rent/first(rent) - 1) * 100
+  ) |>
+  select(name, year, home_price_pct, income_pct, rent_pct) |>
   pivot_longer(
-    cols = c(rent_pct, price_pct, inc_pct),
-    names_to = "type",
-    values_to = "pct_chg"
-  ) |> 
+    cols = ends_with("_pct"),
+    names_to = "metric",
+    values_to = "pct_change"
+  ) |>
   mutate(
-    pct_chg = case_when(
-      year > 2020 & type == "inc_pct" ~ NA_real_,
-      TRUE ~ pct_chg
-    ),
-    type = case_when(
-      type == "inc_pct" ~ "Income",
-      type == "price_pct" ~ "Home price",
-      type == "rent_pct" ~ "Rent",
-      TRUE ~ type
+    metric = case_when(
+      metric == "home_price_pct" ~ "Home price",
+      metric == "income_pct" ~ "Income",
+      metric == "rent_pct" ~ "Rent"
     )
   )
-
 
 write_rds(costs_income_change, "data/costs_income_change.rds")
 
@@ -264,41 +261,56 @@ library(ggiraph)
 library(scales)
 library(ggplot2)
 
+costs_income_change_yearly <- costs_income_change |>
+  group_by(name, year, metric) |>
+  summarise(
+    pct_change = mean(pct_change, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(name, year, metric)
+
+
 #| label: fig-costs-inc-change
 #| fig.cap: "Cumulative percent change in median renter income, home prices, and average rent"
 #| 
 
-cost_plot <- ggplot(costs_income_change,
+  cost_plot <- ggplot(costs_income_change_yearly,
        aes(x = year,
-           y = pct_chg,
-           color = type)) +
+           y = pct_change,
+           color = metric,
+           group = metric)) +
   geom_line(size = 1) +
-  geom_point_interactive(
-    aes(data_id = pct_chg,
-        tooltip = percent_format(accuracy = 0.1)(pct_chg)),
-    size = 0.5) + 
-  theme_pha() +
-  scale_color_pha() + 
-  facet_wrap(~name, nrow = 1) +
-  scale_y_continuous(labels = label_percent()) +
-  labs(title = "Cumulative percent change in median renter income,<br>home prices, and average rent",
-       subtitle ="2020 to 2024 (ACS income data through 2020)",
-       color = "Percent change",
-       caption = "**Sources:** U.S. Census Bureau, American Community Survey, Table B25119;<br>Central Virginia MLS; CoStar Group, Inc.") +
-  theme(legend.position = "bottom")
+  facet_wrap(~name, scales = "fixed", ncol = 4) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),
+    breaks = seq(0, 60, by = 20),
+    limits = c(0, 60)
+  ) +
+  scale_x_continuous(
+    breaks = seq(2020, 2024, by = 2),
+    limits = c(2020, 2024)
+  ) +
+  scale_color_manual(
+    values = c("Home price" = "#445ca9", 
+              "Income" = "#8baeaa", 
+              "Rent" = "#e9ab3f")
+  ) +
+  labs(
+    title = "Cumulative percent change in median renter income,\nhome prices, and average rent",
+    subtitle = "2020 to 2024 (ACS income data through 2022)",
+    x = "",
+    y = "",
+    color = ""
+  ) +
+  theme_hda() +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom",
+    panel.spacing = unit(1, "lines")
+  )
 
-if (knitr::is_html_output()) {
+  print(cost_plot)
   
-  girafe(ggobj = cost_plot,
-         height_svg = 4) 
-  
-} else {
-  
-  cost_plot
-  
-}
-
-
 ```
 
 ### Rental Housing Gap
