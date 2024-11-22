@@ -118,19 +118,19 @@ costs_income_change <- costs_income |>
   arrange(year, .by_group = TRUE) |> 
   mutate(
     rent_chg = (rent - lag(rent)),
-    price_chg = (avg_price - lag(avg_price)),
-    inc_chg = (income - lag(income))
+    price_chg = (Median_Sales_Price - lag(Median_Sales_Price)),
+    inc_chg = (Average_Annual_Salary - lag(Average_Annual_Salary))
   ) |> 
   mutate(
-    across(.cols = c(rent_chg, price_chg, inc_chg), ~replace_na(.x, 0))
+     across(.cols = c(rent_chg, price_chg, inc_chg), ~replace_na(.x, 0))
   ) |> 
   mutate(
     across(.cols = c(rent_chg, price_chg, inc_chg), ~cumsum(.x)),
     rent_pct = rent_chg/first(rent),
-    price_pct = price_chg/first(avg_price),
-    inc_pct = inc_chg/first(income)
+    price_pct = price_chg/first(Median_Sales_Price),
+    inc_pct = inc_chg/first(Average_Annual_Salary)
   ) |> 
-  select(locality, year, rent_pct, price_pct, inc_pct) |>
+ select(name, year, rent_pct, price_pct, inc_pct) |>  
   pivot_longer(
     cols = c(rent_pct, price_pct, inc_pct),
     names_to = "type",
@@ -279,7 +279,7 @@ cost_plot <- ggplot(costs_income_change,
     size = 0.5) + 
   theme_pha() +
   scale_color_pha() + 
-  facet_wrap(~locality, nrow = 1) +
+  facet_wrap(~name, nrow = 1) +
   scale_y_continuous(labels = label_percent()) +
   labs(title = "Cumulative percent change in median renter income,<br>home prices, and average rent",
        subtitle ="2020 to 2024 (ACS income data through 2020)",
