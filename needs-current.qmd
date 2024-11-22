@@ -37,6 +37,7 @@ faar_rent_qtr <- read_rds("data/faar_costar.rds") |>
   select(1:3, 7:8) |> 
   filter(name != "Region")
 
+
 # Load sales data
 
 faar_sales_yr <- read_rds("data/faar_sales.rds") |> 
@@ -48,20 +49,22 @@ faar_sales_qtr <- read_rds("data/faar_sales.rds") |>
 
 # Join rents and sales to incomes
 
-costs_income <- faar_rent_annual |> 
+costs_income <- faar_rent_qtr |> 
   mutate(
-    locality = str_remove(locality, ", Virginia"),
-    rent = avg_price  
+    rent = adj_asking_rent
   ) |>
-  left_join(average_annual, by = c("locality", "year")) |> 
-  left_join(faar_mls_annual, by = c("locality", "year")) |>
+  left_join(faar_wages_qtr, by = c("name", "year")) |> 
+  left_join(faar_sales_qtr, by = c("name", "year")) |>
   filter(year >= 2020) |>
- mutate(
-    rent_to_income = (rent * 12) / Average_Annual_Salary,
-    price_to_income = msp / Average_Annual_Salary
-  ) |> arrange(locality, year) 
+  mutate(
+    rent_to_income = (rent * 12) / adj_annual_pay,
+    price_to_income = adj_med_price / adj_annual_pay
+  ) |> 
+  arrange(name, year)
 
-costs_income <- costs_income |> rename(Median_Sales_Price = msp)
+costs_income <- costs_income |> rename(Median_Sales_Price = adj_med_price,
+                                       Average_Annual_Salary = adj_annual_pay)
+
 
 # Summary Stats 
 
@@ -76,7 +79,6 @@ summary_stats <- costs_income %>%
   )
 
 
-# Add affordable rents and sales prices
 
 # Manually import freddie mac interest rates data set in sales and csvs folder of data github 
 
@@ -112,7 +114,7 @@ write_rds(costs_income_afford, "data/costs_income_afford.rds")
 #| eval: false
 
 costs_income_change <- costs_income |> 
-  group_by(locality) |> 
+  group_by(name) |> 
   arrange(year, .by_group = TRUE) |> 
   mutate(
     rent_chg = (rent - lag(rent)),
