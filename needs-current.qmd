@@ -159,9 +159,9 @@ This analysis's goal is to show existing housing costs versus the ability of hou
 
 ## Overview
 
-\[adding in JTK's new text and spectrum pieces\]
+### All households
 
-At a glance, we can see supply and demand in the region are not in alignment. There is an excess of supply for \[ XYZ and a lack of supply for XYZ. \]
+At a glance, we can see supply and demand in the region are not in alignment. There is an excess of supply for certain AMI brackets and a lack of supply for others, particularly at the extreme ends of incomes. This will be broken down further in the renter housing gap and homeownership gap sections. 
 
 ```{r}
 remotes::install_github("hdadvisors/hdatools")
@@ -227,6 +227,27 @@ ggplot(supply_demand,
 
 
 ```
+
+### Core workforce Households
+
+
+Can the core workforce afford housing in the region? See the Methodology section, which outlines this report’s assumptions on housing affordability (30% of income).
+
+Incorporating AMI into analyses on housing affordability shows some discrepancies between the core and non-core workforce. ELI, low income, and moderate income non-core workforce households have higher median housing costs compared with their core workforce counterparts. This could indicate that the households that are able to both live and work within the GWRC region have more affordable housing costs than those who have to commute into or out of the region for work. Workers may find relief by moving where they work compared to those who must commute in or out. 
+
+Incorporating AMI into analyses on housing affordability shows some discrepancies between the core and non-core workforce. ELI, low income, and moderate income non-core workforce households have higher median housing costs compared with their core workforce counterparts. This could indicate that the households that are able to both live and work within the GWRC region have more affordable housing costs than those who have to commute into or out of the region for work. Workers may find relief by moving where they work compared to those who must commute in or out. 
+
+
+[insert viz of housing costs by workforce status and AMI]
+
+That said, with monthly median income in mind, an overwhelming majority of ELI core workforce households are both severely and cost burdened (81%). Sixty-five percent (65%) of VLI earning households pay over 30% and 50% for their housing costs. Low income households fare better, with only 32% of low income working households that are cost burdened. This is a stark difference though from the 8% and 7% of moderate and above moderate income households who are housing cost burdened. 
+
+
+[ Insert vis housing affordablility core work force]
+
+
+Most of the cost burdened workforce are low income, ELI, and VLI earners, who have less income proportionally to spend on housing costs and with even less remaining for emergencies or other living expenses like healthcare.
+
 
 ## Incomes vs Housing Costs
 
@@ -433,7 +454,7 @@ More likely though, middle to higher income renting-households are able to take 
 ::: callout-tip
 #### Calculating rental affordability
 
-In this chapter, an "affordable rent" is no more than 30 percent of a household's gross monthly income. Any rent amount higher than this level would make the renter cost-burdened.
+An "affordable rent" is no more than 30 percent of a household's gross monthly income. Any rent amount higher than this level would make the renter cost-burdened.
 :::
 
 Occupation data shows the most common salaries in the region, which influences what individuals can purchase or rent, where they must live depending on their wage, and how their families can effectively expand. In a [previous chapter](spectrum-work.qmd###Common%20industries%20and%20occupations) , the five most common occupation categories in the region were determined from the latest PUMS data.
