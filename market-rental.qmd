@@ -6,275 +6,505 @@
 #| message: false
 #| warning: false
 
+# Load common script
 source("_common.R")
 
-# Load packages other than tidyverse and hdatools
-# 
-library(scales)
-library(ggtext)
+# Load other packages other than tidyverse and hdatools
+library(sf)
 library(leaflet)
-library(readxl)
-library(ggiraph)
+library(geojsonio)
+library(classInt)
+library(htmltools)
+library(htmlwidgets)
+library(patchwork)
+
+faar_bps <- read_rds("data/faar_cbps.rds")
+
+faar_costar <- read_rds("data/faar_costar.rds") |> 
+  mutate(yrqtr = paste0(year, " Q", qtr))
+
+faar_nhpd_sub <- read_rds("data/nhpd_subsidies.rds")
+
+faar_nhpd_prop <- read_rds("data/nhpd_properties.rds")
 
 ```
 
-### Existing Supply
+## Existing supply
 
-There are an estimated 35,090 rental units in the FAAR region\[\^market-rental-1\]. The vast majority of these rentals cost over \$1,000 a month, with over 18,000 units that cost over \$1,500 monthly (57%) of total units. Similarly to trends in the homeownership market, most of the existing rental supply is made up of single family housing. Of all types of rental housing, there are roughly 20,000 rental units with two or three bedrooms.
-
-The prominence of two and three bedrooms (20,000 units), compared with studios/efficiencies and one bedrooms (5,000 units) and four and five and more bedrooms (4,500 units) could indicate that regional rental pricing does not necessarily correspond with the number of bedrooms or size of the households being rented. Rental pricing is far more likely to correspond with location or community characteristics that impact desirability and increase competition in the rental market.
-
-\[\^market-rental-1: This estimate includes units that are vacant, but “For rent” and “Rented, not occupied”. These units are distributed across rental units based on the distribution by cost.\]
+Most of the approximate 35,240 rental homes in the Fredericksburg region have 2 or 3 bedrooms, with these sizes accounting for nearly 73% of all rental units. One-bedroom units make up about 14% of rentals, while larger homes with 4 or more bedrooms represent approximately 14% of the rental stock. A small number of rental units (778) have no bedrooms, typically representing studio apartments.
 
 ```{r}
+#| label: fig-renter-bedroom
+#| fig-cap: "Renter-occupied homes by number of bedrooms"
 
-renter_bedroom <- read_rds("data/b25042_region.rds") |> 
-  filter(tenure == "Renter")
+# Read in the tenure by bedrooms data and filter for only homeowners.
+renter_bedroom <- read_rds("data/b25042.rds") |> 
+  filter(tenure == "Renter", year == 2022) |> 
+  summarise(
+    estimate = sum(estimate), .by = br
+  ) |> 
+  mutate(br = fct_wrap(br, 10))
 
-custom_order <- factor(renter_bedroom$br, levels = c("No bedroom", "1 bedroom", "2 bedrooms", 
-                                                    "3 bedrooms", "4 bedrooms", "5 or more bedrooms"))
+sum(renter_bedroom$estimate)
 
-ggplot(renter_bedroom,
-       aes(x = custom_order,
-           y = estimate)) +
-  geom_col(position = "dodge", fill = "#445ca9") +
-  theme_hda(base_size = 10) +
-  scale_fill_hda() +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Existing renter supply by bedrooms",
-       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25042.")
+ggplot(
+  renter_bedroom,
+  aes(x = br, y = estimate, label = label_comma()(estimate))
+  ) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", nudge_y = -310) +
+  scale_y_continuous(
+    labels = label_comma(),
+    limits = c(0, 13000),
+    expand = c(0.01, 0.05)
+  ) +
+  theme_hda() +
+  add_zero_line() +
+  labs(
+    title = "Renter-occupied homes by number of bedrooms",
+    #subtitle = "",
+    caption = acs_cap("B25042")
+  )
 
 ```
 
-Single family homes, inclusive of attached-style rentals like townhomes, remain the most prominent rental type, with more diversity in housing type available in multifamily buildings. The reliance on single-family rental units has had an influence on the rental and home sales sector, as well. While multi-family dwelling types have risen in popularity over the previous two decades, they have not surpassed the number of single-family rental units. This trend can be attributed to a demand for this type of product type (i.e., larger, more private rental housing), but it can also point to the lack of diverse multifamily supply regionally.
-
-The single-family rental market can exacerbate for-sale supply challenges. Single-family rentals are often more modest homes that may be priced more affordably if sold instead. With current interest rates ultimately raising monthly mortgage and housing costs for owners, the region may see increased activity in the rental market as those priced out of mortgages continue to seek out rentals. This type of interplay between the rental and homeownership market further accentuates the importance of having a balanced supply of not only homeownership units, but also rental units.
+Single-family homes comprise the majority of rental properties in the region, with detached houses accounting for about 37% of units and attached homes making up another 16%. Multi-unit properties of varying sizes constitute about 45% of rentals, split between smaller properties with 2-4 units (6%), mid-sized buildings with 5-19 units (27%), and larger complexes with 20 or more units (12%). Manufactured homes account for 4% of rental properties.
 
 ```{r}
+#| label: fig-renter-type
+#| fig-cap: "Renter-occupied homes by structure type"
 
-renter_type <- read_rds("data/b25127_region.rds") |> 
-  filter(tenure == "Renter")
+renter_type <- read_rds("data/b25032.rds") |> 
+  filter(tenure == "Renter", year == 2022) |> 
+  summarise(
+    estimate = sum(estimate), .by = structure
+  ) |> 
+  mutate(structure = fct_wrap(structure, 10))
 
-title_text <- "Existing rental supply is diverse"
-
-subtitle_text <- "<span style = 'color:#445ca9'><b>Single-family housing</b></span> has increasingly been a large proportion of rental"
-
-ggplot(renter_type,
-       aes(x = yrbuilt,
-           y = estimate,
-           fill = structure)) +
-  geom_col() +
-  theme_hda(base_size = 10) +
-  scale_fill_hda(direction = -1) +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = title_text,
-       subtitle = subtitle_text,
-       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, Table B25127.") +
-  theme(legend.position = "right")
-
+ggplot() +
+  geom_col(
+    data = renter_type,
+    aes(x = structure, y = estimate),
+    fill = hda_pal[1]
+  ) +
+  geom_text(
+    data = renter_type,
+    #data = filter(renter_type, estimate > 9000),
+    aes(x = structure, y = estimate, label = label_comma()(estimate)),
+    color = "white",
+    nudge_y = -500
+  ) +
+  # geom_text(
+  #   data = filter(renter_type, estimate < 9000),
+  #   aes(x = structure, y = estimate, label = label_comma()(estimate)),
+  #   color = hda_pal[1],
+  #   nudge_y = 2500
+  # ) +
+  scale_y_continuous(labels = label_comma(), expand = c(0.01, 0.01)) +
+  theme_hda() +
+  add_zero_line() +
+  labs(
+    title = "Renter-occupied homes by structure type",
+    #subtitle = "",
+    caption = acs_cap("B25032")
+  )
 
 ```
 
+The most common rent range in the region is \$1,500 to \$1,999 per month, representing nearly 31% of all rental units. Another 27% of rentals fall between \$1,000 and \$1,499 monthly. Lower-cost units with rents under \$1,000 make up about 15% of the market, while higher-end rentals above \$2,000 represent approximately 22%. About 5% of rental units report no cash rent, typically indicating housing provided as part of employment or family arrangements.
+
 ```{r}
 
-renter_supply <- read_rds("data/b25063_region.rds") 
+#| label: fig-renter-supply
+#| fig-cap: "Renter-occupied homes by monthly gross rent"
 
-# The data visualization below shows the distribution of renter-occupied housing based on gross monthly rent. This viz is focused on the entire region. It accounts for vacant housing units by applying an equal distribution of vacant units based on the distribution by cost.
+renter_supply <- read_rds("data/b25063.rds") |> 
+  summarize(
+    estimate = sum(estimate),
+    .by = c(rent)
+  )
 
-custom_order <- factor(renter_supply$rent, levels = c("Less than $599", "$600 to $999", "$1,000 to $1,499",
-                                                         "$1,500 to $1,999", "More than $2,000"))
-
-sum(renter_supply$adj_estmate)
-
-ggplot(renter_supply,
-       aes(x = custom_order,
-           y = estimate)) +
-  geom_col(stat = "identity", fill = "#445ca9") +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Existing renter supply by gross monthly rent",
-       caption = "Source: U.S. Census Bureau, 5-Year American Community Survey, Table B25063.")
-
-
+ggplot(
+  renter_supply,
+  aes(x = rent, y = estimate, label = label_comma()(estimate))
+  ) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", nudge_y = -500) +
+  scale_y_continuous(
+    labels = label_comma(),
+    expand = c(0.01, 0.01)
+  ) +
+  theme_hda() +
+  add_zero_line() +
+  labs(
+    title = "Renter-occupied homes by monthly gross rent",
+    subtitle = "Inludes contract rent and basic utilities",
+    caption = acs_cap("B25063")
+  )
 
 ```
 
-## Building Trends
+## Building trends
 
-Since the Census Building Permit Survey is unable to disaggregate building permits by tenure, five plus unit building permits often serve as a proxy for rental construction level trends. The years between 2015 and 2020 show increased permitting for 5+ family units, which includes units like for-sale condominiums, as well as multifamily rentals.
-
-While rental multi-family construction activity has increased over time, it is still at a far reduced rate compared with single family permitting. 2018 appears to be the year with the greatest multifamily development in the region, with about 1,500 permits filed regionally. Permitting did not surpass 300 for five plus units in 2017, so there may have been local indicators or funding that would have influenced the increased development of units in that time period.
+Since the Census Building Permit Survey is unable to disaggregate building permits by tenure, this analysis assumes all multi-unit permits are for rental development. New multifamily building permits across the region show distinct patterns by structure type. The vast majority of permits have been issued for larger buildings with 5 or more units, with significant spikes in permitting activity occurring in the early 2000s and again in recent years. Meanwhile, permits for smaller multifamily structures, including 2-unit and 3-4 unit buildings, have remained consistently low throughout the period.
 
 ```{r}
-#| label: fig-bps-chart-mf
-#| fig-cap: "Building Permits"
+#| label: fig-bps-mf
+#| fig-cap: "Annual multifamily building permits by structure type"
 
-bps <- read_rds("data/faar_cbps.rds") |> 
-  filter(NAMELSAD != "Orange County") |> 
-  mutate(type = case_when(
-    type == "2-units" ~ "2-4 units",
-    type == "3-4 units" ~ "2-4 units",
-    TRUE ~ type
-  )) |> 
-  group_by(year, type) |> 
-  summarise(units = sum(units))
+bps <- faar_bps |> 
+  summarize(
+    units = sum(units),
+    .by = c(year, type)
+  ) |> 
+  filter(type != "1-unit")
 
-
-ggplot(bps, 
-       aes(x = year,
-           y = units,
-           fill = type)) +
+ggplot(bps, aes(x = year, y = units, fill = type)) +
   geom_col() +
   facet_wrap(~type, nrow = 1) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = seq(2000, 2024, 4)
+  ) +
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
   scale_fill_hda() +
-  theme_hda(base_size = 10) +
-  labs(title = "The region has still not recovered to pre-Great Recession construction levels",
-       subtitle = "However, <span style='color:#e9ab3f'>Larger multifamily</span> construction is on the rise",
-       caption = "Source: Census Building Permits Survey")
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    panel.spacing.x = unit(0.02, "npc")
+  ) +
+  labs(
+    title = "Annual multifamily building permits by structure type",
+    subtitle = "All permits issued across region from 2000 through September 2024",
+    caption = "**Source:** U.S. Census Bureau, Residential Building Permits Survey."
+  )
   
+```
+
+The cumulative total of multifamily permits issued since 2000 varies dramatically by locality. Spotsylvania County has seen the most substantial growth in multifamily permits, with a sharp acceleration starting around 2016. Stafford County shows steady but more moderate growth over the period, while Fredericksburg demonstrates consistent incremental increases. The remaining localities --- Caroline, King George, and Orange --- show minimal multifamily permitting activity over the past two decades.
+
+```{r}
+#| label: fig-bps-local
+#| fig-cap: "Annual multifamily building permits by locality"
+
+bps_local <- faar_bps |> 
+  filter(type != "1-unit") |> 
+  summarize(
+    units = sum(units),
+    .by = c(NAMELSAD, year)
+  ) |> 
+  mutate(
+    name = str_remove_all(NAMELSAD, " County| city"),
+    cum_sum = cumsum(units),
+    .by = NAMELSAD
+  )
+
+ggplot(bps_local, aes(x = year, y = cum_sum, fill = name)) +
+  geom_col(width = 0.6) +
+  facet_wrap(~fct_reorder(name, cum_sum, .fun = sum), nrow = 1) +
+  scale_x_continuous(
+    #limits = c(2000, 2035),
+    expand = c(0, 0),
+    breaks = seq(2000, 2024, 8)
+  ) +
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  scale_fill_hda() +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    strip.text = element_markdown(size = rel(0.9)),
+    panel.spacing.x = unit(0.03, "npc"),
+    panel.spacing.y = unit(0.05, "npc"),
+  ) +
+  labs(
+    title = "Total multifamily building permits by locality",
+    subtitle = "Cumulative permits issued from 2000 through September 2024",
+    caption = "**Source:** U.S. Census Bureau, Residential Building Permits Survey."
+  )
+  
+```
+
+Based on CoStar data, construction activity for larger multifamily developments has fluctuated considerably since 2015. The number of units under construction peaked in early 2016 at over 1,700 units, followed by another significant surge in early 2019 reaching approximately 1,600 units. Recent quarters show a general downward trend in construction activity, with levels in 2023 falling below 600 units --- some of the lowest observed in the time period.
+
+```{r}
+#| label: fig-costar-uc
+#| fig-cap: "Multifamily units under construction"
+
+faar_costar |> 
+  filter(name == "Region", year != 2024) |> 
+  ggplot(aes(x = qtr, y = under_construction_units)) +
+  facet_grid(cols = vars(year), scales = "free_x",  space = "free_x", switch = "x") +
+  geom_col(width = 0.7, fill = hda_pal[1]) +
+  scale_x_continuous(
+    breaks = c(1:4),
+    labels = c("Q1", "", "", ""),
+    expand = c(0.02, 0.02)
+  ) +
+  scale_y_continuous(
+    labels = label_comma(),
+    expand = c(0.01, 0.01)
+  ) +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(vjust = 0),
+    panel.spacing.x = unit(0, "npc"),
+    strip.text = element_markdown(hjust = 0),
+    strip.placement = "outside"
+  ) +
+  labs(
+    title = "Multifamily units under construction",
+    subtitle = "Number of units observed by quarter from 2015 through 2023",
+    caption = "**Source:** CoStar Group, Inc."
+  )
 
 ```
 
-## Market Trends
+## Market trends
 
-The market rate for monthly rent has been inconsistent post pandemic, steadily increasing over the last four years with a peak in costs in 2021. Following a dip in overall monthly costs in 2023, where rents were \$1,675 on average, rents have risen back to \$1,775 by April 2024.
+The average asking rent in Fredericksburg has shown distinct patterns between nominal and inflation-adjusted values since 2015. While nominal rents steadily increased from around \$1,200 to nearly \$1,700 per unit, inflation-adjusted rents remained relatively stable between \$1,700 and \$1,800 until 2020. A notable spike occurred in 2021-2022, pushing inflation-adjusted rents above \$1,900, before declining through 2023 and stabilizing near $1,750 in early 2024.
 
 ```{r}
 #| label: fig-rent-line
 #| fig-cap: "Average asking rent"
 
-rent <- read_rds("data/faar_costar.rds") |> 
-  filter(locality == "Region") |> 
-  select(year, quarters, adj_rent, rent = asking_rent_per_unit) |> 
-  filter(year >= 2020)
+costar_rent <- faar_costar |>
+  filter(name == "Region") |> 
+  select(yrqtr, `Inflation-adjusted` = adj_asking_rent, `Nominal` = asking_rent_per_unit) |> 
+  pivot_longer(
+    cols = 2:3,
+    names_to = "adj",
+    values_to = "rent"
+  )
 
-
-
-ggplot(rent,
-       aes(x = quarters,
-           y = adj_rent,
-           color = adj_rent)) +
+ggplot(costar_rent, aes(x = yrqtr, y = rent, color = adj, group = adj)) +
   geom_line() +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = dollar_format()) +
-  scale_fill_gradientn(colours = c("#cce0ce", "#8baeaa", "#445ca9", "#233068")) +
-  labs(title = "Average asking rent per unit",
-       subtitle = "In 2024 Q2 inflation-adjusted dollars",
-       caption = "Source: CoStar Group, Inc.")
-  
+  scale_color_hda() +
+  scale_x_discrete(
+    expand = c(0.05, 0.05),
+    breaks = c(
+      "2015 Q1", "2016 Q1", "2017 Q1", "2018 Q1", "2019 Q1",
+      "2020 Q1", "2021 Q1", "2022 Q1", "2023 Q1", "2024 Q1"
+    )
+  ) +
+  scale_y_continuous(
+    labels = label_currency()
+  ) +
+  theme_hda(
+    legend.position = "top"
+  ) +
+  labs(
+    title = "Average asking rent per unit",
+    subtitle = "In September 2024 inflation-adjusted dollars",
+    caption = "**Source:** CoStar Group, Inc."
+  )
 
 ```
 
-This cycle of average asking rents changing roughly \$150 from 2021 to 2023 perhaps reflects the influence of COVID-era rental support systems and eviction prevention measures that were available in Virginia. These programs were largely phased out by 2023, with following years showing increased eviction rates and market rents rising. As these subsidies phased out, overall rents have steadily risen, almost back to their peak in 2021.
+This cycle of average asking rents changing roughly \$150 from 2021 to 2023 perhaps reflects the influence of COVID-era rental support systems and eviction prevention measures that were available in Virginia. These programs were largely phased out by 2023, with following years showing increased eviction rates and market rents rising. 
 
 The reduction in rent from 2021 to 2023 could also be attributed to population migration and the rise of remote work in the pandemic era. Many households doubled up, with singles finding roommates or living with family, or households moving from urban areas to rural communities where they can still work remotely and afford rent. As demand reduced for rentals from 2021 to 2023 as a result, increased vacancy rates and reduced competition for units would drive down rents accordingly.
 
+Quarter-over-quarter changes in average asking rent reveal significant volatility in the market since 2015. The most dramatic increase occurred in mid-2021, when rents jumped by approximately \$85 in a single quarter. More recent trends show moderating changes, with quarterly adjustments typically ranging between \$10-50 since 2023, suggesting a gradual return to historical patterns of incremental changes.
+
 ```{r}
 #| label: fig-growth-bar
-#| fig-cap: "Asking versus effective rent growth"
+#| fig-cap: "Quarterly change in average asking rent"
 
-growth <- read_rds("data/faar_costar.rds") |> 
-  filter(locality == "Region") |> 
-  select(year, quarters, ask = asking_rent_percent_growth_yr, eff = effective_rent_percent_growth_yr) |> 
-  filter(year >= 2020) |> 
-  pivot_longer(3:4,
-               names_to = "rent") |> 
-  mutate(value = as.numeric(value))
-
-title_text <- "<span style = 'color:#445ca9'><b>Asking</b></span> versus <span style = 'color:#8baeaa'><b>effective</span> rent growth"
-
-
-
-ggplot(growth,
-       aes(x = quarters,
-           y = value,
-           fill = rent)) +
-  geom_col(position = "dodge") +
-  scale_y_continuous(labels = percent_format()) +
-  labs(title = title_text,
-       caption = "Source: CoStar Group, Inc.") +
-  scale_fill_hda() +
-  theme_hda(base_size = 10)
+costar_rent_chg <- faar_costar |>
+  filter(name == "Region") |>
+  arrange(yrqtr) |> 
+  mutate(
+    rent_chg = asking_rent_per_unit - lag(asking_rent_per_unit)
+  )
   
+ggplot(costar_rent_chg, aes(x = yrqtr, y = rent_chg)) +
+  geom_col(fill = hda_pal[1]) +
+  scale_x_discrete(
+    expand = c(0.05, 0.05),
+    breaks = c(
+      "2015 Q1", "2016 Q1", "2017 Q1", "2018 Q1", "2019 Q1",
+      "2020 Q1", "2021 Q1", "2022 Q1", "2023 Q1", "2024 Q1"
+    )
+  ) +
+  scale_y_continuous(
+    labels = label_currency()
+  ) +
+  add_zero_line() +
+  theme_hda(
+    legend.position = "top"
+  ) +
+  labs(
+    title = "Quarterly change in average asking rent",
+    subtitle = "2015 Q1 to 2024 Q1",
+    caption = "**Source:** CoStar Group, Inc."
+  )
+
 ```
 
 Vacancy rates give information about the rental market's supply-demand balance and the general health of the rental market. Low rental vacancy rates constrain the rental market, making it more difficult for low-income tenants to compete for homes as there are net fewer apartments available. Declining vacancy rates have significant consequences for home affordability, and can highlight supply and demand mismatches.
 
 ```{r}
-#| label: fig-vac-line
-#| fig-cap: "Rental vacancy"
+#| label: fig-vac
+#| fig-cap: "Rental vacancy rate"
 
-vac <- read_rds("data/faar_costar.rds") |> 
-  filter(locality == "Region") |> 
-  select(year, quarters, vac = vacancy_percent, vac_pct = vacancy_percent_growth_yr) |> 
-  filter(year >= 2020) |> 
-  mutate(vac = as.numeric(vac),
-         vac_pct = as.numeric(vac_pct))
-
-title_text <- "<span style = 'color:#445ca9'><b>Rental vacancy rate</b></span> and <span style = 'color:#e9ab3f'><b>percent change in vacancy</span>"
-
-
-ggplot(vac,
-       aes(x = quarters)) +
-  geom_line(
-    aes(y = vac),
-        color = "#445ca9") +
-  geom_col(
-    aes(y = vac_pct),
-        fill = "#e9ab3f") +
-  labs(title = title_text,
-       caption = "Source: CoStar Group, Inc.") +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = percent_format())
-
+faar_costar |>
+  filter(name == "Region") |>
+  ggplot(aes(x = yrqtr, y = vacancy_percent, group = name)) +
+  geom_line(color = hda_pal[1]) +
+  scale_x_discrete(
+    expand = c(0.05, 0.05),
+    breaks = c(
+      "2015 Q1", "2016 Q1", "2017 Q1", "2018 Q1", "2019 Q1",
+      "2020 Q1", "2021 Q1", "2022 Q1", "2023 Q1", "2024 Q1"
+    )
+  ) +
+  scale_y_continuous(
+    labels = label_percent(accuracy = 0.1),
+    limits = c(0, 0.079)
+  ) +
+  add_zero_line() +
+  theme_hda() +
+  labs(
+    title = "Rental vacancy rate",
+    subtitle = "2015 Q1 to 2024 Q1",
+    caption = "**Source:** CoStar Group, Inc."
+  )
 
 ```
 
-Through the COVID-19 pandemic era, rental vacancy rates across the country, including the FAAR region, reached historic lows. The region has hovered around 6% vacancy rate since the pandemic, showing its position within the state as a rural-small market blend among the counties and growing exurbs.
+Through the COVID-19 pandemic era, rental vacancy rates across the country, including the Fredericksburg region, reached historic lows. The region has hovered around 6% vacancy rate since the pandemic, showing its position within the state as a rural-small market blend among the counties and growing exurbs.
 
 A deeper examination at the year-to-year percent fluctuations reveals that, while the rental market loosened marginally in 2022 and 2023, with greater availability of rentals at decreasing prices. The most recent signs indicate the market tightening again, with the rental vacancy rate trending downward in 2024 with an estimated percent change in vacancy rate at -0.5%.
 
-With the rental vacancy rate sitting near 6% currently, but a decreasing trend in the last four quarters, the region is likely seeing increasing monthly rental costs, as well as decreasing availability of units. This is also a factor that drives rental pricing up.
+With the rental vacancy rate sitting near 6% currently, but a decreasing trend in the last four quarters, the region is likely seeing increasing monthly rental costs, as well as decreasing availability of units. This is also a factor that drives up rental prices.
 
-### Dedicated Affordable Supply
+## Dedicated affordable rental housing
 
-The amount of subsidy gained and attached to a property during development is also a determinant in overall monthly rents. The region’s overwhelming source of subsidy for affordable rentals has been Low-Income Tax Credits (LIHTC), followed by Section 8 (housing vouchers) and HUD-Insured projects. 
+An array of federal housing assistance programs help low-income residents across the region with rental housing opportunities. Today, there are approximately 6,700 dedicated affordable rental homes found across 78 properties. 
+
+Stafford County leads the region with approximately 2,000 federally assisted housing units, followed closely by Fredericksburg City. Spotsylvania maintains a substantial presence with about 1,600 units, while Orange and King George counties have notably smaller inventories of roughly 400 and 350 units respectively. Caroline County has the smallest allocation with 145 units.
 
 
 ```{r}
-#| label: fig-subsidy-type
-#| fig-cap: "Assisted rental units by subsidy"
+#| label: fig-subsidy-local
+#| fig-cap: "Federally assisted units by locality"
 
+nhpd_local <- faar_nhpd_prop |> 
+  summarise(
+    n = n(),
+    units = sum(total_units),
+    .by = county
+  )
 
-# The below data visualization shows the distribution of assisted rental units by subsidy type in the FAAR region.
-
-subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
-  filter(county != "Orange") |> 
-  group_by(subsidy_name) |> 
-  summarise(units = sum(assisted_units))
-
-ggplot(subsidy,
-       aes(x = reorder(subsidy_name, -units),
-           y = units,
-           fill = subsidy_name)) +
-  geom_col() +
-  theme_hda(base_size = 10) +
-  labs(title = "Assisted rental units by subsidy",
-       caption = "Source: National Housing Preservation Database; Note: Subsidies may overlap a single rental unit.") +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  scale_fill_hda(direction = 1)
+ggplot(nhpd_local, aes(x = units, y = reorder(county, units))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    aes(label = label_comma()(units)),
+    color = "white",
+    nudge_x = -30,
+    hjust = 1
+  ) +
+  scale_x_continuous(
+    limits = c(0, 2250),
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  add_zero_line("x") +
+  theme_hda(flip_gridlines = T) +
+  labs(
+    title = "Federally assisted units by locality",
+    subtitle = "Data as of May 2024",
+    caption = "**Source:** National Housing Preservation Database."
+  )
 
 ```
 
-[analysis ]
+The Low Income Housing Tax Credit (LIHTC) program dominates the region's subsidized housing landscape, accounting for over three-quarters of all units. Section 8 and HUD-insured properties each represent approximately 8-10% of the total inventory. USDA Rural Housing Service (RHS) 515 and HOME programs constitute smaller shares at 4% and 1.4% respectively.
 
+```{r}
+#| label: fig-subsidy-type
+#| fig-cap: "Share of federally assisted units by subsidy type"
+
+nhpd_type <- faar_nhpd_sub |> 
+  summarise(
+    n = n(),
+    units = sum(assisted_units),
+    .by = subsidy_name
+  ) |> 
+  mutate(pct = units/sum(units))
+
+ggplot(nhpd_type, aes(x = pct, y = reorder(subsidy_name, pct))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    aes(label = label_percent()(pct)),
+    color = hda_pal[1],
+    nudge_x = .03
+  ) +
+  scale_x_continuous(
+    limits = c(0, 0.9),
+    expand = c(0, 0.01),
+    labels = label_percent()
+  ) +
+  add_zero_line("x") +
+  theme_hda(flip_gridlines = T) +
+  labs(
+    title = "Share of federally assisted units by subsidy type",
+    subtitle = "Data as of May 2024",
+    caption = "**Source:** National Housing Preservation Database."
+  )
+
+```
+
+:::{.callout-important}
+
+It is important to note that Section 8 described above is not the same as Section 8 Housing Choice Vouchers. Section 8 subsidies in the NHPD refer to HUD project-based rental assistance --- meaning that they are rental assistance that is tied to a specific development, whereas Section 8 Housing Choice Vouchers are tenant-based subsidies that a recipient can take wherever they can find housing.
+
+::::
+
+In addition to those federally-assisted units, there are about 1,500 active Housing Choice Vouchers serving families throughout the region. In some cases, HCVs may be used at LIHTC properties to further lower tenants' rents. Data is not readily available to determine how many units may have overlap.
+
+```{r}
+#| label: fig-hcv
+#| fig-cap: "Housing Choice Vouchers by locality"
+
+faar_hcv <- read_rds("data/hcv_clean.rds") |> 
+  mutate(fips_locality = paste0("51", as.character(fips_locality))) |> 
+  filter(fips_locality %in% faar_fips)
+
+ggplot(st_drop_geometry(faar_hcv), aes(x = HCV_PUBLIC, y = reorder(county, HCV_PUBLIC))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    aes(label = label_comma()(HCV_PUBLIC)),
+    color = hda_pal[1],
+    nudge_x = 25
+  ) +
+  scale_x_continuous(
+    limits = c(0, 900),
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  add_zero_line("x") +
+  theme_hda(flip_gridlines = T) +
+  labs(
+    title = "Housing Choice Vouchers by locality",
+    subtitle = "Data as of November 2024",
+    caption = "**Source:** U.S. Department of Housing and Urban Development."
+  )
+
+```
 
 ```{r}
 #| label: fig-nhpd-map
 #| fig-cap: "Assisted rental propeties"
+#| eval: false
 
 prop <- read_rds("data/nhpd_properties.rds") |> 
-  filter(county != "Orange") |> 
   filter(!is.na(fmr))
 
 prop <- sf::st_as_sf(prop, coords = c("long", "lat"), crs = 4326)
@@ -298,38 +528,54 @@ leaflet(prop) |>
     "bottomright",
     pal = pal,
     values =  ~fmr)
-
+ 
 ```
 
-
-These typical sources of affordable housing subsidies include time limits that prevent property owners from collecting market rate rents for a specified period of time. Keeping inventory of these projects is an important consideration when evaluating the overall affordability of the region in the near-term. 
-
-By 2040, **more than half of all subsidized housing in the region, approximately 1,600 units,** will surpass their affordability limitation period, allowing buildings to raise rents in otherwise affordable units and affecting tenants who rely on stable rents in an increasingly competitive market. 
-
+The region faces important timing considerations regarding subsidy preservation, with 57% of federally assisted units having subsidies expiring within the next 9 years. Approximately one-quarter of units will reach expiration within 5 years, while an additional third face expiration in the 5-9 year timeframe. Only about 11% of units have subsidies extending beyond 20 years.
 
 ```{r}
 #| label: fig-subsidy-risk
-#| fig-cap: "Rental subsidy duration"
+#| fig-cap: "Percent of federally assisted units by subsidy expiration date"
 
-subsidy <- read_rds("data/nhpd_subsidies.rds") |> 
-  filter(county != "Orange") |> 
-  mutate(name = paste0(property_name.x, ":", subsidy_name)) |> 
-  select(name, subsidy_name, assisted_units, start_date, end_date)
+nhpd_risk <- faar_nhpd_sub |> 
+  mutate(years = time_length(interval(today(), end_date), "years")) |> 
+  mutate(years_rnd = ceiling(years / 5) * 5) |> 
+  mutate(
+    years_lbl = fct_case_when(
+      years_rnd %in% c(0, 5) ~ "Within 5 years",
+      years_rnd == 10 ~ "5 to 9 years",
+      years_rnd == 15 ~ "10 to 14 years",
+      years_rnd == 20 ~ "15 to 19 years",
+      years_rnd == 25 ~ "20 to 24 years",
+      years_rnd %in% c(30, 35) ~ "25 or more years"
+    )
+  ) |> 
+  summarise(
+    n = n(),
+    units = sum(assisted_units),
+    .by = years_lbl
+  ) |> 
+  mutate(pct = units/sum(units))
 
-subsidy$duration <- subsidy$end_date - subsidy$start_date
-
-ggplot(subsidy, 
-       aes(x = reorder(name, end_date), 
-           y = start_date, 
-           yend = end_date)) +
-  scale_color_hda() +
-  geom_segment(aes(xend = name, color = subsidy_name), stat = "identity", size = 3) +
-  coord_flip() +
-  geom_text(aes(label = assisted_units, y = end_date), vjust = 0.5, hjust = -0.5, color = "darkgrey", size = 2.5) +
-  labs(title = "Rental subsidy duration",
-       subtitle = "With number of units at-risk",
-       caption = "Source: National Housing Preservation Database")
+ggplot(nhpd_risk, aes(x = pct, y = fct_rev(years_lbl))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    aes(label = label_percent(accuracy = 1)(pct)),
+    color = hda_pal[1],
+    nudge_x = .025
+  ) +
+  scale_x_continuous(
+    limits = c(0, 0.78),
+    expand = c(0, 0.01),
+    labels = label_percent()
+  ) +
+  add_zero_line("x") +
+  theme_hda(flip_gridlines = T) +
+  labs(
+    title = "Percent of federally assisted units by subsidy expiration date",
+    subtitle = "Data as of May 2024",
+    caption = "**Source:** National Housing Preservation Database."
+  )
 
 ```
-
 

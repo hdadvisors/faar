@@ -30,7 +30,7 @@ book:
     - part: "Housing market"
       chapters:
         - market-homeown.qmd
-  #      - market-rental.qmd
+        - market-rental.qmd
   #  - part: "Housing gaps"
   #    chapters:
   #      - gaps-current.qmd
@@ -43,9 +43,6 @@ book:
   #      - local-orng.qmd
   #      - local-spot.qmd
   #      - local-staf.qmd
-  # 
-  # appendices: 
-  #   - a1-appendix.qmd
 
 format:
 
