@@ -1057,14 +1057,14 @@
     },
     "hdatools": {
       "Package": "hdatools",
-      "Version": "0.1.6",
+      "Version": "0.1.7",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteUsername": "hdadvisors",
       "RemoteRepo": "hdatools",
       "RemoteRef": "main",
-      "RemoteSha": "e0f8e72ce7aa24af4eb07e1a1a2458a1e2d55f32",
+      "RemoteSha": "7ac3e5f04bac009c5da7d06684d43d374a5e9de3",
       "Requirements": [
         "dplyr",
         "ggiraph",
@@ -1077,7 +1077,7 @@
         "stringr",
         "sysfonts"
       ],
-      "Hash": "fc25b076cf1ec4072ceb0d93ef5750f5"
+      "Hash": "f3a379afca86647d6c758a2b0127afef"
     },
     "highr": {
       "Package": "highr",

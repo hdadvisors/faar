@@ -27,9 +27,9 @@ book:
       chapters:
         - spectrum-reg.qmd
         - spectrum-work.qmd
-  #  - part: "Housing market"
-  #    chapters:
-  #      - market-homeown.qmd
+    - part: "Housing market"
+      chapters:
+        - market-homeown.qmd
   #      - market-rental.qmd
   #  - part: "Housing gaps"
   #    chapters:
@@ -43,7 +43,6 @@ book:
   #      - local-orng.qmd
   #      - local-spot.qmd
   #      - local-staf.qmd
-  #   - references.qmd
   # 
   # appendices: 
   #   - a1-appendix.qmd
@@ -53,7 +52,6 @@ format:
   html:
     theme:
       - lumen
-      # - hfv-custom.scss
     grid: 
       sidebar-width: 300px
     fontsize: "100%"
@@ -84,7 +82,6 @@ format:
   #       \usepackage{float}
   #       \raggedbottom
 
-bibliography: references.bib
 
 
 

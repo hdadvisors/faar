@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5&nbsp; Homeownership market – Fredericksburg Area Housing Gap Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./spectrum-work.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2486e1f0a3ee9ee1fc393803a1361cdb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-424f944a3bd00b48887e5744be4eb1c4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link href="site_libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+
+<script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+
+<link href="site_libs/leaflet-1.3.1/leaflet.css" rel="stylesheet">
+
+<script src="site_libs/leaflet-1.3.1/leaflet.js"></script>
+
+<link href="site_libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet">
+
+<script src="site_libs/proj4-2.6.2/proj4.min.js"></script>
+
+<script src="site_libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+
+<link href="site_libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet">
+
+<script src="site_libs/leaflet-binding-2.2.2/leaflet.js"></script>
+
+<script src="site_libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+
+<script src="site_libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./market-homeown.html">Housing market</a></li><li class="breadcrumb-item"><a href="./market-homeown.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Homeownership market</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Fredericksburg Area Housing Gap Analysis</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/hdadvisors/faar" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About this study</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exec-sum.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Executive summary</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./engagement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Engagement</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./data-notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Data notes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Housing spectrum</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spectrum-reg.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Regional spectrum</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spectrum-work.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Core workforce spectrum</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Housing market</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./market-homeown.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Homeownership market</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+  <div class="note">
+  <p style="font-size: 1.25rem;">🚧 <b>PLEASE NOTE</b> 🚧</p>
+  <p>This report is under construction.</p>
+  </div>
+  <hr>
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#existing-supply" id="toc-existing-supply" class="nav-link active" data-scroll-target="#existing-supply"><span class="header-section-number">5.1</span> Existing supply</a></li>
+  <li><a href="#building-trends" id="toc-building-trends" class="nav-link" data-scroll-target="#building-trends"><span class="header-section-number">5.2</span> Building trends</a></li>
+  <li><a href="#market-trends" id="toc-market-trends" class="nav-link" data-scroll-target="#market-trends"><span class="header-section-number">5.3</span> Market trends</a>
+  <ul class="collapse">
+  <li><a href="#regional-market" id="toc-regional-market" class="nav-link" data-scroll-target="#regional-market">Regional market</a></li>
+  <li><a href="#local-markets" id="toc-local-markets" class="nav-link" data-scroll-target="#local-markets">Local markets</a></li>
+  <li><a href="#market-segments" id="toc-market-segments" class="nav-link" data-scroll-target="#market-segments">Market segments</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./market-homeown.html">Housing market</a></li><li class="breadcrumb-item"><a href="./market-homeown.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Homeownership market</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-market-homeown" class="quarto-section-identifier"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Homeownership market</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+  <style>
+    .note {
+      background-color: #fff4d6;
+    }
+  </style>
+
+
+<div class="cell" data-layout-align="left">
+<style type="text/css">
+
+/* Add css to fix how Quarto renders leaflet legends */
+/* See: https://github.com/quarto-dev/quarto-cli/issues/7843 */
+
+.quarto-figure-center>figure>p, .quarto-figure-center>figure>div {
+    text-align: left;
+}
+
+</style>
+</div>
+<section id="existing-supply" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="existing-supply"><span class="header-section-number">5.1</span> Existing supply</h2>
+<p>There are slightly more than 111,200 households across the region who own their homes. Two-thirds (66%) have a single primary mortgage, and another 8% have an additional second mortgage and/or home equity loan. Just over 25% do not have a mortgage; nearly all of these homeowners have no debt at all.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-owner-mortgage" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-owner-mortgage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-owner-mortgage-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-owner-mortgage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.1: Owner-occupied homes by mortgage status
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Most homes in the existing supply are single family units with three to four bedrooms, units that could easily accommodate households with upwards of four people and more. Nearly 16,000 units in the region have five bedrooms or more, and fewer than 10,000 homes in the region are sized for families of two people or fewer.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-owner-bedroom" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-owner-bedroom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-owner-bedroom-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-owner-bedroom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.2: Owner-occupied homes by number of bedrooms
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The housing stock in the region is predominantly composed of single-family detached homes, which account for about 88% (97,661) of all owner-occupied units. Single-family attached homes represent the second most common structure type with 9,309 units. The remaining housing types — including 2-4 unit buildings, larger multifamily structures, manufactured homes, and other configurations — collectively comprise less than 4% of owner-occupied housing stock.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-owner-type" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-owner-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-owner-type-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-owner-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.3: Owner-occupied homes by structure type
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Home values in the region show a clear concentration in the middle price ranges, with the $300,000-$499,999 bracket containing the largest share of owner-occupied homes. This price segment shows roughly equal distribution between mortgaged and non-mortgaged properties. Higher-value properties ($750,000 and above) represent a relatively small portion of the market, while homes valued under $200,000 account for approximately 15% of the owner-occupied stock.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-owner-value" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-owner-value-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-owner-value-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-owner-value-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.4: Owner-occupied homes by home value
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Monthly housing costs for owner-occupied homes in the region exhibit notable variation, with the largest segment (43,668 households) paying more than $2,000 per month for housing-related expenses. About 26,489 households (26%) have relatively lower monthly costs under $1,000, while the middle cost ranges ($1,000-$1,999) account for approximately 30,918 households. This distribution suggests significant disparities in housing cost burdens across the region’s homeowners.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-owner-supply" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-owner-supply-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-owner-supply-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-owner-supply-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.5: Owner-occupied homes by monthly housing costs
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="building-trends" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="building-trends"><span class="header-section-number">5.2</span> Building trends</h2>
+<p>Single-unit permits dominated the construction landscape since 2000, peaking around 2004 at approximately 5,000 permits before declining sharply to stabilize between 1,500-2,000 permits annually after 2008. Multifamily construction (5+ units) showed modest but consistent activity, while 2-4 unit structures remained minimal throughout the period. The vast majority of new homes produced in the region were built to be sold.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-bps-chart" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bps-chart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-bps-chart-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bps-chart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.6: Annual building permits by structure type
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Among localities, Stafford and Spotsylvania demonstrated the strongest growth trajectories, reaching approximately 22,000 and 19,000 cumulative permits respectively. The remaining localities — Orange, Caroline, King George, and Fredericksburg — showed more modest growth, each accumulating between 2,000 and 6,000 permits over the period.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-bps-local" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bps-local-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-bps-local-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bps-local-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.7: Total single-family building permits by locality
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The chart below depicts relative changes in single-family building permit activity, indexed to 2000 levels. Caroline County and Fredericksburg showed the highest relative volatility, reaching peaks significantly above their baselines in the mid 2000s. Following declines during and after the Great Recession, most localities have seen stronger production levels in recent years. While Stafford and Spotsylvania account for most of the raw production totals, their rates of residential development today are well below the pace they set in the 2000s.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-bps-local-chg" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bps-local-chg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-bps-local-chg-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bps-local-chg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.8: Change in annual single-family building permits by locality
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>. . .</p>
+<div class="cell" data-layout-align="left">
+<div id="fig-nc-map" class="cell-output-display quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nc-map-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="leaflet html-widget html-fill-item" id="htmlwidget-4be355d2dceb8f8ce312" style="width:100%;height:415.296px;"></div>
+<script type="application/json" data-for="htmlwidget-4be355d2dceb8f8ce312">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron",null,"Simple",{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addProviderTiles","args":["Esri.WorldImagery",null,"Imagery",{"errorTileUrl":"","noWrap":false,"opacity":0.6,"detectRetina":false}]},{"method":"addPolygons","args":[[[[{"lng":[-78.28572136000001,-78.29861877,-78.29861877,-78.28572136000001,-78.27282394999999,-78.27282394999999,-78.28572136000001],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-78.14384984999998,-78.15674726,-78.15674726,-78.14384984999998,-78.13095243999999,-78.13095243999999,-78.14384984999998],"lat":[38.22273006863232,38.22857975051662,38.24027770300606,38.24612597356499,38.24027770300606,38.22857975051662,38.22273006863232]}]],[[{"lng":[-78.13095243999999,-78.14384984999998,-78.14384984999998,-78.13095243999999,-78.11805502999999,-78.11805502999999,-78.13095243999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-78.11805502999999,-78.13095243999999,-78.13095243999999,-78.11805502999999,-78.10515761999999,-78.10515761999999,-78.11805502999999],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-78.10515761999999,-78.11805502999999,-78.11805502999999,-78.10515761999999,-78.09226020999999,-78.09226020999999,-78.10515761999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-78.0793628,-78.09226020999999,-78.09226020999999,-78.0793628,-78.06646538999999,-78.06646538999999,-78.0793628],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-78.06646538999999,-78.0793628,-78.0793628,-78.06646538999999,-78.05356798,-78.05356798,-78.06646538999999],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-78.05356798,-78.06646538999999,-78.06646538999999,-78.05356798,-78.04067057,-78.04067057,-78.05356798],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.98908092999999,-78.00197833999999,-78.00197833999999,-77.98908092999999,-77.97618351999999,-77.97618351999999,-77.98908092999999],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.97618351999999,-77.98908092999999,-77.98908092999999,-77.97618351999999,-77.96328611,-77.96328611,-77.97618351999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.96328611,-77.97618351999999,-77.97618351999999,-77.96328611,-77.95038869999999,-77.95038869999999,-77.96328611],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.96328611,-77.97618351999999,-77.97618351999999,-77.96328611,-77.95038869999999,-77.95038869999999,-77.96328611],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.95038869999999,-77.96328611,-77.96328611,-77.95038869999999,-77.93749129,-77.93749129,-77.95038869999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.93749129,-77.95038869999999,-77.95038869999999,-77.93749129,-77.92459388,-77.92459388,-77.93749129],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.92459388,-77.93749129,-77.93749129,-77.92459388,-77.91169647,-77.91169647,-77.92459388],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.92459388,-77.93749129,-77.93749129,-77.92459388,-77.91169647,-77.91169647,-77.92459388],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.92459388,-77.93749129,-77.93749129,-77.92459388,-77.91169647,-77.91169647,-77.92459388],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.91169647,-77.92459388,-77.92459388,-77.91169647,-77.89879906,-77.89879906,-77.91169647],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.91169647,-77.92459388,-77.92459388,-77.91169647,-77.89879906,-77.89879906,-77.91169647],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.91169647,-77.92459388,-77.92459388,-77.91169647,-77.89879906,-77.89879906,-77.91169647],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.89879906,-77.91169647,-77.91169647,-77.89879906,-77.88590165000001,-77.88590165000001,-77.89879906],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.89879906,-77.91169647,-77.91169647,-77.89879906,-77.88590165000001,-77.88590165000001,-77.89879906],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.89879906,-77.91169647,-77.91169647,-77.89879906,-77.88590165000001,-77.88590165000001,-77.89879906],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.87300423999999,-77.88590165000001,-77.88590165000001,-77.87300423999999,-77.86010682999998,-77.86010682999998,-77.87300423999999],"lat":[38.09977812353113,38.10563767882762,38.11735537961278,38.12321352505433,38.11735537961278,38.10563767882762,38.09977812353113]}]],[[{"lng":[-77.87300423999999,-77.88590165000001,-77.88590165000001,-77.87300423999999,-77.86010682999998,-77.86010682999998,-77.87300423999999],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.87300423999999,-77.88590165000001,-77.88590165000001,-77.87300423999999,-77.86010682999998,-77.86010682999998,-77.87300423999999],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.86010682999998,-77.87300423999999,-77.87300423999999,-77.86010682999998,-77.84720942,-77.84720942,-77.86010682999998],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.86010682999998,-77.87300423999999,-77.87300423999999,-77.86010682999998,-77.84720942,-77.84720942,-77.86010682999998],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.84720942,-77.86010682999998,-77.86010682999998,-77.84720942,-77.83431200999999,-77.83431200999999,-77.84720942],"lat":[38.09977812353113,38.10563767882762,38.11735537961278,38.12321352505433,38.11735537961278,38.10563767882762,38.09977812353113]}]],[[{"lng":[-77.84720942,-77.86010682999998,-77.86010682999998,-77.84720942,-77.83431200999999,-77.83431200999999,-77.84720942],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.84720942,-77.86010682999998,-77.86010682999998,-77.84720942,-77.83431200999999,-77.83431200999999,-77.84720942],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.83431200999999,-77.84720942,-77.84720942,-77.83431200999999,-77.82141459999998,-77.82141459999998,-77.83431200999999],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.83431200999999,-77.84720942,-77.84720942,-77.83431200999999,-77.82141459999998,-77.82141459999998,-77.83431200999999],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.82141459999998,-77.83431200999999,-77.83431200999999,-77.82141459999998,-77.80851719,-77.80851719,-77.82141459999998],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.80851719,-77.82141459999998,-77.82141459999998,-77.80851719,-77.79561978,-77.79561978,-77.80851719],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.80851719,-77.82141459999998,-77.82141459999998,-77.80851719,-77.79561978,-77.79561978,-77.80851719],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.80851719,-77.82141459999998,-77.82141459999998,-77.80851719,-77.79561978,-77.79561978,-77.80851719],"lat":[38.36299255172329,38.3688309372202,38.3805062952881,38.38634326781391,38.3805062952881,38.3688309372202,38.36299255172329]}]],[[{"lng":[-77.78272236999999,-77.79561978,-77.79561978,-77.78272236999999,-77.76982495999999,-77.76982495999999,-77.78272236999999],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.78272236999999,-77.79561978,-77.79561978,-77.78272236999999,-77.76982495999999,-77.76982495999999,-77.78272236999999],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.76982495999999,-77.78272236999999,-77.78272236999999,-77.76982495999999,-77.75692755,-77.75692755,-77.76982495999999],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.76982495999999,-77.78272236999999,-77.78272236999999,-77.76982495999999,-77.75692755,-77.75692755,-77.76982495999999],"lat":[38.3454745696524,38.35131436791673,38.36299255172329,38.3688309372202,38.36299255172329,38.35131436791673,38.3454745696524]}]],[[{"lng":[-77.75692755,-77.76982495999999,-77.76982495999999,-77.75692755,-77.74403013999998,-77.74403013999998,-77.75692755],"lat":[38.04702098300006,38.05288476658473,38.06461092458557,38.07047329895421,38.06461092458557,38.05288476658473,38.04702098300006]}]],[[{"lng":[-77.75692755,-77.76982495999999,-77.76982495999999,-77.75692755,-77.74403013999998,-77.74403013999998,-77.75692755],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.75692755,-77.76982495999999,-77.76982495999999,-77.75692755,-77.74403013999998,-77.74403013999998,-77.75692755],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.75692755,-77.76982495999999,-77.76982495999999,-77.75692755,-77.74403013999998,-77.74403013999998,-77.75692755],"lat":[38.36299255172329,38.3688309372202,38.3805062952881,38.38634326781391,38.3805062952881,38.3688309372202,38.36299255172329]}]],[[{"lng":[-77.74403013999998,-77.75692755,-77.75692755,-77.74403013999998,-77.73113273,-77.73113273,-77.74403013999998],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.74403013999998,-77.75692755,-77.75692755,-77.74403013999998,-77.73113273,-77.73113273,-77.74403013999998],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.74403013999998,-77.75692755,-77.75692755,-77.74403013999998,-77.73113273,-77.73113273,-77.74403013999998],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.73113273,-77.74403013999998,-77.74403013999998,-77.73113273,-77.71823531999999,-77.71823531999999,-77.73113273],"lat":[38.04702098300006,38.05288476658473,38.06461092458557,38.07047329895421,38.06461092458557,38.05288476658473,38.04702098300006]}]],[[{"lng":[-77.73113273,-77.74403013999998,-77.74403013999998,-77.73113273,-77.71823531999999,-77.71823531999999,-77.73113273],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.73113273,-77.74403013999998,-77.74403013999998,-77.73113273,-77.71823531999999,-77.71823531999999,-77.73113273],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.73113273,-77.74403013999998,-77.74403013999998,-77.73113273,-77.71823531999999,-77.71823531999999,-77.73113273],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.73113273,-77.74403013999998,-77.74403013999998,-77.73113273,-77.71823531999999,-77.71823531999999,-77.73113273],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.73113273,-77.74403013999998,-77.74403013999998,-77.73113273,-77.71823531999999,-77.71823531999999,-77.73113273],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.71823531999999,-77.73113273,-77.73113273,-77.71823531999999,-77.70533790999998,-77.70533790999998,-77.71823531999999],"lat":[38.02942681419457,38.03529200678115,38.04702098300006,38.05288476658473,38.04702098300006,38.03529200678115,38.02942681419457]}]],[[{"lng":[-77.71823531999999,-77.73113273,-77.73113273,-77.71823531999999,-77.70533790999998,-77.70533790999998,-77.71823531999999],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.71823531999999,-77.73113273,-77.73113273,-77.71823531999999,-77.70533790999998,-77.70533790999998,-77.71823531999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.71823531999999,-77.73113273,-77.73113273,-77.71823531999999,-77.70533790999998,-77.70533790999998,-77.71823531999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.70533790999998,-77.71823531999999,-77.71823531999999,-77.70533790999998,-77.69244049999999,-77.69244049999999,-77.70533790999998],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.69244049999999,-77.70533790999998,-77.70533790999998,-77.69244049999999,-77.67954309,-77.67954309,-77.69244049999999],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.69244049999999,-77.70533790999998,-77.70533790999998,-77.69244049999999,-77.67954309,-77.67954309,-77.69244049999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.67954309,-77.69244049999999,-77.69244049999999,-77.67954309,-77.66664567999999,-77.66664567999999,-77.67954309],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.67954309,-77.69244049999999,-77.69244049999999,-77.67954309,-77.66664567999999,-77.66664567999999,-77.67954309],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.66664567999999,-77.67954309,-77.67954309,-77.66664567999999,-77.65374826999999,-77.65374826999999,-77.66664567999999],"lat":[37.99422579749967,38.00009380744533,38.01182841881267,38.01769502018643,38.01182841881267,38.00009380744533,37.99422579749967]}]],[[{"lng":[-77.66664567999999,-77.67954309,-77.67954309,-77.66664567999999,-77.65374826999999,-77.65374826999999,-77.66664567999999],"lat":[38.06461092458557,38.07047329895421,38.08219663830928,38.08805760324833,38.08219663830928,38.07047329895421,38.06461092458557]}]],[[{"lng":[-77.66664567999999,-77.67954309,-77.67954309,-77.66664567999999,-77.65374826999999,-77.65374826999999,-77.66664567999999],"lat":[38.17006176665952,38.17591568126772,38.18762209983206,38.19347460374158,38.18762209983206,38.17591568126772,38.17006176665952]}]],[[{"lng":[-77.66664567999999,-77.67954309,-77.67954309,-77.66664567999999,-77.65374826999999,-77.65374826999999,-77.66664567999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.65374826999999,-77.66664567999999,-77.66664567999999,-77.65374826999999,-77.64085086,-77.64085086,-77.65374826999999],"lat":[38.08219663830928,38.08805760324833,38.09977812353113,38.10563767882762,38.09977812353113,38.08805760324833,38.08219663830928]}]],[[{"lng":[-77.65374826999999,-77.66664567999999,-77.66664567999999,-77.65374826999999,-77.64085086,-77.64085086,-77.65374826999999],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.65374826999999,-77.66664567999999,-77.66664567999999,-77.65374826999999,-77.64085086,-77.64085086,-77.65374826999999],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.65374826999999,-77.66664567999999,-77.66664567999999,-77.65374826999999,-77.64085086,-77.64085086,-77.65374826999999],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.64085086,-77.65374826999999,-77.65374826999999,-77.64085086,-77.62795344999999,-77.62795344999999,-77.64085086],"lat":[38.09977812353113,38.10563767882762,38.11735537961278,38.12321352505433,38.11735537961278,38.10563767882762,38.09977812353113]}]],[[{"lng":[-77.64085086,-77.65374826999999,-77.65374826999999,-77.64085086,-77.62795344999999,-77.62795344999999,-77.64085086],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.64085086,-77.65374826999999,-77.65374826999999,-77.64085086,-77.62795344999999,-77.62795344999999,-77.64085086],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.62795344999999,-77.64085086,-77.64085086,-77.62795344999999,-77.61505604,-77.61505604,-77.62795344999999],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.62795344999999,-77.64085086,-77.64085086,-77.62795344999999,-77.61505604,-77.61505604,-77.62795344999999],"lat":[38.39801579973636,38.40385135908793,38.41552106445928,38.4213552104341,38.41552106445928,38.40385135908793,38.39801579973636]}]],[[{"lng":[-77.61505604,-77.62795344999999,-77.62795344999999,-77.61505604,-77.60215863000001,-77.60215863000001,-77.61505604],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.61505604,-77.62795344999999,-77.62795344999999,-77.61505604,-77.60215863000001,-77.60215863000001,-77.61505604],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.61505604,-77.62795344999999,-77.62795344999999,-77.61505604,-77.60215863000001,-77.60215863000001,-77.61505604],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.61505604,-77.62795344999999,-77.62795344999999,-77.61505604,-77.60215863000001,-77.60215863000001,-77.61505604],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.60215863000001,-77.61505604,-77.61505604,-77.60215863000001,-77.58926121999998,-77.58926121999998,-77.60215863000001],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.60215863000001,-77.61505604,-77.61505604,-77.60215863000001,-77.58926121999998,-77.58926121999998,-77.60215863000001],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.60215863000001,-77.61505604,-77.61505604,-77.60215863000001,-77.58926121999998,-77.58926121999998,-77.60215863000001],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.60215863000001,-77.61505604,-77.61505604,-77.60215863000001,-77.58926121999998,-77.58926121999998,-77.60215863000001],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.60215863000001,-77.61505604,-77.61505604,-77.60215863000001,-77.58926121999998,-77.58926121999998,-77.60215863000001],"lat":[38.46801141421435,38.47384131884942,38.48549971398288,38.49132820443681,38.48549971398288,38.47384131884942,38.46801141421435]}]],[[{"lng":[-77.58926121999998,-77.60215863000001,-77.60215863000001,-77.58926121999998,-77.57636381,-77.57636381,-77.58926121999998],"lat":[38.06461092458557,38.07047329895421,38.08219663830928,38.08805760324833,38.08219663830928,38.07047329895421,38.06461092458557]}]],[[{"lng":[-77.58926121999998,-77.60215863000001,-77.60215863000001,-77.58926121999998,-77.57636381,-77.57636381,-77.58926121999998],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.58926121999998,-77.60215863000001,-77.60215863000001,-77.58926121999998,-77.57636381,-77.57636381,-77.58926121999998],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.58926121999998,-77.60215863000001,-77.60215863000001,-77.58926121999998,-77.57636381,-77.57636381,-77.58926121999998],"lat":[38.3454745696524,38.35131436791673,38.36299255172329,38.3688309372202,38.36299255172329,38.35131436791673,38.3454745696524]}]],[[{"lng":[-77.58926121999998,-77.60215863000001,-77.60215863000001,-77.58926121999998,-77.57636381,-77.57636381,-77.58926121999998],"lat":[38.3805062952881,38.38634326781391,38.39801579973636,38.40385135908793,38.39801579973636,38.38634326781391,38.3805062952881]}]],[[{"lng":[-77.58926121999998,-77.60215863000001,-77.60215863000001,-77.58926121999998,-77.57636381,-77.57636381,-77.58926121999998],"lat":[38.48549971398288,38.49132820443681,38.50298377100818,38.50881084708131,38.50298377100818,38.49132820443681,38.48549971398288]}]],[[{"lng":[-77.57636381,-77.58926121999998,-77.58926121999998,-77.57636381,-77.5634664,-77.5634664,-77.57636381],"lat":[38.01182841881267,38.01769502018643,38.02942681419457,38.03529200678115,38.02942681419457,38.01769502018643,38.01182841881267]}]],[[{"lng":[-77.57636381,-77.58926121999998,-77.58926121999998,-77.57636381,-77.5634664,-77.5634664,-77.57636381],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.57636381,-77.58926121999998,-77.58926121999998,-77.57636381,-77.5634664,-77.5634664,-77.57636381],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.57636381,-77.58926121999998,-77.58926121999998,-77.57636381,-77.5634664,-77.5634664,-77.57636381],"lat":[38.36299255172329,38.3688309372202,38.3805062952881,38.38634326781391,38.3805062952881,38.3688309372202,38.36299255172329]}]],[[{"lng":[-77.57636381,-77.58926121999998,-77.58926121999998,-77.57636381,-77.5634664,-77.5634664,-77.57636381],"lat":[38.46801141421435,38.47384131884942,38.48549971398288,38.49132820443681,38.48549971398288,38.47384131884942,38.46801141421435]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[37.99422579749967,38.00009380744533,38.01182841881267,38.01769502018643,38.01182841881267,38.00009380744533,37.99422579749967]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[38.02942681419457,38.03529200678115,38.04702098300006,38.05288476658473,38.04702098300006,38.03529200678115,38.02942681419457]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[38.13492840591767,38.14078514129246,38.15249720181095,38.15835252690776,38.15249720181095,38.14078514129246,38.13492840591767]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[38.3454745696524,38.35131436791673,38.36299255172329,38.3688309372202,38.36299255172329,38.35131436791673,38.3454745696524]}]],[[{"lng":[-77.5634664,-77.57636381,-77.57636381,-77.5634664,-77.55056898999999,-77.55056898999999,-77.5634664],"lat":[38.48549971398288,38.49132820443681,38.50298377100818,38.50881084708131,38.50298377100818,38.49132820443681,38.48549971398288]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[37.97661895090265,37.98248836920432,37.99422579749967,38.00009380744533,37.99422579749967,37.98248836920432,37.97661895090265]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[38.01182841881267,38.01769502018643,38.02942681419457,38.03529200678115,38.02942681419457,38.01769502018643,38.01182841881267]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[38.11735537961278,38.12321352505433,38.13492840591767,38.14078514129246,38.13492840591767,38.12321352505433,38.11735537961278]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[38.22273006863232,38.22857975051662,38.24027770300606,38.24612597356499,38.24027770300606,38.22857975051662,38.22273006863232]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[38.43302208884984,38.43885482124593,38.45051887230271,38.45635019091871,38.45051887230271,38.43885482124593,38.43302208884984]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[38.46801141421435,38.47384131884942,38.48549971398288,38.49132820443681,38.48549971398288,38.47384131884942,38.46801141421435]}]],[[{"lng":[-77.55056898999999,-77.5634664,-77.5634664,-77.55056898999999,-77.53767157999998,-77.53767157999998,-77.55056898999999],"lat":[38.50298377100818,38.50881084708131,38.52046358469186,38.52628924618511,38.52046358469186,38.50881084708131,38.50298377100818]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[37.95900787967043,37.96487870611163,37.97661895090265,37.98248836920432,37.97661895090265,37.96487870611163,37.95900787967043]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[37.99422579749967,38.00009380744533,38.01182841881267,38.01769502018643,38.01182841881267,38.00009380744533,37.99422579749967]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.06461092458557,38.07047329895421,38.08219663830928,38.08805760324833,38.08219663830928,38.07047329895421,38.06461092458557]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.09977812353113,38.10563767882762,38.11735537961278,38.12321352505433,38.11735537961278,38.10563767882762,38.09977812353113]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.3454745696524,38.35131436791673,38.36299255172329,38.3688309372202,38.36299255172329,38.35131436791673,38.3454745696524]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.3805062952881,38.38634326781391,38.39801579973636,38.40385135908793,38.39801579973636,38.38634326781391,38.3805062952881]}]],[[{"lng":[-77.53767157999998,-77.55056898999999,-77.55056898999999,-77.53767157999998,-77.52477417,-77.52477417,-77.53767157999998],"lat":[38.48549971398288,38.49132820443681,38.50298377100818,38.50881084708131,38.50298377100818,38.49132820443681,38.48549971398288]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[37.97661895090265,37.98248836920432,37.99422579749967,38.00009380744533,37.99422579749967,37.98248836920432,37.97661895090265]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.01182841881267,38.01769502018643,38.02942681419457,38.03529200678115,38.02942681419457,38.01769502018643,38.01182841881267]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.04702098300006,38.05288476658473,38.06461092458557,38.07047329895421,38.06461092458557,38.05288476658473,38.04702098300006]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.22273006863232,38.22857975051662,38.24027770300606,38.24612597356499,38.24027770300606,38.22857975051662,38.22273006863232]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.52477417,-77.53767157999998,-77.53767157999998,-77.52477417,-77.51187675999999,-77.51187675999999,-77.52477417],"lat":[38.39801579973636,38.40385135908793,38.41552106445928,38.4213552104341,38.41552106445928,38.40385135908793,38.39801579973636]}]],[[{"lng":[-77.51187675999999,-77.52477417,-77.52477417,-77.51187675999999,-77.49897934999998,-77.49897934999998,-77.51187675999999],"lat":[37.99422579749967,38.00009380744533,38.01182841881267,38.01769502018643,38.01182841881267,38.00009380744533,37.99422579749967]}]],[[{"lng":[-77.51187675999999,-77.52477417,-77.52477417,-77.51187675999999,-77.49897934999998,-77.49897934999998,-77.51187675999999],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.51187675999999,-77.52477417,-77.52477417,-77.51187675999999,-77.49897934999998,-77.49897934999998,-77.51187675999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.51187675999999,-77.52477417,-77.52477417,-77.51187675999999,-77.49897934999998,-77.49897934999998,-77.51187675999999],"lat":[38.3805062952881,38.38634326781391,38.39801579973636,38.40385135908793,38.39801579973636,38.38634326781391,38.3805062952881]}]],[[{"lng":[-77.49897934999998,-77.51187675999999,-77.51187675999999,-77.49897934999998,-77.48608194000001,-77.48608194000001,-77.49897934999998],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.49897934999998,-77.51187675999999,-77.51187675999999,-77.49897934999998,-77.48608194000001,-77.48608194000001,-77.49897934999998],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.49897934999998,-77.51187675999999,-77.51187675999999,-77.49897934999998,-77.48608194000001,-77.48608194000001,-77.49897934999998],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.49897934999998,-77.51187675999999,-77.51187675999999,-77.49897934999998,-77.48608194000001,-77.48608194000001,-77.49897934999998],"lat":[38.36299255172329,38.3688309372202,38.3805062952881,38.38634326781391,38.3805062952881,38.3688309372202,38.36299255172329]}]],[[{"lng":[-77.49897934999998,-77.51187675999999,-77.51187675999999,-77.49897934999998,-77.48608194000001,-77.48608194000001,-77.49897934999998],"lat":[38.39801579973636,38.40385135908793,38.41552106445928,38.4213552104341,38.41552106445928,38.40385135908793,38.39801579973636]}]],[[{"lng":[-77.49897934999998,-77.51187675999999,-77.51187675999999,-77.49897934999998,-77.48608194000001,-77.48608194000001,-77.49897934999998],"lat":[38.46801141421435,38.47384131884942,38.48549971398288,38.49132820443681,38.48549971398288,38.47384131884942,38.46801141421435]}]],[[{"lng":[-77.48608194000001,-77.49897934999998,-77.49897934999998,-77.48608194000001,-77.47318453,-77.47318453,-77.48608194000001],"lat":[38.17006176665952,38.17591568126772,38.18762209983206,38.19347460374158,38.18762209983206,38.17591568126772,38.17006176665952]}]],[[{"lng":[-77.48608194000001,-77.49897934999998,-77.49897934999998,-77.48608194000001,-77.47318453,-77.47318453,-77.48608194000001],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.48608194000001,-77.49897934999998,-77.49897934999998,-77.48608194000001,-77.47318453,-77.47318453,-77.48608194000001],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.48608194000001,-77.49897934999998,-77.49897934999998,-77.48608194000001,-77.47318453,-77.47318453,-77.48608194000001],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.48608194000001,-77.49897934999998,-77.49897934999998,-77.48608194000001,-77.47318453,-77.47318453,-77.48608194000001],"lat":[38.3454745696524,38.35131436791673,38.36299255172329,38.3688309372202,38.36299255172329,38.35131436791673,38.3454745696524]}]],[[{"lng":[-77.48608194000001,-77.49897934999998,-77.49897934999998,-77.48608194000001,-77.47318453,-77.47318453,-77.48608194000001],"lat":[38.45051887230271,38.45635019091871,38.46801141421435,38.47384131884942,38.46801141421435,38.45635019091871,38.45051887230271]}]],[[{"lng":[-77.47318453,-77.48608194000001,-77.48608194000001,-77.47318453,-77.46028711999998,-77.46028711999998,-77.47318453],"lat":[38.18762209983206,38.19347460374158,38.20517820069895,38.21102929370031,38.20517820069895,38.19347460374158,38.18762209983206]}]],[[{"lng":[-77.47318453,-77.48608194000001,-77.48608194000001,-77.47318453,-77.46028711999998,-77.46028711999998,-77.47318453],"lat":[38.22273006863232,38.22857975051662,38.24027770300606,38.24612597356499,38.24027770300606,38.22857975051662,38.22273006863232]}]],[[{"lng":[-77.47318453,-77.48608194000001,-77.48608194000001,-77.47318453,-77.46028711999998,-77.46028711999998,-77.47318453],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.47318453,-77.48608194000001,-77.48608194000001,-77.47318453,-77.46028711999998,-77.46028711999998,-77.47318453],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.47318453,-77.48608194000001,-77.48608194000001,-77.47318453,-77.46028711999998,-77.46028711999998,-77.47318453],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.47318453,-77.48608194000001,-77.48608194000001,-77.47318453,-77.46028711999998,-77.46028711999998,-77.47318453],"lat":[38.43302208884984,38.43885482124593,38.45051887230271,38.45635019091871,38.45051887230271,38.43885482124593,38.43302208884984]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.17006176665952,38.17591568126772,38.18762209983206,38.19347460374158,38.18762209983206,38.17591568126772,38.17006176665952]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.41552106445928,38.4213552104341,38.43302208884984,38.43885482124593,38.43302208884984,38.4213552104341,38.41552106445928]}]],[[{"lng":[-77.46028711999998,-77.47318453,-77.47318453,-77.46028711999998,-77.44738971000001,-77.44738971000001,-77.46028711999998],"lat":[38.45051887230271,38.45635019091871,38.46801141421435,38.47384131884942,38.46801141421435,38.45635019091871,38.45051887230271]}]],[[{"lng":[-77.44738971000001,-77.46028711999998,-77.46028711999998,-77.44738971000001,-77.43449229999999,-77.43449229999999,-77.44738971000001],"lat":[37.94139258445357,37.94726481881725,37.95900787967043,37.96487870611163,37.95900787967043,37.94726481881725,37.94139258445357]}]],[[{"lng":[-77.44738971000001,-77.46028711999998,-77.46028711999998,-77.44738971000001,-77.43449229999999,-77.43449229999999,-77.44738971000001],"lat":[38.15249720181095,38.15835252690776,38.17006176665952,38.17591568126772,38.17006176665952,38.15835252690776,38.15249720181095]}]],[[{"lng":[-77.44738971000001,-77.46028711999998,-77.46028711999998,-77.44738971000001,-77.43449229999999,-77.43449229999999,-77.44738971000001],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.44738971000001,-77.46028711999998,-77.46028711999998,-77.44738971000001,-77.43449229999999,-77.43449229999999,-77.44738971000001],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.44738971000001,-77.46028711999998,-77.46028711999998,-77.44738971000001,-77.43449229999999,-77.43449229999999,-77.44738971000001],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.44738971000001,-77.46028711999998,-77.46028711999998,-77.44738971000001,-77.43449229999999,-77.43449229999999,-77.44738971000001],"lat":[38.43302208884984,38.43885482124593,38.45051887230271,38.45635019091871,38.45051887230271,38.43885482124593,38.43302208884984]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[37.88852136142717,37.89439781825016,37.90614932467698,37.91202437423215,37.90614932467698,37.89439781825016,37.88852136142717]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[38.20517820069895,38.21102929370031,38.22273006863232,38.22857975051662,38.22273006863232,38.21102929370031,38.20517820069895]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[38.3805062952881,38.38634326781391,38.39801579973636,38.40385135908793,38.39801579973636,38.38634326781391,38.3805062952881]}]],[[{"lng":[-77.43449229999999,-77.44738971000001,-77.44738971000001,-77.43449229999999,-77.42159488999998,-77.42159488999998,-77.43449229999999],"lat":[38.45051887230271,38.45635019091871,38.46801141421435,38.47384131884942,38.46801141421435,38.45635019091871,38.45051887230271]}]],[[{"lng":[-77.42159488999998,-77.43449229999999,-77.43449229999999,-77.42159488999998,-77.40869748,-77.40869748,-77.42159488999998],"lat":[38.01182841881267,38.01769502018643,38.02942681419457,38.03529200678115,38.02942681419457,38.01769502018643,38.01182841881267]}]],[[{"lng":[-77.42159488999998,-77.43449229999999,-77.43449229999999,-77.42159488999998,-77.40869748,-77.40869748,-77.42159488999998],"lat":[38.22273006863232,38.22857975051662,38.24027770300606,38.24612597356499,38.24027770300606,38.22857975051662,38.22273006863232]}]],[[{"lng":[-77.42159488999998,-77.43449229999999,-77.43449229999999,-77.42159488999998,-77.40869748,-77.40869748,-77.42159488999998],"lat":[38.32795234968769,38.33379356051515,38.3454745696524,38.35131436791673,38.3454745696524,38.33379356051515,38.32795234968769]}]],[[{"lng":[-77.42159488999998,-77.43449229999999,-77.43449229999999,-77.42159488999998,-77.40869748,-77.40869748,-77.42159488999998],"lat":[38.36299255172329,38.3688309372202,38.3805062952881,38.38634326781391,38.3805062952881,38.3688309372202,38.36299255172329]}]],[[{"lng":[-77.42159488999998,-77.43449229999999,-77.43449229999999,-77.42159488999998,-77.40869748,-77.40869748,-77.42159488999998],"lat":[38.43302208884984,38.43885482124593,38.45051887230271,38.45635019091871,38.45051887230271,38.43885482124593,38.43302208884984]}]],[[{"lng":[-77.42159488999998,-77.43449229999999,-77.43449229999999,-77.42159488999998,-77.40869748,-77.40869748,-77.42159488999998],"lat":[38.46801141421435,38.47384131884942,38.48549971398288,38.49132820443681,38.48549971398288,38.47384131884942,38.46801141421435]}]],[[{"lng":[-77.40869748,-77.42159488999998,-77.42159488999998,-77.40869748,-77.39580006999999,-77.39580006999999,-77.40869748],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.40869748,-77.42159488999998,-77.42159488999998,-77.40869748,-77.39580006999999,-77.39580006999999,-77.40869748],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.40869748,-77.42159488999998,-77.42159488999998,-77.40869748,-77.39580006999999,-77.39580006999999,-77.40869748],"lat":[38.3805062952881,38.38634326781391,38.39801579973636,38.40385135908793,38.39801579973636,38.38634326781391,38.3805062952881]}]],[[{"lng":[-77.40869748,-77.42159488999998,-77.42159488999998,-77.40869748,-77.39580006999999,-77.39580006999999,-77.40869748],"lat":[38.41552106445928,38.4213552104341,38.43302208884984,38.43885482124593,38.43302208884984,38.4213552104341,38.41552106445928]}]],[[{"lng":[-77.39580006999999,-77.40869748,-77.40869748,-77.39580006999999,-77.38290265999998,-77.38290265999998,-77.39580006999999],"lat":[38.22273006863232,38.22857975051662,38.24027770300606,38.24612597356499,38.24027770300606,38.22857975051662,38.22273006863232]}]],[[{"lng":[-77.39580006999999,-77.40869748,-77.40869748,-77.39580006999999,-77.38290265999998,-77.38290265999998,-77.39580006999999],"lat":[38.39801579973636,38.40385135908793,38.41552106445928,38.4213552104341,38.41552106445928,38.40385135908793,38.39801579973636]}]],[[{"lng":[-77.39580006999999,-77.40869748,-77.40869748,-77.39580006999999,-77.38290265999998,-77.38290265999998,-77.39580006999999],"lat":[38.46801141421435,38.47384131884942,38.48549971398288,38.49132820443681,38.48549971398288,38.47384131884942,38.46801141421435]}]],[[{"lng":[-77.38290265999998,-77.39580006999999,-77.39580006999999,-77.38290265999998,-77.37000524999999,-77.37000524999999,-77.38290265999998],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.38290265999998,-77.39580006999999,-77.39580006999999,-77.38290265999998,-77.37000524999999,-77.37000524999999,-77.38290265999998],"lat":[38.41552106445928,38.4213552104341,38.43302208884984,38.43885482124593,38.43302208884984,38.4213552104341,38.41552106445928]}]],[[{"lng":[-77.38290265999998,-77.39580006999999,-77.39580006999999,-77.38290265999998,-77.37000524999999,-77.37000524999999,-77.38290265999998],"lat":[38.48549971398288,38.49132820443681,38.50298377100818,38.50881084708131,38.50298377100818,38.49132820443681,38.48549971398288]}]],[[{"lng":[-77.37000524999999,-77.38290265999998,-77.38290265999998,-77.37000524999999,-77.35710784,-77.35710784,-77.37000524999999],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.37000524999999,-77.38290265999998,-77.38290265999998,-77.37000524999999,-77.35710784,-77.35710784,-77.37000524999999],"lat":[38.43302208884984,38.43885482124593,38.45051887230271,38.45635019091871,38.45051887230271,38.43885482124593,38.43302208884984]}]],[[{"lng":[-77.37000524999999,-77.38290265999998,-77.38290265999998,-77.37000524999999,-77.35710784,-77.35710784,-77.37000524999999],"lat":[38.50298377100818,38.50881084708131,38.52046358469186,38.52628924618511,38.52046358469186,38.50881084708131,38.50298377100818]}]],[[{"lng":[-77.35710784,-77.37000524999999,-77.37000524999999,-77.35710784,-77.34421042999999,-77.34421042999999,-77.35710784],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.34421042999999,-77.35710784,-77.35710784,-77.34421042999999,-77.33131302,-77.33131302,-77.34421042999999],"lat":[38.01182841881267,38.01769502018643,38.02942681419457,38.03529200678115,38.02942681419457,38.01769502018643,38.01182841881267]}]],[[{"lng":[-77.34421042999999,-77.35710784,-77.35710784,-77.34421042999999,-77.33131302,-77.33131302,-77.34421042999999],"lat":[38.04702098300006,38.05288476658473,38.06461092458557,38.07047329895421,38.06461092458557,38.05288476658473,38.04702098300006]}]],[[{"lng":[-77.34421042999999,-77.35710784,-77.35710784,-77.34421042999999,-77.33131302,-77.33131302,-77.34421042999999],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.34421042999999,-77.35710784,-77.35710784,-77.34421042999999,-77.33131302,-77.33131302,-77.34421042999999],"lat":[38.43302208884984,38.43885482124593,38.45051887230271,38.45635019091871,38.45051887230271,38.43885482124593,38.43302208884984]}]],[[{"lng":[-77.33131302,-77.34421042999999,-77.34421042999999,-77.33131302,-77.31841561,-77.31841561,-77.33131302],"lat":[38.02942681419457,38.03529200678115,38.04702098300006,38.05288476658473,38.04702098300006,38.03529200678115,38.02942681419457]}]],[[{"lng":[-77.33131302,-77.34421042999999,-77.34421042999999,-77.33131302,-77.31841561,-77.31841561,-77.33131302],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.31841561,-77.33131302,-77.33131302,-77.31841561,-77.30551819999998,-77.30551819999998,-77.31841561],"lat":[38.36299255172329,38.3688309372202,38.3805062952881,38.38634326781391,38.3805062952881,38.3688309372202,38.36299255172329]}]],[[{"lng":[-77.27972337999999,-77.29262078999999,-77.29262078999999,-77.27972337999999,-77.26682596999999,-77.26682596999999,-77.27972337999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.27972337999999,-77.29262078999999,-77.29262078999999,-77.27972337999999,-77.26682596999999,-77.26682596999999,-77.27972337999999],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.25392855999999,-77.26682596999999,-77.26682596999999,-77.25392855999999,-77.24103115,-77.24103115,-77.25392855999999],"lat":[37.99422579749967,38.00009380744533,38.01182841881267,38.01769502018643,38.01182841881267,38.00009380744533,37.99422579749967]}]],[[{"lng":[-77.25392855999999,-77.26682596999999,-77.26682596999999,-77.25392855999999,-77.24103115,-77.24103115,-77.25392855999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.24103115,-77.25392855999999,-77.25392855999999,-77.24103115,-77.22813373999999,-77.22813373999999,-77.24103115],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.22813373999999,-77.24103115,-77.24103115,-77.22813373999999,-77.21523632999998,-77.21523632999998,-77.22813373999999],"lat":[38.24027770300606,38.24612597356499,38.25782110319579,38.26366796222158,38.25782110319579,38.24612597356499,38.24027770300606]}]],[[{"lng":[-77.22813373999999,-77.24103115,-77.24103115,-77.22813373999999,-77.21523632999998,-77.21523632999998,-77.22813373999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.22813373999999,-77.24103115,-77.24103115,-77.22813373999999,-77.21523632999998,-77.21523632999998,-77.22813373999999],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.21523632999998,-77.22813373999999,-77.22813373999999,-77.21523632999998,-77.20233892,-77.20233892,-77.21523632999998],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.20233892,-77.21523632999998,-77.21523632999998,-77.20233892,-77.18944150999999,-77.18944150999999,-77.20233892],"lat":[38.3104258924431,38.31626851562887,38.32795234968769,38.33379356051515,38.32795234968769,38.31626851562887,38.3104258924431]}]],[[{"lng":[-77.17654409999997,-77.18944150999999,-77.18944150999999,-77.17654409999997,-77.16364668999999,-77.16364668999999,-77.17654409999997],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.16364668999999,-77.17654409999997,-77.17654409999997,-77.16364668999999,-77.15074927999999,-77.15074927999999,-77.16364668999999],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.16364668999999,-77.17654409999997,-77.17654409999997,-77.16364668999999,-77.15074927999999,-77.15074927999999,-77.16364668999999],"lat":[38.29289519853435,38.29873923387299,38.3104258924431,38.31626851562887,38.3104258924431,38.29873923387299,38.29289519853435]}]],[[{"lng":[-77.15074927999999,-77.16364668999999,-77.16364668999999,-77.15074927999999,-77.13785186999998,-77.13785186999998,-77.15074927999999],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.13785186999998,-77.15074927999999,-77.15074927999999,-77.13785186999998,-77.12495446,-77.12495446,-77.13785186999998],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.11205704999999,-77.12495446,-77.12495446,-77.11205704999999,-77.09915963999998,-77.09915963999998,-77.11205704999999],"lat":[38.25782110319579,38.26366796222158,38.27536026857885,38.28120571586435,38.27536026857885,38.26366796222158,38.25782110319579]}]],[[{"lng":[-77.09915963999998,-77.11205704999999,-77.11205704999999,-77.09915963999998,-77.08626223,-77.08626223,-77.09915963999998],"lat":[38.27536026857885,38.28120571586435,38.29289519853435,38.29873923387299,38.29289519853435,38.28120571586435,38.27536026857885]}]],[[{"lng":[-77.04757000000001,-77.06046740999999,-77.06046740999999,-77.04757000000001,-77.03467258999999,-77.03467258999999,-77.04757000000001],"lat":[38.3454745696524,38.35131436791673,38.36299255172329,38.3688309372202,38.36299255172329,38.35131436791673,38.3454745696524]}]]],null,null,{"interactive":true,"className":"","stroke":true,"color":"black","weight":1,"opacity":0.1,"fill":true,"fillColor":["#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#799B99DD","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#799B99DD","#799B99DD","#8BAEAA33","#8BAEAA33","#799B99DD","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#445CA9","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#799B99DD","#8BB79799","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BB79799","#8BB79799","#8BAEAA33","#8BB79799","#8BAEAA33","#799B99DD","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#799B99DD","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#799B99DD","#445CA9","#8BAEAA33","#799B99DD","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BB79799","#8BB79799","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#799B99DD","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#799B99DD","#8BB79799","#8BAEAA33","#8BB79799","#8BAEAA33","#799B99DD","#8BB79799","#8BAEAA33","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#445CA9","#799B99DD","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BB79799","#799B99DD","#8BAEAA33","#8BB79799","#8BAEAA33","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BB79799","#8BAEAA33","#8BAEAA33","#8BB79799","#8BB79799","#8BB79799","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#445CA9","#8BB79799","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#8BAEAA33","#445CA9","#8BAEAA33","#799B99DD","#445CA9","#8BAEAA33","#8BAEAA33","#8BAEAA33"],"fillOpacity":0.75,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addLegend","args":[{"colors":["#8BAEAA33","#8BB79799","#799B99DD","#445CA9"],"labels":["3 - 4","4 - 7","7 - 15","15 - 140"],"na_color":null,"na_label":"NA","opacity":0.5,"position":"topright","type":"unknown","title":"New construction<br>homes sold<br>since 2020","extra":null,"layerId":null,"className":"info legend","group":null}]},{"method":"addLayersControl","args":[["Simple","Imagery"],[],{"collapsed":false,"autoZIndex":true,"position":"bottomright"}]}],"limits":{"lat":[37.88852136142717,38.52628924618511],"lng":[-78.29861877,-77.03467258999999]}},"evals":[],"jsHooks":[]}</script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nc-map-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.9: New construction home sales activity
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Four-bedroom homes consistently represent the largest segment of new construction, peaking at approximately 350 new units sold in 2022. Smaller three-bedroom homes maintained steady construction levels around 250 units annually, while five-bedroom homes showed relative stability at about 100 units annually. Totals for 2024 are through April only.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-nc-beds" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nc-beds-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-nc-beds-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nc-beds-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.10: Number of new homes by bedrooms
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Five-bedroom homes showed consistent size reduction from approximately 3,500 to 2,800 square feet. Four-bedroom homes maintained relative stability around 2,700 square feet, while three-bedroom homes remained steady at roughly 1,800 square feet throughout the period.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-nc-beds-size" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nc-beds-size-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-nc-beds-size-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nc-beds-size-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.11: Median finished size of new homes by bedroom
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="market-trends" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="market-trends"><span class="header-section-number">5.3</span> Market trends</h2>
+<section id="regional-market" class="level3">
+<h3 class="anchored" data-anchor-id="regional-market">Regional market</h3>
+<p>The total volume of home sales in the Fredericksburg region shows distinct seasonal patterns overlaid with broader market trends. Peak activity consistently occurs in late spring/early summer, with notable spikes reaching approximately 1,000 monthly sales in 2020 and 2021. However, the market has experienced a gradual decline in overall volume since 2021, with recent months showing sales levels around 500 units — roughly half the volume seen during the market’s peak periods.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-sales-line" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sales-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-sales-line-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sales-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.12: Total monthly home sales
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The median time homes spend on the market reveals significant market evolution over the study period. Early 2020 saw homes taking about 30 days to sell, followed by a sharp decline to 5-10 days during the pandemic-driven market acceleration. Since 2022, average days on market in the off seasons has partially returned to pre-pandemic levels, but most homes in the spring of 2024 still sold in fewer than 10 days.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-dom-line" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dom-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-dom-line-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dom-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.13: Monthly median days on market
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Median home sale prices demonstrate consistent upward momentum throughout the period. Starting from approximately $300,000 in early 2020, prices have risen steadily, with particularly sharp increases during 2021 and 2022. Current median prices hover around $425,000, representing a roughly 40% increase over the four-year period, though the rate of appreciation appears to have moderated in recent months.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-price-line" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-price-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-price-line-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-price-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.14: Monthly median sales price
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The distribution of closing prices across different price segments highlights the market’s structural transformation. In 2020, about 45% of sales occurred below $300,000, while only 5% exceeded $500,000. By 2024, this distribution has shifted dramatically — only 9% of sales fall below $300,000, while approximately 41% of transactions occur above $500,000, reflecting both home price appreciation and changes in the composition of sales activity.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-price-range" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-price-range-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-price-range-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-price-range-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.15: Closing price range
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="local-markets" class="level3">
+<h3 class="anchored" data-anchor-id="local-markets">Local markets</h3>
+<p>The distribution of home sales volume across localities reveals stark differences in market size and trajectory. Stafford and Spotsylvania dominate the regional market, each recording over 3,000 annual sales at their peak in 2021. However, both jurisdictions have experienced substantial declines, with current volumes approximately 60% below their peaks. The region’s smaller markets, including Orange, Caroline, King George, and Fredericksburg, demonstrate more modest but still significant reductions, with current annual sales volumes ranging from about 100 to 600 units.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-left">
+<figure class="figure">
+<p><img src="market-homeown_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Market velocity, measured by median days on market, shows increasing differentiation between localities over time. While all jurisdictions experienced extremely rapid sales during 2021-2022 with median marketing periods of 5-10 days, recent trends reveal growing disparity. Stafford and Spotsylvania maintain relatively quick sales at 8-10 days, while Orange and Caroline have seen marketing times extend to 20-25 days. King George and Fredericksburg occupy the middle ground with typical marketing periods of 10-13 days.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-left">
+<figure class="figure">
+<p><img src="market-homeown_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Price appreciation patterns demonstrate both the region’s overall growth and persistent jurisdictional differences. Stafford leads the market with median prices now exceeding $500,000, representing about 35% appreciation since 2020. The remaining jurisdictions cluster between $350,000 and $450,000, with King George, Fredericksburg, and Spotsylvania showing similar trajectories. Orange and Caroline, while experiencing steady growth, maintain lower price points with current medians near $350,000 and $325,000 respectively.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-left">
+<figure class="figure">
+<p><img src="market-homeown_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="market-segments" class="level3">
+<h3 class="anchored" data-anchor-id="market-segments">Market segments</h3>
+<p>The market dynamics between detached homes and townhomes reveal divergent volume trends but similar price trajectories. Annual sales of detached homes peaked near 8,000 units in 2021 before declining sharply to about 1,500 units by early 2024. Townhome sales, while more modest in volume, maintained relatively stable levels around 1,000-1,200 units annually until 2023. Both segments have experienced steady price appreciation, with detached homes rising from about $360,000 to $460,000 and townhomes increasing from $270,000 to $380,000. Marketing times show growing differences, as detached homes now typically require 12 days to sell compared to 6-7 days for townhomes.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-mls-type" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mls-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-mls-type-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mls-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.16: Sale trends for detached homes and townhomes
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The comparison between resale and new construction markets highlights distinct patterns in both volume and buyer behavior. Resale transactions dominated the market with peak volumes exceeding 8,500 units in 2021, while new construction maintained consistent but much lower volumes around 800-1,000 units annually. Marketing periods for new homes have increased dramatically from 10 days in 2021 to nearly 40 days in 2024, while resale properties stabilized at about 10 days. Price trends show new construction commanding a significant premium, with current median prices near $500,000 compared to about $425,000 for resales, though both segments have experienced similar appreciation rates of roughly 30% since 2020.</p>
+<div class="cell" data-layout-align="left">
+<div class="cell-output-display">
+<div id="fig-mls-nc" class="quarto-float quarto-figure quarto-figure-left anchored" data-fig-align="left">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mls-nc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="market-homeown_files/figure-html/fig-mls-nc-1.png" class="img-fluid quarto-figure quarto-figure-left figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mls-nc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.17: Sale trends for resales new construction homes
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./spectrum-work.html" class="pagination-link" aria-label="Core workforce spectrum">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Core workforce spectrum</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -16,14 +16,40 @@ library(geojsonio)
 library(classInt)
 library(htmltools)
 library(htmlwidgets)
+library(patchwork)
 
-faar_mls <- read_rds("data/faar_mls.rds")
+bps <- read_rds("data/faar_cbps.rds") |> 
+  mutate(type = case_when(
+    type == "2-units" ~ "2-4 units",
+    type == "3-4 units" ~ "2-4 units",
+    TRUE ~ type
+  ))
+
+faar_mls <- read_rds("data/faar_mls.rds") |> 
+  mutate(list_date = close_date - days(dom), .after = 6) |> 
+  mutate(list_month = floor_date(list_date, unit = "month"), .after = 7)
 
 faar_mls_sf <- read_rds("data/faar_mls_sf.rds")
 
+faar_local <- read_rds("data/ami/local_va.rds") |> 
+  filter(GEOID %in% faar_fips)
+
+mls_cap = "**Sources:** Fredericksburg Area Association of REALTORS®; Bright MLS."
+
 ```
 
-### Existing Supply 
+```{css}
+
+/* Add css to fix how Quarto renders leaflet legends */
+/* See: https://github.com/quarto-dev/quarto-cli/issues/7843 */
+
+.quarto-figure-center>figure>p, .quarto-figure-center>figure>div {
+    text-align: left;
+}
+
+```
+
+## Existing supply 
 
 There are slightly more than 111,200 households across the region who own their homes. Two-thirds (66%) have a single primary mortgage, and another 8% have an additional second mortgage and/or home equity loan. Just over 25% do not have a mortgage; nearly all of these homeowners have no debt at all.
 
@@ -43,7 +69,7 @@ owner_mortgage <- read_rds("data/b25081.rds") |>
   ) |> 
   mutate(multiple = fct_wrap(multiple, 25))
 
-sum(owner_mortgage$estimate)
+#sum(owner_mortgage$estimate)
 
 ggplot(owner_mortgage, aes(x = estimate, y = mortgage, fill = fct_rev(multiple))) +
   facet_wrap(~mortgage, ncol = 1, scales = "free_y") +
@@ -55,7 +81,7 @@ ggplot(owner_mortgage, aes(x = estimate, y = mortgage, fill = fct_rev(multiple))
     color = "white"
   ) +
   scale_x_continuous(
-    expand = c(0,0),
+    expand = c(0, 0.01),
     labels = label_comma()
   ) +
   scale_fill_hda(-1, guide = guide_legend(reverse = T)) +
@@ -73,24 +99,9 @@ ggplot(owner_mortgage, aes(x = estimate, y = mortgage, fill = fct_rev(multiple))
     strip.text = element_markdown(hjust = 0)
   )
 
-ggplot(
-  owner_mortgage,
-  aes(x = mortgage, y = estimate, fill = multiple, label = label_comma()(estimate))
-  ) +
-  geom_col() +
-  geom_text(color = "white", nudge_y = -1500) +
-  scale_y_continuous(labels = label_comma()) +
-  theme_hda() +
-  add_zero_line() +
-  labs(
-    title = "Owner-occupied homes by mortgage status",
-    #subtitle = "",
-    caption = acs_cap("B25081")
-  )
-
 ```
 
-Most homes in the existing supply are single family units with three to four bedrooms, units that could easily accommodate households with upwards of four people and more. Around 15,000 units in the region have five bedrooms or more, and less than 10,000 homes in the region are sized for families of two people or fewer. This may indicate a market priority to larger and higher-income households who can afford both higher interest rates and increased bedroom sizes.
+Most homes in the existing supply are single family units with three to four bedrooms, units that could easily accommodate households with upwards of four people and more. Nearly 16,000 units in the region have five bedrooms or more, and fewer than 10,000 homes in the region are sized for families of two people or fewer.
 
 ```{r}
 #| label: fig-owner-bedroom
@@ -104,15 +115,19 @@ owner_bedroom <- read_rds("data/b25042.rds") |>
   ) |> 
   mutate(br = fct_wrap(br, 10))
 
-sum(owner_bedroom$estimate)
+# sum(owner_bedroom$estimate)
 
 ggplot(
   owner_bedroom,
-  aes(x = br, y = adj_estimate, label = label_comma()(adj_estimate))
+  aes(x = br, y = estimate, label = label_comma()(estimate))
   ) +
   geom_col(fill = hda_pal[1]) +
   geom_text(color = "white", nudge_y = -1500) +
-  scale_y_continuous(labels = label_comma()) +
+  scale_y_continuous(
+    labels = label_comma(),
+    limits = c(0, 47000),
+    expand = c(0.01, 0.05)
+  ) +
   theme_hda() +
   add_zero_line() +
   labs(
@@ -123,7 +138,7 @@ ggplot(
 
 ```
 
-The region offers very little diversity of housing type, as single-family homes dominate both the rental and ownership markets. Of the existing ownership units region-wide, Stafford, Spotsylvania, and Fredericksburg respectively hold the largest shares of non-single family ownership units. Construction and current sales both overwhelmingly favor single family homes, and thus the existing supply reflects these trends in cost and size over time.
+The housing stock in the region is predominantly composed of single-family detached homes, which account for about 88% (97,661) of all owner-occupied units. Single-family attached homes represent the second most common structure type with 9,309 units. The remaining housing types --- including 2-4 unit buildings, larger multifamily structures, manufactured homes, and other configurations --- collectively comprise less than 4% of owner-occupied housing stock.
 
 ```{r}
 #| label: fig-owner-type
@@ -165,11 +180,7 @@ ggplot() +
 
 ```
 
-*Note: This graph only shows homeownership units.*
-
-
-
-. . . 
+Home values in the region show a clear concentration in the middle price ranges, with the \$300,000-\$499,999 bracket containing the largest share of owner-occupied homes. This price segment shows roughly equal distribution between mortgaged and non-mortgaged properties. Higher-value properties (\$750,000 and above) represent a relatively small portion of the market, while homes valued under \$200,000 account for approximately 15% of the owner-occupied stock.
 
 ```{r}
 #| label: fig-owner-value
@@ -180,7 +191,7 @@ owner_value <- read_rds("data/b25096.rds") |>
   summarise(
     estimate = sum(estimate), .by = c(mortgage, value)
   ) |> 
-  mutate(structure = fct_wrap(value, 12))
+  mutate(value = fct_wrap(value, 12))
 
 value_sub <- paste0(
   "Number of homes ",
@@ -196,9 +207,11 @@ value_cap <- paste0(
 )
 
 ggplot(owner_value, aes(x = estimate, y = value, fill = mortgage)) +
-  #facet_wrap(~mortgage) +
   geom_col() +
-  scale_x_continuous(labels = label_comma()) +
+  scale_x_continuous(
+    expand = c(0.01,0.01),
+    labels = label_comma()
+  ) +
   scale_fill_hda(-1) +
   theme_hda(flip_gridlines = T) +
   add_zero_line("x") +
@@ -210,65 +223,7 @@ ggplot(owner_value, aes(x = estimate, y = value, fill = mortgage)) +
 
 ```
 
-### Building Trends
-
-Single-family construction has dominated over the past two decades, but the post-Great Recession recovery for the region has been slow. Permitting and construction data shows that the region has yet to recover to pre-Recession building levels with its height in 2005 for both rental and ownership unit development.
-
-Construction appears to have been impacted by increasing interest rates and other inflationary pressures felt nation-wide in recent years, as permitting for single units has slowed following 2020. With a peak in single unit development in 2022 with about 2,500 permits that year, single family construction has decreased since then.
-
-2024 may result in greater single family construction, to show recovery after interest rate increases in 2023, as the first quarter of 2024 shows about 1000 regional permits. If development continues steadily at this pace, construction for new single family units will nearly surpass pre-Great Recession levels.
-
-```{r}
-#| label: fig-bps-chart
-#| fig-cap: "Annual building permits by structure type"
-
-# The data visualization below shows building trends broken out by type of housing in the FAAR region.
-
-bps <- read_rds("data/faar_cbps.rds") |> 
-  #filter(NAMELSAD != "Orange County") |> 
-  mutate(type = case_when(
-    type == "2-units" ~ "2-4 units",
-    type == "3-4 units" ~ "2-4 units",
-    TRUE ~ type
-  )) |> 
-  group_by(year, type) |> 
-  summarise(units = sum(units))
-
-subtitle_text <- "However, <span style = 'color: #e9ab3f'><b>larger multifamily</b></span> construction has been on the rise."
-
-ggplot(bps, aes(x = year, y = units, fill = type)) +
-  geom_col() +
-  facet_wrap(~type, nrow = 1) +
-  scale_x_continuous(
-    expand = c(0.02, 0.02),
-    breaks = seq(2000, 2024, 4)
-  ) +
-  scale_y_continuous(
-    expand = c(0.01, 0.05),
-    labels = label_comma()
-  ) +
-  scale_fill_hda() +
-  add_zero_line() +
-  theme_hda(
-    axis.text.x = element_text(angle = 90, vjust = 0.5),
-    panel.spacing.x = unit(0.02, "npc")
-  ) +
-  labs(
-    title = "Annual building permits by structure type",
-    subtitle = "All permits issued across region from 2000 through September 2024",
-    caption = "**Source:** U.S. Census Bureau, Residential Building Permits Survey."
-  )
-  
-
-```
-
-*Note: This table includes permitting for both rental and ownership units.*
-
-### Market Trends
-
-`update with new text`
-
-What all current homeowners are paying...
+Monthly housing costs for owner-occupied homes in the region exhibit notable variation, with the largest segment (43,668 households) paying more than \$2,000 per month for housing-related expenses. About 26,489 households (26%) have relatively lower monthly costs under \$1,000, while the middle cost ranges (\$1,000-\$1,999) account for approximately 30,918 households. This distribution suggests significant disparities in housing cost burdens across the region's homeowners.
 
 ```{r}
 #| label: fig-owner-supply
@@ -292,7 +247,10 @@ ggplot(
   ) +
   geom_col(fill = hda_pal[1]) +
   geom_text(color = "white", nudge_y = -1500) +
-  scale_y_continuous(labels = label_comma()) +
+  scale_y_continuous(
+    labels = label_comma(),
+    expand = c(0.01, 0.01)
+  ) +
   theme_hda() +
   add_zero_line() +
   labs(
@@ -303,17 +261,403 @@ ggplot(
 
 ```
 
-The market that buyers face...
+## Building trends
 
-Median sales prices for new construction versus resales varies, and overall sales pricing for both have consistently increased over the last four years, especially for resales. An in-depth view of recent new construction and resale pricing reflects the pressures that changing interest rates, inflation, and building material shortages place on the sales market. New construction pricing peaked in 2021 and 2023, reflecting peaks in interest rates in 2023 and construction and material shortages that in turn raise costs for builders and ultimately buyers. 
+Single-unit permits dominated the construction landscape since 2000, peaking around 2004 at approximately 5,000 permits before declining sharply to stabilize between 1,500-2,000 permits annually after 2008. Multifamily construction (5+ units) showed modest but consistent activity, while 2-4 unit structures remained minimal throughout the period. The vast majority of new homes produced in the region were built to be sold.
 
-Resale market pricing has crept up more stably than new construction, with peaks in 2021, 2022, and 2023, demonstrating that the resale market is stronger than the new construction market in the face of the same interest rate and inflationary pressures. The resale market is certainly affected by interest rate spikes and changes, which can also affect homeowner decision making about when it is time to sell and move. The regional resale market still follows a conventional sales cycle with increased activity and competition, driving prices, in the spring and summer. 
+```{r}
+#| label: fig-bps-chart
+#| fig-cap: "Annual building permits by structure type"
+
+# The data visualization below shows building trends broken out by type of housing in the FAAR region.
+
+bps_str <- bps |> 
+  summarise(
+    units = sum(units),
+    .by = c(year, type)
+  )
+
+ggplot(bps_str, aes(x = year, y = units, fill = type)) +
+  geom_col() +
+  facet_wrap(~type, nrow = 1) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = seq(2000, 2024, 4)
+  ) +
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  scale_fill_hda() +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    panel.spacing.x = unit(0.02, "npc")
+  ) +
+  labs(
+    title = "Annual building permits by structure type",
+    subtitle = "All permits issued across region from 2000 through September 2024",
+    caption = "**Source:** U.S. Census Bureau, Residential Building Permits Survey."
+  )
+  
+```
+
+Among localities, Stafford and Spotsylvania demonstrated the strongest growth trajectories, reaching approximately 22,000 and 19,000 cumulative permits respectively. The remaining localities --- Orange, Caroline, King George, and Fredericksburg --- showed more modest growth, each accumulating between 2,000 and 6,000 permits over the period.
+
+```{r}
+#| label: fig-bps-local
+#| fig-cap: "Total single-family building permits by locality"
+
+bps_local <- bps |> 
+  filter(type == "1-unit") |> 
+  group_by(GEOID) |> 
+  arrange(year, .by_group = TRUE) |> 
+  mutate(
+    name = str_remove_all(NAMELSAD, " County| city"),
+    cum_sum = cumsum(units),
+    pct_chg = ((units - first(units)) / first(units)),
+    index = (pct_chg + 1) * 100
+  ) |> 
+  ungroup()
+
+ggplot(bps_local, aes(x = year, y = cum_sum, fill = name)) +
+  geom_col(width = 0.6) +
+  facet_wrap(~fct_reorder(name, cum_sum), nrow = 1) +
+  scale_x_continuous(
+    #limits = c(2000, 2035),
+    expand = c(0, 0),
+    breaks = seq(2000, 2024, 8)
+  ) +
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  scale_fill_hda() +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    strip.text = element_markdown(size = rel(0.9)),
+    panel.spacing.x = unit(0.03, "npc"),
+    panel.spacing.y = unit(0.05, "npc"),
+  ) +
+  labs(
+    title = "Total single-family building permits by locality",
+    subtitle = "Cumulative permits issued from 2000 through September 2024",
+    caption = "**Source:** U.S. Census Bureau, Residential Building Permits Survey."
+  )
+
+```
+
+The chart below depicts relative changes in single-family building permit activity, indexed to 2000 levels. Caroline County and Fredericksburg showed the highest relative volatility, reaching peaks significantly above their baselines in the mid 2000s. Following declines during and after the Great Recession, most localities have seen stronger production levels in recent years. While Stafford and Spotsylvania account for most of the raw production totals, their rates of residential development today are well below the pace they set in the 2000s.
+
+```{r}
+#| label: fig-bps-local-chg
+#| fig-cap: "Change in annual single-family building permits by locality"
+
+bps_ends <- bps_local |> 
+  filter(year != 2024) |> 
+  slice_tail(n = 1, by = name)
+
+ggplot(filter(bps_local, year != 2024), aes(x = year, y = index, color = name)) +
+  geom_line() +
+  geom_hline(yintercept = 100, color = "#4b4f50", linewidth = 0.5) +
+  geom_text(
+    data = bps_ends,
+    aes(x = 2024, y = index, color = name, label = label_number(accuracy = 0.1)(index)),
+    size = rel(2.5),
+    hjust = 0,
+    vjust = 1
+  ) +
+  facet_wrap(~fct_reorder2(name, year, index, .fun = last2), nrow = 1) +
+  scale_x_continuous(
+    limits = c(2000, 2035),
+    expand = c(0, 0),
+    breaks = seq(2000, 2024, 8)
+  ) +
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    limits = c(-50, 1050),
+    breaks = seq(-100, 900, 100)
+  ) +
+  scale_color_hda() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    strip.text = element_markdown(size = rel(0.9)),
+    panel.spacing.x = unit(0.03, "npc"),
+    panel.spacing.y = unit(0.05, "npc"),
+  ) +
+  labs(
+    title = "Change in annual single-family building permits by locality",
+    subtitle = "Indexed to 100.0 for 2000 totals",
+    caption = "**Source:** U.S. Census Bureau, Residential Building Permits Survey."
+  )
+
+```
+
+. . .
+
+```{r}
+#| label: fn-make-hex-map
+
+make_hex_map <- function(data, n = 3, min = 0,
+                         cols = c("#8baeaa33", "#8abc8ecc", "#445ca9"),
+                         legend_title = NULL
+                         ) {
+  
+  sf_use_s2(FALSE)
+
+  hex_grid <- st_make_grid(
+    st_transform(data, 3857),
+    n = c(50,50),
+    what = "polygons",
+    square = FALSE
+  ) |> 
+    st_sf()
+  
+  hex_grid_sf <- hex_grid |>  
+    mutate(grid_id = 1:length(lengths(hex_grid)))
+  
+  hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, st_transform(data, 3857)))
+  
+  hex_count <- filter(hex_grid_sf, n_pts > min) |> 
+    st_transform(4326)
+  
+  pal <- colorQuantile(
+    palette = cols,
+    domain = unique(hex_count$n_pts),
+    n = n,
+    alpha = TRUE
+  )
+  
+  hex_count |> 
+    leaflet() |> 
+    addProviderTiles(
+      providers$CartoDB.Positron,
+      group = "Simple"
+    ) |>
+    addProviderTiles(
+      providers$Esri.WorldImagery,
+      options = providerTileOptions(opacity = 0.6),
+      group = "Imagery"
+    ) |> 
+    addPolygons(
+      fillColor = ~pal(n_pts),
+      fillOpacity = 0.75,
+      color = "black",
+      opacity = 0.1,
+      weight = 1
+    ) |> 
+    addLegend(
+      "topright",
+      title = legend_title,
+      colors = unique(pal(sort(hex_count$n_pts))),
+      labels = paste(
+        lag(quantile(hex_count$n_pts, seq(0, 1, 1/n))),
+        quantile(hex_count$n_pts, seq(0, 1, 1/n)),
+        sep = " - "
+      )[-1]
+    ) |> 
+    addLayersControl(
+      baseGroups = c("Simple", "Imagery"),
+      position = "bottomright",
+      options = layersControlOptions(collapsed = FALSE)
+    )
+  
+}
+
+```
+
+```{r}
+#| label: fig-nc-map
+#| fig-cap: "New construction home sales activity"
+
+faar_mls_sf |>
+  filter(nc == "New Construction") |>
+  make_hex_map(
+    n = 4,
+    min = 2,
+    legend_title = "New construction<br>homes sold<br>since 2020"
+  )
+
+```
+
+Four-bedroom homes consistently represent the largest segment of new construction, peaking at approximately 350 new units sold in 2022. Smaller three-bedroom homes maintained steady construction levels around 250 units annually, while five-bedroom homes showed relative stability at about 100 units annually. Totals for 2024 are through April only.
+
+```{r}
+#| label: fig-nc-beds
+#| fig-cap: "Number of new homes by bedrooms"
+
+mls_nc_sf <- faar_mls |> 
+  filter(
+    nc == "New Construction",
+    fin_sqft > 0
+  ) |> 
+  mutate(
+    beds = fct_case_when(
+      beds == 3 ~ "3 bedrooms",
+      beds == 4 ~ "4 bedrooms",
+      beds == 5 ~ "5 bedrooms",
+      beds %in% c(0, 1, 2, 6, 7, 8, 9, 33) ~ "Other"
+    )
+  ) |> 
+  summarise(
+    n = n(),
+    fin_sqft = median(fin_sqft),
+    lot_size = median(lot_size, na.rm = TRUE),
+    .by = c(year, beds)
+  )
+
+ggplot(filter(mls_nc_sf, beds != "Other"), aes(x = year, y = n, fill = beds)) +
+  geom_col() +
+  facet_wrap(~beds) +
+  scale_x_continuous(
+    expand = c(0, 0)
+  ) +
+  scale_fill_hda() +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    panel.spacing.x = unit(0.03, "npc"),
+    panel.spacing.y = unit(0.05, "npc"),
+  ) +
+  labs(
+    title = "Number of new homes by bedroom",
+    subtitle = "All new construction homes sold from 2020 through April 2024",
+    caption = mls_cap
+  )
+```
+
+Five-bedroom homes showed consistent size reduction from approximately 3,500 to 2,800 square feet. Four-bedroom homes maintained relative stability around 2,700 square feet, while three-bedroom homes remained steady at roughly 1,800 square feet throughout the period.
+
+```{r}
+#| label: fig-nc-beds-size
+#| fig-cap: "Median finished size of new homes by bedroom"
+
+ggplot(filter(mls_nc_sf, beds != "Other"), aes(x = year, y = fin_sqft, color = beds)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~beds) +
+  scale_x_continuous(
+    expand = c(0.01, 0.01)
+  ) +
+  scale_y_continuous(
+    labels = label_comma(suffix = " sqft"),
+    breaks = seq(0, 3500, 500),
+    expand = c(0.01, 0.05)
+  ) +
+  scale_color_hda() +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    panel.spacing.x = unit(0.03, "npc"),
+    panel.spacing.y = unit(0.05, "npc"),
+  ) +
+  labs(
+    title = "Median finished size of new homes by bedroom",
+    subtitle = "All new construction homes sold from 2020 through April 2024",
+    caption = mls_cap
+  )
+
+```
+
+## Market trends
+
+### Regional market
+
+The total volume of home sales in the Fredericksburg region shows distinct seasonal patterns overlaid with broader market trends. Peak activity consistently occurs in late spring/early summer, with notable spikes reaching approximately 1,000 monthly sales in 2020 and 2021. However, the market has experienced a gradual decline in overall volume since 2021, with recent months showing sales levels around 500 units --- roughly half the volume seen during the market's peak periods.
+
+```{r}
+#| label: fig-sales-line
+#| fig-cap: "Total monthly home sales"
+
+mls_sales <- faar_mls |> 
+  filter(close_month != "2024-05-01") |> 
+  mutate(
+    year = year(close_month),
+    month = month(close_month, label = T),
+    qtr = quarter(close_month),
+    yrqtr = floor_date(close_month, "quarter")
+  ) |> 
+  group_by(year, month) |> 
+  summarise(
+    sales = n()
+  ) |> 
+  ungroup()
+
+ggplot(mls_sales, aes(x = month, y = sales, alpha = year, color = year, fill = year, group = year)) +
+  facet_grid(cols = vars(year), scales = "free_x", space = "free_x") +
+  geom_area() +
+  scale_fill_steps(low = hda_pal[3], high = hda_pal[5]) +
+  scale_color_steps(low = hda_pal[3], high = hda_pal[5]) +
+  scale_alpha_continuous(range = c(0.4, 1)) +
+  scale_x_discrete(
+    breaks = c("Jan", "Apr", "Jul", "Oct"),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    labels = label_comma()
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Total monthly home sales",
+    subtitle = "All homes sold in region from January 2020 through April 2024",
+    caption = mls_cap
+  ) +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  )
+
+```
+
+The median time homes spend on the market reveals significant market evolution over the study period. Early 2020 saw homes taking about 30 days to sell, followed by a sharp decline to 5-10 days during the pandemic-driven market acceleration. Since 2022, average days on market in the off seasons has partially returned to pre-pandemic levels, but most homes in the spring of 2024 still sold in fewer than 10 days. 
+
+```{r}
+#| label: fig-dom-line
+#| fig-cap: "Monthly median days on market"
+
+mls_dom <- faar_mls |> 
+  filter(close_month != "2024-05-01") |> 
+  mutate(
+    year = year(close_date),
+    month = month(close_date, label = T),
+    qtr = quarter(close_date),
+    yrqtr = floor_date(close_date, "quarter")
+  ) |> 
+  group_by(year, month) |> 
+  summarise(
+    dom = median(dom)
+  ) |> 
+  ungroup()
+
+ggplot(mls_dom, aes(x = month, y = dom, alpha = year, color = year, fill = year, group = year)) +
+  facet_grid(cols = vars(year), scales = "free_x", space = "free_x") +
+  geom_area() +
+  scale_fill_steps(low = hda_pal[5], high = hda_pal[1]) +
+  scale_color_steps(low = hda_pal[5], high = hda_pal[1]) +
+  scale_alpha_continuous(range = c(0.3, 0.9)) +
+  scale_x_discrete(
+    breaks = c("Jan", "Apr", "Jul", "Oct"),
+    expand = c(0, 0)
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Median monthly days on market",
+    subtitle = "All homes sold in region from January 2020 through April 2024",
+    caption = mls_cap
+  ) +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  )
+
+```
+
+Median home sale prices demonstrate consistent upward momentum throughout the period. Starting from approximately \$300,000 in early 2020, prices have risen steadily, with particularly sharp increases during 2021 and 2022. Current median prices hover around \$425,000, representing a roughly 40% increase over the four-year period, though the rate of appreciation appears to have moderated in recent months.
 
 ```{r}
 #| label: fig-price-line
-#| fig-cap: "Median sales price"
+#| fig-cap: "Monthly median sales price"
 
-mls_msp <- read_rds("data/faar_mls.rds") |> 
+mls_msp <- faar_mls |> 
   filter(close_month != "2024-05-01") |> 
   mutate(
     year = year(close_date),
@@ -328,511 +672,417 @@ mls_msp <- read_rds("data/faar_mls.rds") |>
   ) |> 
   ungroup()
 
-d_ends <- mls_msp |> 
-  group_by(year) |> 
-  slice_max(month, n = 1)
+ggplot(mls_msp, aes(x = month, y = msp, alpha = year, color = year, fill = year, group = year)) +
+  facet_grid(cols = vars(year), scales = "free_x", space = "free_x") +
+  geom_area() +
+  scale_fill_steps(low = hda_pal[2], high = hda_pal[6]) +
+  scale_color_steps(low = hda_pal[2], high = hda_pal[6]) +
+  scale_alpha_continuous(range = c(0.4, 0.9)) +
+  scale_x_discrete(
+    breaks = c("Jan", "Apr", "Jul", "Oct"),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    labels = label_currency(scale = 0.001, suffix = "k"),
+    expand = c(0.01, 0)
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Monthly median home sales price",
+    subtitle = "All homes sold in region from January 2020 through April 2024",
+    caption = mls_cap
+  ) +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  )
 
-ggplot(mls_msp, aes(x = month, y = msp, alpha = year, group = year)) +
-  #facet_wrap(~fct_reorder(county, msp), nrow = 1) +
-  geom_line() +
+```
+
+The distribution of closing prices across different price segments highlights the market's structural transformation. In 2020, about 45% of sales occurred below \$300,000, while only 5% exceeded \$500,000. By 2024, this distribution has shifted dramatically --- only 9% of sales fall below \$300,000, while approximately 41% of transactions occur above \$500,000, reflecting both home price appreciation and changes in the composition of sales activity.
+
+```{r}
+#| label: fig-price-range
+#| fig-cap: "Closing price range"
+
+mls_price_range <- faar_mls |> 
+  mutate(
+    yrqtr = floor_date(close_date, "quarter")
+  ) |> 
+  mutate(price_range = 
+    fct_case_when(
+      close_price < 300000 ~ "Below $300k",
+      close_price >= 300000 & close_price < 400000 ~ "$300k to $400k",
+      close_price >= 400000 & close_price < 500000 ~ "$400k to $500k",
+      close_price >= 500000 & close_price < 600000 ~ "$500k to $600k",
+      close_price >= 600000 & close_price < 700000 ~ "$600k to $700k",
+      close_price >= 700000 & close_price < 800000 ~ "$700k to $800k",
+      close_price >= 800000 ~ "Above $800k"
+    )
+  ) |> 
+  summarise(
+    n = n(),
+    .by = c(yrqtr, price_range)
+  ) |> 
+  arrange(yrqtr, price_range) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2,
+    .by = yrqtr
+  ) |> 
+  mutate(
+    year = year(yrqtr),
+    qtr = paste0("Q", quarter(yrqtr))
+  )
+
+ggplot(mls_price_range, aes(x = qtr, y = pct, fill = fct_rev(price_range), group = fct_rev(price_range))) +
+  facet_grid(cols = vars(year), scales = "free_x", space = "free_x") +
+  geom_col(width = 1) +
+  geom_label(
+    data = . %>% filter(year == 2022, qtr == "Q2"),
+    aes(y = pct_label, label = price_range),
+    color = "white",
+    size = 3,
+    label.size = 0,
+    #position = position_stack(vjust = 0.5),
+    hjust = 0.5,
+    nudge_x = 0.5
+  ) +
   geom_text(
-    data = d_ends,
-    aes(x = month, y = msp, label = year),
-    nudge_x = 0.3
+    data = . %>% filter(year == 2020, qtr == "Q1", pct > 0.03),
+    aes(y = pct_label, label = label_percent(accuracy = 1)(pct)),
+    color = "white",
+    hjust = 0.5
   ) +
-  scale_y_continuous(
-    limits = c(205000, 500000),
-    breaks = seq(250000, 500000, 50000),
-    labels = label_currency(scale = 0.001, suffix = "k")
+  geom_text(
+    data = . %>% filter(year == 2024, qtr == "Q2"),
+    aes(y = pct_label, label = label_percent(accuracy = 1)(pct)),
+    color = "white",
+    hjust = 0.5
   ) +
-  add_zero_line() +
-  theme_hda()
-
-ggplot(mls_msp, aes(x = yrqtr, y = msp, color = county)) +
-  facet_wrap(~fct_reorder(county, msp), nrow = 1) +
-  geom_line(alpha = 0.4) +
-  geom_smooth(se = FALSE) +
-  scale_color_hda() +
-  scale_x_date(date_breaks = "2 years", date_labels = "%y %Q") +
-  scale_y_continuous(
-    limits = c(150000, 540000),
-    breaks = seq(0, 500000, 100000),
-    labels = label_currency(scale = 0.001, suffix = "k")
+  scale_y_continuous(limits = c(0, 1), expand = c(0.01, 0.01)) +
+  scale_x_discrete(
+    expand = c(0,0.5)
   ) +
-  add_zero_line() +
-  theme_hda()
-
-
- |> 
-  filter(close_month != "2024-05-01") |>
-  ggplot(
-    aes(x = close_date, y = close_price, color = county)
+  scale_fill_manual(
+    values = c("#445ca9", "#5561a5", "#6666a1", "#776b9e", "#87709a", "#987596", "#a97a92")
   ) +
-  facet_wrap(~fct_reorder(county, close_price, median), nrow = 1) +
-  geom_smooth(se = FALSE) +
-  geom_point(alpha = 0.05, shape = 20, size = 1.5, stroke = NA) +
-  scale_color_hda() +
-  coord_cartesian(ylim=c(0, 560000)) +
-  scale_y_continuous(
-    breaks = seq(0, 1000000, 100000),
-    labels = label_currency(scale = 0.001, suffix = "k")
+  theme_hda(
+    axis.text.x = element_text(vjust = 0.5),
+    axis.text.y = element_blank(),
+    panel.grid.major.y = element_blank()
+    #panel.spacing.x = unit(0.005, "npc")
   ) +
-  add_zero_line() +
-  theme_hda()
-
-
-
-title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
-
-ggplot(sales_price,
-       aes(x = quarter,
-           y = med_sales,
-           color = type)) +
-  geom_line(size = 1) +
-  geom_point() +
-  scale_color_hda() + 
-  theme_hda(base_size = 10) +
-  labs(title = title_text,
-       subtitle = "In 2024 Q2 inflation-adjusted dollars",
-       caption = "Source: BrightMLS; CPI for All Urban Consumers: All Items Less Shelter in U.S. City Average") +
-  scale_y_continuous(labels = dollar_format())
-
-```
-
-
-Additionally, as these data incorporate market trends from the last four years, and the for-sale housing market has changed drastically in that time, especially in more recent years. Interest rates, which have the greatest potential to influence monthly mortgage payments, have peaked at 7.79% in October 2023  and settled around 6.95% as of July 2024.[^2] While regional resales peaked in 2021, likely with much lower purchase prices and interest rates, recent home sales with increased pricing and rates may influence these data by pulling monthly housing costs for all ownership units higher.  
-
-[^2]: FreddieMac Primary Mortgage Market Survey as of July 2024.
-
-```{r}
-#| label: fig-owner-costs
-#| fig-cap: "Monthly Owner Costs and Interest Rates"
-
-
-```
-
-
-
-
-The regional for-sale market is relatively strong, with core hot spots present where resales happen most quickly. Most single family home sales in the past four years have been along the 95 Corridor in Fredericksburg City and in Spotsylvania and Stafford counties. The map below shows the number of residential home sales between January 2020 through April 2024, with dark hexagons representing a higher number of home sales.
-
-
-
-```{r}
-#| label: fig-sales-map-nc
-#| fig-cap: "Map of total new construction home sales from 2020 through April 2024"
-
-# Create a hex grid map showing home sale concentrations in FAAR region.
-
-
-
-# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
-#   mutate(longitude = case_when(
-#     mls_number == "630778" ~ -78.329369,
-#     TRUE ~ longitude)) |>
-#   mutate(latitude = case_when(
-#     mls_number == "630778" ~ 38.214775,
-#     TRUE ~ latitude)) |>
-#   mutate(longitude = case_when(
-#     mls_number == "VAOR2002600" ~ -78.181042,
-#     TRUE ~ longitude)) |>
-#   mutate(latitude = case_when(
-#     mls_number == "VAOR2002600" ~ 38.137717,
-#     TRUE ~ latitude)) |>
-#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
-#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-# 
-# 
-# write_rds(sales, "data/faar_mls_check.rds")
-# geojson_write(sales, file = "data/mls.geojson")
-# 
-
-
-sales <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  filter(new_construction_yn == "Yes")
-
-# leaflet(sales) |> 
-#   addProviderTiles(providers$CartoDB.Positron) |> 
-#   addCircleMarkers()
-
-hex_grid <- st_make_grid(sales, n = c(50,50),
-                         what = "polygons", square = FALSE)
-
-hex_grid_sf <- st_sf(hex_grid) %>% 
-  mutate(grid_id = 1:length(lengths(hex_grid)))
-
-hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
-
-hex_count <- filter(hex_grid_sf, n_pts > 0)
-
-# Define the base color
-base_color <- "#445ca9"
-
-# Create a color palette function based on the base color
-color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
-
-# Number of bins (adjust as needed)
-bins <- 9
-
-# Generate the color palette for the bins
-palette_colors <- color_palette(bins)
-
-# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
-
-
-# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
-
-quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
-palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
-
-
-leaflet(hex_count) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addPolygons(
-    fillColor = ~palette_quantiles(n_pts),
-    fillOpacity = 0.7,
-    opacity = 1,
-    weight = 1,
-    color='white',
-    label = ~as.character(n_pts),  # Show n_pts value when hovered over
-    highlightOptions = highlightOptions(
-      weight = 3,
-      color = '#666',
-      fillOpacity = 0.7,
-      bringToFront = TRUE
-    ),
-    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
-  ) |> 
-  addLegend(
-    pal = palette_quantiles,
-    values = ~n_pts,
-    title = "Number of Sales",
-    position = "bottomleft"
+  labs(
+    title = "Closing price range",
+    subtitle = "All homes sold in region from January 2020 through April 2024",
+    caption = mls_cap
   )
 
-
 ```
 
+### Local markets
+
 ```{r}
-#| label: fig-sales-map-resale
-#| fig-cap: "Map of total homes resales from 2020 through April 2024"
 
-# Create a hex grid map showing home sale concentrations in FAAR region.
-
-library(leaflet)
-library(sf)
-library(geojsonio)
-library(classInt)
-library(htmltools)
-library(htmlwidgets)
-
-# sales <- read_rds("data/faar_mls_cpi_google.rds") |>
-#   mutate(longitude = case_when(
-#     mls_number == "630778" ~ -78.329369,
-#     TRUE ~ longitude)) |>
-#   mutate(latitude = case_when(
-#     mls_number == "630778" ~ 38.214775,
-#     TRUE ~ latitude)) |>
-#   mutate(longitude = case_when(
-#     mls_number == "VAOR2002600" ~ -78.181042,
-#     TRUE ~ longitude)) |>
-#   mutate(latitude = case_when(
-#     mls_number == "VAOR2002600" ~ 38.137717,
-#     TRUE ~ latitude)) |>
-#   filter(mls_number != "606389") |>  # This entry is incorrectly marked as being in Spotsylvania County
-#   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-# 
-# 
-# write_rds(sales, "data/faar_mls_check.rds")
-# geojson_write(sales, file = "data/mls.geojson")
-# 
-
-
-sales <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  filter(new_construction_yn != "Yes")
-
-# leaflet(sales) |> 
-#   addProviderTiles(providers$CartoDB.Positron) |> 
-#   addCircleMarkers()
-
-hex_grid <- st_make_grid(sales, n = c(50,50),
-                         what = "polygons", square = FALSE)
-
-hex_grid_sf <- st_sf(hex_grid) %>% 
-  mutate(grid_id = 1:length(lengths(hex_grid)))
-
-hex_grid_sf$n_pts <- lengths(st_intersects(hex_grid_sf, sales))
-
-hex_count <- filter(hex_grid_sf, n_pts > 0)
-
-# Define the base color
-base_color <- "#445ca9"
-
-# Create a color palette function based on the base color
-color_palette <- colorRampPalette(colors = c("#cce0ce", base_color))
-
-# Number of bins (adjust as needed)
-bins <- 9
-
-# Generate the color palette for the bins
-palette_colors <- color_palette(bins)
-
-# color_bin_palette <- colorBin(palette = palette_colors, domain = hex_count$n_pts, bins = bins)
-
-
-# palette <- colorBin('Greens', domain = hex_count$n_pts, bins = 9)
-
-quantiles <- classIntervals(hex_count$n_pts, n=5, style='jenks')
-palette_quantiles <- colorBin(palette_colors, domain = hex_count$n_pts, bins=quantiles$brks, pretty=FALSE)
-
-
-m <- leaflet(hex_count) |> 
-  addProviderTiles(providers$CartoDB.Positron) |> 
-  addPolygons(
-    fillColor = ~palette_quantiles(n_pts),
-    fillOpacity = 0.7,
-    opacity = 1,
-    weight = 1,
-    color='white',
-    label = ~as.character(n_pts),  # Show n_pts value when hovered over
-    highlightOptions = highlightOptions(
-      weight = 3,
-      color = '#666',
-      fillOpacity = 0.7,
-      bringToFront = TRUE
-    ),
-    popup = ~paste("n_pts:", n_pts)  # Show n_pts value on click
-  ) |> 
-  addLegend(
-    pal = palette_quantiles,
-    values = ~n_pts,
-    title = "Number of Sales",
-    position = "bottomleft"
+mls_local <- faar_mls |> 
+  filter(close_month != "2024-05-01") |> 
+  #group_by(name, year, month) |> 
+  summarise(
+    sales = n(),
+    msp = median(close_price),
+    dom = median(dom, na.rm = TRUE),
+    .by = c(name, year)
   )
 
-
 ```
 
-
-Single-family homes account for the vast majority of all these housing transactions, with little to no variation in building type represented in the for sale market. While manufactured housing development saw an increase in the decades between 1980-2000, this has trended downward between 2000-2020 and seems to have fallen especially following the COVID-19 pandemic. 
-
-Supply and permitting trends skew towards higher-cost ownership units, such as single family units that can accommodate larger families. Residential sales for new construction and resales both overwhelmingly favor single family also reflects this trend. Townhomes take the largest share of regional resales following single family units, with resale of all home types staying on the market for less than the median 30 days for the last 4 years. New construction sales are far more limited in number and also offer a smaller range of housing diversity.
-
+The distribution of home sales volume across localities reveals stark differences in market size and trajectory. Stafford and Spotsylvania dominate the regional market, each recording over 3,000 annual sales at their peak in 2021. However, both jurisdictions have experienced substantial declines, with current volumes approximately 60% below their peaks. The region's smaller markets, including Orange, Caroline, King George, and Fredericksburg, demonstrate more modest but still significant reductions, with current annual sales volumes ranging from about 100 to 600 units.
 
 ```{r}
-#| label: type-bar
-#| fig-cap: "Total sales"
 
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
-
-sales_type <- read_rds("data/faar_mls_check.rds")|> 
-  filter(county != "Orange, VA") |> 
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  mutate(structure_type = case_when(
-    structure_type == "End of Row/Townhouse" ~ "Townhouse",
-    structure_type == "Interior Row/Townhouse" ~ "Townhouse",
-    structure_type == "Penthouse Unit/Flat/Apartment" ~ "Unit/Flat/Apartment",
-    structure_type == "Mobile Pre 1976" ~ "Other",
-    TRUE ~ structure_type
-  )) |> 
-  group_by(structure_type, type, quarter) |> 
-  summarise(count = n_distinct(mls_number))
-
-# title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span> by quarter"
-
-ggplot(sales_type,
-       aes(x = quarter,
-           y = count,
-           fill = reorder(structure_type, -count))) +
-  geom_col(position = "stack") +
-  facet_wrap(~type) +
-  scale_fill_hda() +
-  theme_hda(base_size = 10) +
-  labs(title = "Residential sales by sale type and structure type",
-       caption = "Source: BrightMLS") +
-  theme(legend.position = "right") +
-  scale_y_continuous(labels = number_format(big.mark = ","))
-
-```
-
-
-Since 2021, new construction days on the market have climbed, reaching a median-high near 100 days in the first quarter of 2023. With new construction homes priced above \$500,000 since 2021, the buyer pool for new construction has undoubtedly decreased significantly, likely as a result of increased interest rates and builder costs driving up purchase prices. Home resales in the region have been rapid in recent quarters, frequently on the market for fewer than 30 days. This reflects a high demand for homes priced below \$500,000, potentially driving competition for moderately priced housing in well-established communities. To that end, infill construction in older neighborhoods could meet the demand for resales among households at varying incomes.
-
-
-```{r}
-#| label: dom-bar
-#| fig-cap: "Days on Market"
-
-# Create a bar chart showing the number of home sales per quarter. Fill bar stacks based on jurisdiction.
-
-sales_dom <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |>
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  select(quarter, cdom, type) |> 
-  filter(cdom != 0) |> 
-  group_by(quarter, type) |> 
-  summarise(med_dom = median(cdom))
-
-title_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span> median days on market"
-
-ggplot(sales_dom,
-       aes(x = quarter,
-           y = med_dom,
-           fill = type)) +
-  geom_col(position = "dodge") +
-  theme_hda(base_size = 10) +
-  scale_fill_hda() +
-  labs(title = title_text,
-       caption = "Source: BrightMLS")
-```
-
-Resales with three and four bedrooms are overrepresented in the sales market. Roughly 18,000 units with three to four bedrooms in the region were sold in the last four years, with comparatively very few new construction sales with similar size. Smaller resales with 3 and 4 bedrooms, compared with new construction with much fewer overall permits and sales (see Graph on sales by sales type and structure type), are selling more quickly despite the relative availability of new construction homes with greater square footage and the same number of bedrooms.
-
-
-```{r}
-#| label: bed-plot
-#| fig-cap: "Bedrooms"
-
-# Create a data viz that shows the distribution of home sales based on bedroom count.
-
-
-beds <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> # Filter out Orange County
-  mutate(type = case_when( # Create a label for New Construction and Resale
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  filter(structure_type != "Garage/Parking Space", # Remove garage and parking space sales
-         beds != 0) |>  # Remove home sales wherein there are no bedrooms listed due to incomplete entries
-  mutate(beds = case_when( # Group bedrooms of 5 or more
-    beds > 5 ~ 5, 
-    TRUE ~ beds
-  )) |> 
-  mutate(beds = as.character(beds)) |> # Transform beds into character rather than a numeric
-  mutate(beds = case_when( # Transform the 5 count to "5 or more"
-    beds == "5" ~ "5 or more",
-    TRUE ~ beds
-  )) |> 
-  mutate(count = 1) |> # Create a column to help calculate a sum
-  group_by(type, beds) |> 
-  summarise(sum = sum(count)) |> 
-  ungroup() |>
-  group_by(type) |> 
-  mutate(pct = sum/sum(sum))
-
-
-ggplot(beds, 
-       aes(x = beds,
-           y = pct,
-           fill = type)) +
-  geom_col(position = "dodge") +
-  theme_hda(base_size = 10) +
-  labs(title = "Distribution of Bedrooms",
-       subtitle = "Percent of total by sales type",
-       caption = "Source: BrightMLS, excludes listings where bedrooms are listed as zero.") +
-  facet_wrap(~type, nrow = 1) +
-  scale_fill_hda() +
-  scale_y_continuous(labels = percent_format())
-
-
-
-```
-
-With resales skewing towards 3 bedrooms, and selling far faster than new construction, we can see the regional market preference towards smaller, more moderately priced homes that can sleep bigger households than new construction with greater square footage and 4 bedrooms.  Similarly sized households appear to buy units based on purchase price, or affordability. There seems to be obvious increased sales competition for resales based on purchase price, as the square footage is less for the same number of bedrooms and resales are consistently on the market for less than 25 days. 
-
-
-```{r}
-#| label: sf-plot
-#| fig-cap: "Square Footage"
-
-# Create a data viz that shows the distribution of home sales based on square footage.
-# Density plot more easily handles outliers.
-
-sales_sf <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  select(total_finished_sqft, type) |> 
-  filter(total_finished_sqft != 0) |> 
-  filter(total_finished_sqft < 5000)
-
-subtitle_text <- "<span style = 'color:#445ca9'><b>New Construction</b></span> and <span style = 'color:#8baeaa'><b>Resale</span>"
-
-
-ggplot(sales_sf, 
-       aes(x = total_finished_sqft,
-           fill = type)) +
-  geom_density(
-    alpha = 0.6,
-    color = "white"
+ggplot(mls_local, aes(x = year, y = sales, fill = year, alpha = year)) +
+  facet_wrap(~fct_reorder(name, sales, .desc = T), nrow = 1) +
+  geom_col() +
+  scale_fill_steps(low = hda_pal[3], high = hda_pal[5]) +
+  scale_alpha_continuous(range = c(0.4, 1)) +
+  scale_x_continuous(
+    expand = c(0, 0)
   ) +
-  theme_hda(base_size = 10) +
-  labs(title = "Distribution of Square Footage",
-       subtitle = subtitle_text,
-       x = "Square Footage",
-       y = "Density",
-       caption = "Source: BrightMLS, excludes listings where sq. ft. is listed as zero or above 5,000.") +
-  scale_fill_hda() +
-  scale_y_continuous(labels = number_format())
-
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Total annual home sales by locality",
+    subtitle = "All homes sold from January 2020 through April 2024",
+    caption = mls_cap
+  ) +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    strip.text = element_markdown(size = rel(0.9)),
+  )
 
 ```
 
-Furthermore, lot sizes for both new construction sales and resales skew smaller across the region, regardless of the square footage or number of bedrooms of the improvement. New construction sales square footage leans more above 2,000 square feet per home, while resale units have more homes skewing toward the 1,000 to 1,500 square feet range. 
-
+Market velocity, measured by median days on market, shows increasing differentiation between localities over time. While all jurisdictions experienced extremely rapid sales during 2021-2022 with median marketing periods of 5-10 days, recent trends reveal growing disparity. Stafford and Spotsylvania maintain relatively quick sales at 8-10 days, while Orange and Caroline have seen marketing times extend to 20-25 days. King George and Fredericksburg occupy the middle ground with typical marketing periods of 10-13 days.
 
 ```{r}
-#| label: lot-plot
-#| fig-cap: "Lot Size"
 
-# Create a data viz that shows the distribution of home sales based on lot size.
-# Density plot more easily handles outliers.
-
-sales_lot <- read_rds("data/faar_mls_check.rds") |> 
-  filter(county != "Orange, VA") |> 
-  mutate(type = case_when(
-    new_construction_yn == "Yes" ~ "New Construction",
-    TRUE ~ "Resale"
-  )) |> 
-  filter(structure_type != "Garage/Parking Space") |> 
-  select(lot_size_acres, type) |> 
-  filter(lot_size_acres != 0) |> 
-  filter(lot_size_acres < 10)
-
-title_text <- "<span style = 'color:#011E41'><b>New Construction</b></span> and <span style = 'color:#40C0C0'><b>Resale</span> by quarter"
-
-ggplot(sales_lot, 
-       aes(x = lot_size_acres,
-           fill = type)) +
-  geom_density(
-    alpha = 0.6,
-    color = "white"
+ggplot(mls_local, aes(x = year, y = dom, fill = year, alpha = year)) +
+  facet_wrap(~fct_reorder(name, dom), nrow = 1) +
+  geom_col() +
+  scale_fill_steps(low = hda_pal[5], high = hda_pal[1]) +
+  scale_alpha_continuous(range = c(0.3, 0.9)) +
+  scale_x_continuous(
+    expand = c(0, 0)
   ) +
-  theme_hda(base_size = 10) +
-  labs(title = "Distribution of Lot Size",
-       subtitle = subtitle_text,
-       x = "Acres",
-       y = "Density",
-       caption = "Source: BrightMLS, excludes listings where lot size is listed as zero or above 10 acres.") +
-  scale_fill_hda() +
-  scale_y_continuous(labels = number_format())
+  scale_y_continuous(
+    expand = c(0.01, 0.05),
+    labels = label_comma()
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Annual median days on market by locality",
+    subtitle = "All homes sold from January 2020 through April 2024",
+    caption = mls_cap
+  ) +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    strip.text = element_markdown(size = rel(0.9)),
+  )
 
 ```
+
+Price appreciation patterns demonstrate both the region's overall growth and persistent jurisdictional differences. Stafford leads the market with median prices now exceeding \$500,000, representing about 35% appreciation since 2020. The remaining jurisdictions cluster between \$350,000 and \$450,000, with King George, Fredericksburg, and Spotsylvania showing similar trajectories. Orange and Caroline, while experiencing steady growth, maintain lower price points with current medians near \$350,000 and \$325,000 respectively.
+
+```{r}
+
+ggplot(mls_local, aes(x = year, y = msp, fill = year, alpha = year)) +
+  facet_wrap(~fct_reorder(name, msp, .desc = T), nrow = 1) +
+  geom_col() +
+  scale_fill_steps(low = hda_pal[2], high = hda_pal[6]) +
+  scale_alpha_continuous(range = c(0.4, 0.9)) +
+  scale_x_continuous(
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    labels = label_currency(scale = 0.001, suffix = "k"),
+    expand = c(0.01, 0)
+  ) +
+  add_zero_line() +
+  labs(
+    title = "Annual median sales price by locality",
+    subtitle = "All homes sold from January 2020 through April 2024",
+    caption = mls_cap
+  ) +
+  theme_hda(
+    axis.text.x = element_text(angle = 90, vjust = 0.5),
+    strip.text = element_markdown(size = rel(0.9)),
+  )
+
+```
+
+### Market segments
+
+The market dynamics between detached homes and townhomes reveal divergent volume trends but similar price trajectories. Annual sales of detached homes peaked near 8,000 units in 2021 before declining sharply to about 1,500 units by early 2024. Townhome sales, while more modest in volume, maintained relatively stable levels around 1,000-1,200 units annually until 2023. Both segments have experienced steady price appreciation, with detached homes rising from about \$360,000 to \$460,000 and townhomes increasing from \$270,000 to \$380,000. Marketing times show growing differences, as detached homes now typically require 12 days to sell compared to 6-7 days for townhomes.
+
+```{r}
+#| label: fig-mls-type
+#| fig-cap: "Sale trends for detached homes and townhomes"
+
+mls_type <- faar_mls |> 
+  mutate(
+    structure_type = case_when(
+      structure_type == "Detached" ~ "Detached",
+      structure_type == "Interior Row/Townhouse" ~ "Townhouse",
+      structure_type == "End of Row/Townhouse" ~ "Townhouse",
+      .default = "Other"
+    ),
+    structure_type = fct_relevel(
+      structure_type, "Detached", "Townhouse", "Other"
+    )
+  ) |> 
+  summarise(
+    sales = n(),
+    msp = median(close_price),
+    dom = median(dom, na.rm = TRUE),
+    .by = c(year, structure_type)
+  ) |> 
+  filter(structure_type != "Other")
+
+mls_type_title <- paste0(
+  "Sale trends for ",
+  "<span style='color: #445ca9'><b>detached homes</b></span> and ",
+  "<span style='color: #8baeaa'><b>townhomes</b></span>"
+)
+
+(
+  ggplot(mls_type, aes(x = year, y = sales, fill = structure_type)) +
+    geom_col(position = "dodge") +
+    scale_y_continuous(
+      labels = label_comma(),
+      limits = c(0, 8000),
+      breaks = seq(0, 8000, 2000),
+      expand = c(0.01, 0.05)
+    ) +
+    scale_fill_hda() +
+    add_zero_line() +
+    theme_hda() +
+    labs(
+      title = mls_type_title,
+      subtitle = "Total annual sales"
+    )
+  ) /
+  
+((
+  ggplot(mls_type, aes(x = year, y = dom, color = structure_type)) +
+    geom_line() +
+    geom_point() +
+    scale_y_continuous(
+      labels = label_number(),
+      limits = c(0, 14),
+      breaks = seq(0, 14, 2),
+      expand = c(0.01, 0.05)
+    ) +
+    scale_color_hda() +
+    add_zero_line() +
+    theme_hda() +
+    labs(
+      subtitle = "Median days on market"
+    )
+  ) +
+
+(
+  ggplot(mls_type, aes(x = year, y = msp/1000, color = structure_type)) +
+    geom_line() +
+    geom_point() +
+    scale_y_continuous(
+      labels = label_dollar(suffix = "k"),
+      limits = c(0, 500),
+      breaks = seq(0, 500, 100),
+      expand = c(0.01, 0.05)
+    ) +
+    scale_color_hda() +
+    add_zero_line() +
+    theme_hda() +
+    labs(
+      subtitle = "Median sales price"
+    )
+  )) +
+  
+  plot_annotation(
+    caption = mls_cap,
+    theme = theme(
+      plot.caption = element_markdown(
+        size = 9,
+        color = "#383c3d",
+        hjust = 0L,
+        vjust = 0L,
+        margin = ggplot2::margin(t = 10, unit = "pt"),
+        lineheight = 1.1,
+        face = "plain",
+        family = "Lato"
+      )
+    )
+  )
+
+```
+
+The comparison between resale and new construction markets highlights distinct patterns in both volume and buyer behavior. Resale transactions dominated the market with peak volumes exceeding 8,500 units in 2021, while new construction maintained consistent but much lower volumes around 800-1,000 units annually. Marketing periods for new homes have increased dramatically from 10 days in 2021 to nearly 40 days in 2024, while resale properties stabilized at about 10 days. Price trends show new construction commanding a significant premium, with current median prices near \$500,000 compared to about \$425,000 for resales, though both segments have experienced similar appreciation rates of roughly 30% since 2020.
+
+```{r}
+#| label: fig-mls-nc
+#| fig-cap: "Sale trends for resales new construction homes"
+
+mls_nc <- faar_mls |> 
+  summarise(
+    sales = n(),
+    msp = median(close_price),
+    dom = median(dom, na.rm = TRUE),
+    .by = c(year, nc)
+  )
+
+mls_nc_title <- paste0(
+  "Sale trends for ",
+  "<span style='color: #a97a92'><b>resales</b></span> and ",
+  "<span style='color: #e9ab3f'><b>new construction</b></span> homes"
+)
+
+(
+  ggplot(mls_nc, aes(x = year, y = sales, fill = fct_rev(nc))) +
+    geom_col(position = "dodge") +
+    scale_y_continuous(
+      labels = label_comma(),
+      limits = c(0, 10000),
+      breaks = seq(0, 10000, 2000),
+      expand = c(0.01, 0.05)
+    ) +
+    scale_fill_manual(values = c(hda_pal[5], hda_pal[3])) +
+    add_zero_line() +
+    theme_hda() +
+    labs(
+      title = mls_nc_title,
+      subtitle = "Total annual sales"
+    )
+  ) /
+  
+((
+  ggplot(mls_nc, aes(x = year, y = dom, color = fct_rev(nc))) +
+    geom_line() +
+    geom_point() +
+    scale_y_continuous(
+      labels = label_number(),
+      limits = c(0, 40),
+      breaks = seq(0, 40, 10),
+      expand = c(0.01, 0.05)
+    ) +
+    scale_color_manual(values = c(hda_pal[5], hda_pal[3])) +
+    add_zero_line() +
+    theme_hda() +
+    labs(
+      subtitle = "Median days on market"
+    )
+  ) +
+
+(
+  ggplot(mls_nc, aes(x = year, y = msp/1000, color = fct_rev(nc))) +
+    geom_line() +
+    geom_point() +
+    scale_y_continuous(
+      labels = label_dollar(suffix = "k"),
+      limits = c(0, 600),
+      breaks = seq(0, 600, 100),
+      expand = c(0.01, 0.05)
+    ) +
+    scale_color_manual(values = c(hda_pal[5], hda_pal[3])) +
+    add_zero_line() +
+    theme_hda() +
+    labs(
+      subtitle = "Median sales price"
+    )
+  )) +
+  
+  plot_annotation(
+    caption = mls_cap,
+    theme = theme(
+      plot.caption = element_markdown(
+        size = 9,
+        color = "#383c3d",
+        hjust = 0L,
+        vjust = 0L,
+        margin = ggplot2::margin(t = 10, unit = "pt"),
+        lineheight = 1.1,
+        face = "plain",
+        family = "Lato"
+      )
+    )
+  )
+
+```
+
 
 
 
