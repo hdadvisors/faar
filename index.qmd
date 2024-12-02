@@ -4,9 +4,9 @@ engine: knitr
 
 # About this study {.unnumbered}
 
-::: {.callout-caution}
+::: {.callout-note}
 ### Note
-*Draft last updated `r format(Sys.Date(), "%B %d, %Y")`*
+*Last updated `r format(Sys.Date(), "%B %d, %Y")`*
 :::
 
 This study is a regional housing gap analysis conducted by [HDAdvisors](https://www.hdadvisors.net) (HDA) for the [Fredericksburg Area Association of REALTORS®](https://www.faarmembers.com/) (FAAR). The study has four objectives:
