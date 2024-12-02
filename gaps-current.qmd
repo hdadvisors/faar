@@ -1,4 +1,4 @@
-# Current gaps {#sec-gaps-current}
+# Current housing gaps {#sec-current-gaps}
 
 ```{r}
 #| label: setup
@@ -6,944 +6,387 @@
 #| message: false
 #| warning: false
 
+# Load common script
 source("_common.R")
-
 source("r/affordcalc.R")
 
-# Load packages other than tidyverse and hdatools
- 
-library(scales)
-library(ggtext)
+# Load other packages other than tidyverse and hdatools
+library(sf)
+library(leaflet)
+library(htmltools)
+library(htmlwidgets)
+library(patchwork)
+library(tidycensus)
+library(srvyr)
+
+# Household records only
+pums_faar_hh <- read_rds("data/pums/pums_faar.rds") |> filter(SPORDER == 1)
+
+# Source caption for most plots
+pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
+
+faar_chas <- read_rds("data/tb_18_match.rds")
 
 ```
 
+## Overview
+
+Monthly housing costs show substantial variation across income bands in the Fredericksburg region. Maximum affordable housing costs scale proportionally with Area Median Income (AMI), ranging from about \$1,000 monthly for households below 30% AMI to over \$4,000 for those above 120% AMI.
+
+However, actual current housing costs demonstrate a compressed range between approximately \$1,500 and \$2,500 monthly across all income bands, creating particular affordability challenges for lower-income households.
 
 ```{r}
 
-# The data visualization below shows the cumulative change in households by tenure since 2010. 
-
-
-tenure <- read_rds("data/b25003.rds") |> 
-  filter(NAME != "Orange County, VA") |> 
-  group_by(year, tenure) |> 
-  summarise(estimate = sum(estimate)) |> 
-  ungroup() |> 
-  group_by(tenure) |> 
-  mutate(cum_chg = estimate - first(estimate)) |> 
-  filter(estimate > 0 )
-
-
-ggplot(tenure,
-       aes(x = year,
-           y = cum_chg,
-           fill = tenure)) +
-  geom_col() +
-  facet_wrap(~tenure) +
-  scale_fill_hda() +
-  scale_y_continuous(labels = number_format(big.mark = ",")) +
-  labs(title = "Change in households by tenure",
-       subtitle = "Cumulative change since 2010",
-       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, Table B25003.") +
-  theme_hda(base_size = 10)
-
-```
-
-```{r}
-
-income <- read_rds("data/b25118.rds") |> 
-  filter(NAME != "Orange County") |> 
-  group_by(year, tenure, income) |> 
-  summarise(estimate = sum(estimate)) |> 
-  filter(year == 2010 | year == 2022)
-
-level_order <- c("Less than $15,000", "$15,000 to $24,999", "$25,000 to $49,999", "$50,000 to $74,999", "$75,000 to $99,999", "$100,000 to $149,999", "$150,000 or more")
-
-
-ggplot(income,
-       aes(x = factor(income, level = level_order),
-           y = estimate,
-           fill = tenure)) +
-  geom_col(position = "dodge") +
-  facet_grid(year~tenure) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-  scale_y_continuous(labels = label_comma()) +
-  labs(title = "Households by income and tenure",
-       subtitle = "2010 versus 2021",
-       caption = "**Source:** U.S. Census Bureau, ACS 5-year estimates, Table B25118.") +
-  scale_fill_hda() +
-  theme_hda(base_size = 10) +
-  theme(axis.text.x = element_text(angle = 90, vjust = .2, size = 8))
-
-
-
-```
-
-```{r}
-#| eval: false
-
-pums_join <- read_rds("data/faar_pums_join.rds")
-
-pums_med_inc <- pums_join |> 
-  mutate(hh_size = case_when(
-    NP == 1 ~ 1,
-    NP == 2 ~ 2,
-    NP == 3 ~ 3, 
-    NP == 4 ~ 4,
-    TRUE ~ 5
-  )) |> 
-  mutate(hh_size = as.character(hh_size),
-         hh_size = case_when(
-           hh_size == "5" ~ "5 or more",
-           TRUE ~ hh_size
-         )) |> 
-  filter(SPORDER == 1) |> 
-  filter(tenure != "NA") |> 
-  mutate(inc = ADJINC*HINCP) |> 
-  group_by(hh_size, tenure) |> 
-  summarise(med_inc = weighted.median(inc, WGTP, na.rm = TRUE))
-
-title_text <- "<span style = 'color:#8baeaa'><b>Renter</b></span> and <span style = 'color:#445ca9'><b>homeowner</span> income by household size"
-ggplot(pums_med_inc,
-       aes(y = med_inc,
-           x = hh_size,
-           fill = tenure)) +
-  geom_col(position = "dodge") +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = dollar_format()) +
-  scale_fill_hda() +
-  labs(title = title_text,
-       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, PUMS Microdata.")
-
-
-```
-
-```{r}
-#| eval: false
-
-pums_join <- read_rds("data/faar_pums_join.rds")
-
-pums_med_inc <- pums_join |> 
-  mutate(hh_age = case_when(
-    HHLDRAGEP < 25 ~ "Under 25 years",
-    HHLDRAGEP >= 25 & HHLDRAGEP <=44 ~ "25 to 44 years",
-    HHLDRAGEP >= 45 & HHLDRAGEP <= 64 ~ "45 to 64 years",
-    HHLDRAGEP >= 65  ~ "65 years and over",
-  )) |>
-  filter(SPORDER == 1) |> 
-  filter(tenure != "NA") |> 
-  mutate(inc = ADJINC*HINCP) |> 
-  group_by(hh_age, tenure) |> 
-  summarise(med_inc = weighted.median(inc, WGTP, na.rm = TRUE))
-
-
-age_order <- c("Under 25 years", "25 to 44 years", "45 to 64 years", "65 years and over")
-pums_med_inc$hh_age <- factor(pums_med_inc$hh_age, levels = age_order)
-
-ggplot(pums_med_inc,
-       aes(y = med_inc,
-           x = hh_age,
-           fill = tenure)) +
-  geom_col(position = "dodge") +
-  theme_hda(base_size = 10) +
-  scale_y_continuous(labels = dollar_format())  +
-  scale_fill_hda() +
-  labs(title = title_text,
-       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, PUMS Microdata.")
-
-```
-
-
-```{r}
-
-supply_demand <- read_rds("data/fxburg_supply_demand.rds")
-
-ami_order <- factor(supply_demand$ami, levels = c("30% AMI or below", "31-50% AMI",
-                                           "51-80% AMI", "81-100% AMI", "101-120% AMI",
-                                           "121% AMI and greater"))
-
-
-title_text <- "<span style = 'color:#8baeaa'><b>Supply</b></span> and <span style = 'color:#445ca9'><b>Demand</span> in the region"
-
-
-
-ggplot(supply_demand,
-       aes(x = reorder(ami_order, desc(ami_order)),
-           y = estimate,
-           fill = value)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~tenure) +
-  theme_hda(base_size = 10) +
-  scale_fill_hda() +
-  coord_flip() +
-  labs(title = title_text)
-
-
-```
-
-
-```{r}
-
-# Who can afford home prices today?
-
-# Rent Q2 - 1765.885
-# Sales Q2 New  - 498745.0
-# Sales Q2 Resale - 450000.0
-
-# library(FinCal)
-# 
-# price_df <- data.frame(
-#   locality = c("Region"),
-#   new_price = c(450000),
-#   resale_price = c(498745.0),
-#   avg_rent = c(1765.885)
-# )
-# 
-# calc_income_needed <- function(data, new_price_col, resale_price_col, rent_col) {
-#   
-#   
-#   calc_buy_income <- function(med_price){
-#     downpayment <- 0.05 # 5% downpayment
-#     principal <- med_price - (med_price * downpayment)
-#     closingcosts <- 0.015 # 1.5% closing costs
-#     loanamt <- principal / (1 - closingcosts) # Closing costs added to loan amount 
-#     int_rate <- 0.0694 # U.S. WEEKLY AVG AS OF 05.23.2024
-#     utilities <- 250 # Assume $250/month for utilities
-#     
-#     payment <- abs(pmt(int_rate/12, 360, loanamt, 0)) + utilities
-#   
-#     inc_needed <- (payment/0.28)*12
-#     
-#     return(inc_needed)
-#   }
-#   
-#   data <- data %>%
-#     mutate(
-#       renter_income = format((!!sym(rent_col)/0.30) * 12, scientific = FALSE), # 30% of annual income goes to rent
-#       new_buyer_income = calc_buy_income(!!sym(new_price_col)),
-#       
-#       resale_buyer_income = calc_buy_income(!!sym(resale_price_col))
-#     )
-#   
-#   return(data)
-# }
-# 
-# # Assuming price_df is your data frame with the columns "median_price" and "avg_rent"
-# price_df <- calc_income_needed(price_df, "new_price", "resale_price", "avg_rent")
-# 
-# price_table <- price_df |> 
-#   pivot_longer(cols = 5:7)
-
-afford_df <- data.frame(
-  type = c("Rental", "New Construction Purchase", "Resale Purchase"),
-  cost = c("$1,765.89", "$498,745", "$450,000"),
-  income = c("$70,635.40", "$133,714.80", "$147,038.50")
+fig_subtitle1 <- paste(
+  "Range of monthly",
+  "<span style='color: #445ca9'><b>maximum affordable</b></span> and",
+  "<span style='color: #8baeaa'><b>actual current</b></span>",
+  "housing costs"
 )
 
-library(kableExtra)
-
-afford_df |> 
-  kbl(col.names = c("Housing Type", "2024 Q2 Cost", "Income Needed to Afford"),
-        align = "lrr") |> 
-  kable_material(c("striped", "hover")) |> 
-  kable_styling(font_size = 20)
-
-
-
-```
-
-```{r}
-#| eval: false
-
-# What can the average household in the region afford?
-
-pums_join <- read_rds("data/faar_pums_join.rds")
-
-pums_med_inc <- pums_join |> 
-  mutate(hh_age = case_when(
-    HHLDRAGEP < 25 ~ "Under 25 years",
-    HHLDRAGEP >= 25 & HHLDRAGEP <=44 ~ "25 to 44 years",
-    HHLDRAGEP >= 45 & HHLDRAGEP <= 64 ~ "45 to 64 years",
-    HHLDRAGEP >= 65  ~ "65 years and over",
-  )) |>
-  filter(SPORDER == 1) |> 
-  filter(tenure != "NA") |> 
-  mutate(inc = ADJINC*HINCP) |> 
-  group_by(hh_age, tenure) |> 
-  summarise(med_inc = weighted.median(inc, WGTP, na.rm = TRUE)) 
-
-pums_afford <- calc_affordable_rent(pums_med_inc, "med_inc")
-
-pums_afford <- calc_affordable_sales(pums_afford, "med_inc", 0.03, 0.10, 0.20)
-
-
-pums_afford_df <- pums_afford |> 
-  select(tenure, hh_age, affordable_rent, 7:9) |> 
-  pivot_longer(3:6,
-               names_to = "type") |> 
-  mutate(type = case_when(
-    type == "affordable_rent" ~ "Affordable rent",
-    type == "affordable_sales_0.03" ~ "Affordable purchase w/ 3% down",
-    type == "affordable_sales_0.1" ~ "Affordable purchase w/ 10% down",
-    type == "affordable_sales_0.2" ~ "Affordable purchase w/ 20% down"
-  )) |> 
-  filter(tenure == "Renter")
-
-age_order <- c("Under 25 years", "25 to 44 years", "45 to 64 years", "65 years and over")
-pums_afford_df$hh_age <- factor(pums_afford_df$hh_age, levels = age_order)
-
-ggplot(pums_afford_df,
-       aes(x = hh_age,
-           y = value,
-           fill = type)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~type, scales = "free_y") +
-  scale_y_continuous(labels = dollar_format()) +
-  scale_fill_hda() +
-  labs(title = "Income needed by renters",
-       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, PUMS Microdata; calculations by HDAdvisors.")
-
-
-```
-
-```{r}
-#| eval: false
-
-# What can the average household in the region afford?
-
-
-pums_join <- read_rds("data/faar_pums_join.rds")
-
-pums_med_inc <- pums_join |> 
-  mutate(hh_size = case_when(
-    NP == 1 ~ 1,
-    NP == 2 ~ 2,
-    NP == 3 ~ 3, 
-    NP == 4 ~ 4,
-    TRUE ~ 5
-  )) |> 
-  mutate(hh_size = as.character(hh_size),
-         hh_size = case_when(
-           hh_size == "5" ~ "5 or more",
-           TRUE ~ hh_size
-         )) |> 
-  filter(SPORDER == 1) |> 
-  filter(tenure != "NA") |> 
-  mutate(inc = ADJINC*HINCP) |> 
-  group_by(hh_size, tenure) |> 
-  summarise(med_inc = weighted.median(inc, WGTP, na.rm = TRUE))
-
-pums_afford <- calc_affordable_rent(pums_med_inc, "med_inc")
-
-pums_afford <- calc_affordable_sales(pums_afford, "med_inc", 0.03, 0.10, 0.20)
-
-
-pums_afford_df <- pums_afford |> 
-  select(tenure, hh_size, affordable_rent, 7:9) |> 
-  pivot_longer(3:6,
-               names_to = "type") |> 
-  mutate(type = case_when(
-    type == "affordable_rent" ~ "Affordable rent",
-    type == "affordable_sales_0.03" ~ "Affordable purchase w/ 3% down",
-    type == "affordable_sales_0.1" ~ "Affordable purchase w/ 10% down",
-    type == "affordable_sales_0.2" ~ "Affordable purchase w/ 20% down"
-  )) |> 
-  filter(tenure == "Renter")
-
-ggplot(pums_afford_df,
-       aes(x = hh_size,
-           y = value,
-           fill = type)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~type, scales = "free_y") +
-  scale_y_continuous(labels = dollar_format()) +
-  scale_fill_hda() +
-  labs(title = "Income needed by renters",
-       caption = "Source: U.S. Census Bureau, ACS 5-Year Estimates, PUMS Microdata; calculations by HDAdvisors.")
-
-
-```
-
-```{r}
-
-wages <- read_csv("data/faar_locality_wages.csv") |> 
-  filter(locality != "Orange") |> 
-  select(locality, job, salary, `salary type`) |> 
-  filter(`salary type` == "average")
-
-calc_affordable_rent <- function(data, input_col){
-  
-  data |> 
-    mutate(affordable_rent := (0.3*!!sym(input_col))/12)
-}
-
-wages_afford <- calc_affordable_rent(wages, "salary")
-
-wages_afford <- calc_affordable_sales(wages_afford, "salary", 0.03, 0.10, 0.20)
-
-wages_afford_df <- wages_afford |> 
-  select(locality, job, salary, affordable_rent,8:10) |> 
-  pivot_longer(4:7,
-               names_to = "type") |> 
-  mutate(type = case_when(
-    type == "affordable_rent" ~ "Affordable rent",
-    type == "affordable_sales_0.03" ~ "Affordable purchase w/ 3% down",
-    type == "affordable_sales_0.1" ~ "Affordable purchase w/ 10% down",
-    type == "affordable_sales_0.2" ~ "Affordable purchase w/ 20% down"
-  ))
-
-wages_afford_rent <- wages_afford_df |> 
-  filter(type == "Affordable rent") |> 
-  mutate(job_location = paste(job, locality, sep = "-"))
-
-ggplot(wages_afford_rent,
-       aes(x = reorder(job_location, value),
-           y = value,
-           fill = locality)) +
-  geom_col() +
-  scale_y_continuous(labels = dollar_format()) +
-  coord_flip() +
-  scale_fill_hda() +
-  theme_hda(base_size = 10) +
-  labs(title = "Affordable rent based on average salary",
-       caption = "Source: Virginia Department of Education; Bureau of Labor Statistics; calculations by HDAdvisors.")
-
-```
-
-
-```{r}
-
-# You need to run the chunk above to run this chunk.
-
-wages_afford_own <- wages_afford_df |> 
-  filter(type == "Affordable purchase w/ 20% down")|> 
-  mutate(job_location = paste(job, locality, sep = "-"))
-
-ggplot(wages_afford_own,
-       aes(x = reorder(job_location, value),
-           y = value,
-           fill = locality)) +
-  geom_col() +
-  scale_y_continuous(labels = dollar_format()) +
-  coord_flip() +
-  scale_fill_hda() +
-  theme_hda(base_size = 10) +
-  labs(title = "Affordable purchase price w/ 20% down based on average salary",
-       caption = "Source: Virginia Department of Education; Bureau of Labor Statistics; calculations by HDAdvisors.")
-
-
-```
-
-
-```{r}
-## Create a bar graph showing the distribution of households by tenure. Focus on showing the change in households by tenure in terms of percent change from 2019 to 2022.
-
-# Load necessary libraries
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(readr)
-
-# Read and process the data
-tenure_data <- read_rds("data/b25003_project.rds")
-
-# Filter for the years 2019 to 2022 and select necessary columns
-tenure_filtered <- tenure_data |> 
-  filter(year %in% c(2019, 2020, 2021, 2022)) |> 
-  select(year, tenure, estimate)
-
-# Calculate year-to-year percent changes
-tenure_percent_change <- tenure_filtered |> 
-  pivot_wider(names_from = year, values_from = estimate) |> 
+pums_faar_hh |> 
+  filter(hh_income > 0) |>
+  mutate(tenure = paste0(tenure, "s")) |> 
   mutate(
-    change_2020 = ((`2020` - `2019`) / `2019`) * 100,
-    change_2021 = ((`2021` - `2020`) / `2020`) * 100,
-    change_2022 = ((`2022` - `2021`) / `2021`) * 100
-  ) |> 
-  select(tenure, change_2020, change_2021, change_2022) |> 
-  pivot_longer(cols = starts_with("change"), names_to = "year", values_to = "percent_change") |> 
-  mutate(year = case_when(
-    year == "change_2020" ~ "2020",
-    year == "change_2021" ~ "2021",
-    year == "change_2022" ~ "2022"
-  ))
-
-# Plotting the data
-ggplot(tenure_percent_change, aes(x = year, y = percent_change, fill = tenure)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme_hda(base_size = 10) +  # Apply custom theme
-  scale_fill_hda() +           # Apply custom scale
-  labs(title = "Year-to-Year Percent Change in Households by Tenure (2019-2022)",
-       x = "Year",
-       y = "Percent Change (%)",
-       fill = "Tenure") +
-  geom_text(aes(label = round(percent_change, 1)), position = position_dodge(width = 0.9), vjust = -0.5)
-
-
-
-```
-
-```{r}
-#| label: fig-age-tenure
-#| fig-cap: "Change in households by age and tenure"
-
-##B25007: Tenure by Age of Householder - 
-
-##Create a bar chart showing the change in households by tenure and age of household from 2019 to 2022. Group by Under 25 years, 25 to 44 years, 45 to 64 years, and 65 years and over. Aggregate to the regional level. This should help to show household formation trends among renters and homeowners.
-
-## First make an RDS file for b25007
-
-
-b25007_data <- read_rds("data/b25007_data.rds")
-
-FAAR_age <- b25007_data |> 
-  group_by(NAME, year, tenure, age) |> 
-  summarise(estimate = sum(estimate)) |> 
-  pivot_wider(names_from = year,
-              values_from = estimate) |> 
-  select(tenure, age, `2019`, `2022`) |> 
-  transform(change = `2022` - `2019`) |> 
-  group_by(NAME, tenure, age) |> 
-  summarise(change = sum(change)) |> 
-  mutate(age = fct_relevel(age, "Under 25 years old")) |> 
-  group_by(tenure, age) |> 
-  summarise(change = sum(change))
-
-subtitle_text <- "Change in <span style = 'color:#011E41'><b>homeowners</b></span> and <span style = 'color:#40C0C0'><b>renters</b></span> from 2010 to 2021"
-
-FAAR_age_plot <- ggplot(cv_age,
-       aes(x = tenure, 
-           y = change,
-           fill = tenure,
-           data_id = change,
-           tooltip = label_number(big.mark = ",", style_positive = "plus", style_negative = "minus")(change)))  +
-  facet_wrap(~age, nrow =1) +
-  geom_col(position = "dodge") +
-  geom_col_interactive(size = 2) +
-  theme_hda() +
-  add_zero_line("y") +
-  scale_fill_hfv() +
-  scale_y_continuous(labels = label_number(big.mark = ",", style_positive = "plus", style_negative = "minus")) +
-  theme(axis.text.x = element_blank()) +
-  labs(title = "Change in households by age",
-       subtitle = subtitle_text,
-       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25007.") +
-  plot_annotation(
-    theme = theme(
-    plot.subtitle = element_markdown(
-       margin = margin(b = 0.4, unit = 'cm'),
-        size = 11.5
-    )))
-
-
-```
-
-
-```{r}
-#| eval: false
-
-##BLS: Top 5 Occupations and Annual Wage
-
-## Create a text chart that shows the top five occupations in the region with their respective annual wage.
-
-# Load libraries
-library(dplyr)
-library(ggplot2)
-
-# transform column titles 
-
-occupation_data <- oews_data %>%
-  rename(
-    occupation = occ_title,
-    employees_2023 = tot_emp_2023, 
-    employees_2020 = tot_emp_2020 
-  )
-
-# Aggregate data by occupation
-aggregated_data <- occupation_data %>%
-  group_by(occupation) %>%
-  summarise(
-    employees_2023 = sum(employees_2023, na.rm = TRUE),
-    employees_2020 = sum(employees_2020, na.rm = TRUE),
-    a_median_2023 = mean(a_median_2023, na.rm = TRUE),  
-    a_median_2020 = mean(a_median_2020, na.rm = TRUE)   
-  )
-
-# Calculate average number of employees
-
-aggregated_data <- aggregated_data %>%
-  mutate(average_employees = (employees_2023 + employees_2020) / 2)
-
-
-# Get top five occupations by total employed
- 
-top_occupations <- aggregated_data %>%
-  arrange(desc(average_employees)) %>%
-  slice_head(n = 5)
-
-# Calculate affordability for top occupations
-# Define a sample affordcalc function for illustration
-
-affordcalc <- function(annual_wage, type) {
-  if (type == "rent") {
-    return(annual_wage * 0.3 / 12)  # 30% of monthly income for rent
-  } else if (type == "sale") {
-    return(annual_wage * 3)  # Assuming 3 times annual income for home price
-  }
-}
-
-# Calculate 2023 affordability for top occupations
-affordability <- top_occupations %>%
-  mutate(
-    affordable_rent = affordcalc(a_median_2023, "rent"),
-    affordable_sale = affordcalc(a_median_2023, "sale")
-  )
-
-# Create a text chart  
-text_chart <- affordability %>%
-  mutate(
-    text = paste0(
-      "Occupation: ", occupation, "\n",
-      "Median Wage 2023: $", round(a_median_2023, 2), "\n",
-      "Affordable Rent: $", round(affordable_rent, 2), "\n",
-      "Affordable Sale: $", round(affordable_sale, 2)
+    wf = case_when(
+      core_workforce == TRUE ~ "Core workforce",
+      .default = "Not core workforce"
+    ),
+    costs = case_when(
+      cost_own == -1 ~ cost_rent,
+      .default = cost_own
     )
-  ) %>%
-  pull(text) %>%
-  paste(collapse = "\n\n")
-
-# Print the text chart
-cat(text_chart)
-
-# Reformat in HDA style/kableExtra 
-## Install needed packages 
-
-install.packages("kableExtra")
-library(kableExtra)
-library(dplyr)
-
-# Example text_chart
-text_chart <- "
-Occupation: Data Scientist
-Jobs: 5000
-Mean annual wage: $90,000
-Affordable Rent: $2,250
-Affordable Home Sale: $270,000
-
-Occupation: Software Engineer
-Jobs: 6000
-Mean annual wage: $85,000
-Affordable Rent: $2,125
-Affordable Home Sale: $255,000
-"
-cat(text_chart)
-
-# Format the table using kable and kableExtra::kable_styling
-library(dplyr)
-library(kableExtra)
-install.packages("scales")
-library(scales)
-
-styled_table <- affordability %>%
-  select(occupation, employees_2023, a_median_2023, affordable_rent, affordable_sale) %>%
+  ) |> 
+  mutate(max_hsg_cost = hh_income/12 * 0.3) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar) |> 
+  summarise(
+    cost_wm = survey_median(costs, vartype = "cv"),
+    cost_q = survey_quantile(costs, c(0.25, 0.75)),
+    max_wm = survey_median(max_hsg_cost, vartype = "cv"),
+    max_q = survey_quantile(max_hsg_cost, c(0.25, 0.75)),
+  ) |> 
+  ungroup() |> 
+  pivot_longer(
+    cols = 2:13,
+    names_to = "stat",
+    values_to = "value"
+  ) |> 
   mutate(
-    employees_2023 = comma(employees_2023),
-    a_median_2023 = dollar(a_median_2023),
-    affordable_rent = dollar(affordable_rent),
-    affordable_sale = dollar(affordable_sale)
-  ) %>%
-  kable(caption = "Top Five Occupations and What they Can Afford in 2023",
-        align = "lrrr",
-        col.names = c("Occupation", "Jobs", "Median Wage 2023", "Affordable Rent", "Affordable Home Sale")) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+    type = case_when(
+      str_detect(stat, "cost") ~ "Housing cost",
+      .default = "Max cost"
+    ), .after = 1
+  ) |> 
+  mutate(
+    stat = str_remove_all(stat, "cost_|max_")
+  ) |> 
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) |> 
+  ggplot(aes(x = wm, y = ami_faar, color = type)) +
+  geom_point(size = rel(2), position = position_dodge2(0.5)) +
+  geom_segment(
+    aes(y = ami_faar, x = q_q25, xend = q_q75),
+    linewidth = rel(1.5),
+    lineend = "round",
+    alpha = 0.8,
+    position = position_dodge2(0.5)
+  ) +
+  scale_color_hda(-1) +
+  scale_x_continuous(
+    limits = c(100, 5800),
+    breaks = seq(1000, 5000, 1000),
+    expand = c(0, 0),
+    labels = label_dollar(),
+    position = "top"
+  ) +
+  labs(
+    title = "Affordable and actual housing costs by AMI",
+    x = "Lines show range containing 50% of typical values",
+    subtitle = fig_subtitle1,
+    caption = pums_cap
+  ) +
+  theme_hda(
+    flip_gridlines = T,
+    axis.text.y = element_text(size = rel(1.2)),
+    axis.title.x = element_text()
+  )
 
-# Print or display the styled table
-styled_table
+
 
 ```
 
+As a result of this mismatch, housing cost burdens reveal stark disparities between income groups, with similar patterns varying between core workforce and other households. Among core workforce households, severe cost burdens affect about two-thirds of those below 30% AMI, while an additional 44% of households between 30-50% AMI face moderate cost burdens.
+
+The burden decreases significantly for higher income brackets, with only 7-8% of households above 80% AMI experiencing any cost burden. Similar patterns emerge for non-core workforce households, though with notably higher cost burdens in the 80-100% AMI range at 19% compared to 8% for core workforce households.
+
 ```{r}
-#| label: fig-hhsize
-#| fig-cap: "Change in households by size and tenure"
+#| label: fig-cb
+#| fig-cap: "Housing affordability by AMI"
 
-#ACS B25010 Household Size of Occupied Housing Units by Tenure
+fig_subtitle2 <- paste(
+  "Percent of households ",
+  "<span style='color: #e9ab3f'><b>cost-burdened</b></span> or",
+  "<span style='color: #e76f52'><b>severely cost-burdened</b></span>"
+)
 
-## Are renter households increasing in size? What does this mean for rental housing demand? Are homeowner households increasing or decreasing? Create a bar chart that compares average household size by tenure. 
-
-library(dplyr)
-library(tidyr)
-
-
-# Read the data
-b25010_data <- read_rds("data/b25010_decade_region.rds")
-
-# Inspect the data structure
-str(b25010_data)
-
-faar_hhsize <- b25010_data |> 
-  group_by(year, tenure, size) |> 
-  summarise(estimate = sum(estimate)) |> 
-  pivot_wider(names_from = year,
-              values_from = estimate) |> 
-  select(tenure, size, `2010`, `2021`) |> 
-  transform(change = `2021` - `2010`) 
-
-##load ggplot
-library(ggplot2)
-install.packages("ggtext")
-library(ggtext)
-
-
-subtitle_text <- "Change in <span style = 'color:#445ca9'><b>homeowners</b></span> and <span style = 'color:#8baeaa'><b>renters</b></span> from 2010 to 2021"
-
-faar_hhsize_plot <- ggplot(faar_hhsize,
-       aes(x = tenure,
-           y = change,
-           fill = tenure,
-           tooltip = paste("Change:", label_number(big.mark = ",", style_positive = "plus", style_negative = "minus")(change)))) +
+pums_faar_hh |> 
+  mutate(
+    wf = case_when(
+      core_workforce == TRUE ~ "Core workforce",
+      .default = "Not core workforce"
+    )
+  ) |> 
+  mutate(tenure = paste0(tenure, "s")) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(wf, ami_faar, cb_label) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  ungroup() |> 
+  filter(cb_label != "Not cost-burdened") |> 
+  ggplot(aes(y = ami_faar, x = pct, fill = cb_label)) +
+  facet_wrap(~wf, nrow = 2, scales = "free_x") +
   geom_col() +
-  facet_wrap(~size, nrow = 1) +
-  theme_hda() +
-  add_zero_line("y") +
-  scale_fill_hda() +
-  labs(title = "Change in households by size",
-       subtitle = subtitle_text,
-       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25010.",
-       y = "Change",
-       x = "Tenure") +
-  theme(axis.text.x = element_blank(),
-        plot.subtitle = element_markdown(
-          margin = margin(b = 0.4, unit = 'cm'),
-          size = 11.5
-        )) +
-  scale_y_continuous(labels = label_number(big.mark = ",", style_positive = "plus", style_negative = "minus"))
-
-  
-publish_plot(faar_hhsize_plot)
-
-
+  geom_text(
+    data = . %>% filter(pct > 0.04),
+    aes(label = label_percent(accuracy = 1)(pct)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_x_continuous(expand = c(0, 0.03)) +
+  scale_fill_manual(values = c(cb_pal[1], cb_pal[2])) +
+  labs(
+    title = "Housing affordability by AMI",
+    subtitle = fig_subtitle2,
+    caption = pums_cap
+  ) +
+  add_zero_line("x") +
+  theme_hda(
+    panel.grid.major.y = element_blank(),
+    #axis.text.y = element_blank(),
+    axis.text.x = element_blank(),
+    strip.text = element_markdown(margin = margin(t = 5))
+  )
 
 ```
 
 ```{r}
-## Checking changes between tenures over time and exploring chart types for B25010
+#| label: fig-gap-cb
+#| fig-cap: "Households who need affordable homes"
+#| eval: false
 
-# Assuming `tenure` is numeric representing years
-faar_hhsize$tenure <- factor(faar_hhsize$tenure)
+pums_gap_cb <- pums_faar_hh |> 
+  filter(
+    hh_income > 0,
+    #tenure == 'Renter',
+    cb_label != "Not cost-burdened"
+  ) |> 
+  #mutate(tenure = paste0(tenure, "s")) |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(core_workforce, ami_faar) |> 
+  summarise(
+    n = survey_total(vartype = "cv")
+  ) |> 
+  ungroup() |> 
+  mutate(
+    pct = n/sum(n),
+    ymax = cumsum(pct),
+    ymin = c(0, head(ymax, n = -1)),
+    pct_label = (ymax + ymin)/2
+  ) |>
+  mutate(
+    core_workforce = case_match(
+      core_workforce,
+      core_workforce = T ~ "Core workforce",
+      .default = "Not core workforce"
+    )
+  )
 
-# Define the order of years for x-axis
-years <- as.character(2010:2022)
-
-# Plotting code
-faar_hhsize_plot <- ggplot(faar_hhsize,
-                           aes(x = tenure,
-                               y = change,
-                               fill = as.factor(tenure),
-                               tooltip = paste("Change:", label_number(big.mark = ",", style_positive = "plus", style_negative = "minus")(change)))) +
-  geom_area() +
-  facet_wrap(~size, nrow = 1) +
-  theme_hda() +
-  scale_fill_hue() +
-  labs(title = "Change in households by size over years",
-       subtitle = subtitle_text,
-       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25010.",
-       y = "Change",
-       x = "Year") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.subtitle = element_markdown(
-          margin = margin(b = 0.4, unit = 'cm'),
-          size = 11.5
-        )) +
-  scale_y_continuous(labels = label_number(big.mark = ",", style_positive = "plus", style_negative = "minus"))
-
-faar_hhsize_plot
-
-
-```
-
-
-
-
-```{r}
-#B25007: Tenure by Age of Householder
-
-## When are households forming? Are homeowner households forming later in life?
-
-## Create a bar chart showing the change in households by tenure and age of household from 2019 to 2022. Group by Under 25 years, 25 to 44 years, 45 to 64 years, and 65 years and over. Aggregate to the regional level. This should help to show household formation trends among renters and homeowners.
-
-
-#| label: fig-hhsize
-#| fig-cap: "Change in households by age and tenure"
-
-library(dplyr)
-library(tidyr)
-install.packages("ggiraphExtra")
-library(ggiraphExtra)
-
-# Read the data
-b25007_data <- read_rds("data/b25007_region.rds")
-
-# Inspect the data structure
-str(b25007_data)
-
-# Summarize regional data 
-age_table <- b25007_data |>
-  group_by(year, tenure, age) |>
-  summarise(total_estimate = sum(estimate, na.rm = TRUE)) |>
-  ungroup()
-
-
-# Create a new data frame to calculate the changes
-age_table_changes <- age_table |>
- filter(year >= 2018 & year <= 2022) %>%
-  group_by(tenure, age) %>%
-  mutate(change = total_estimate - lag(total_estimate, default = first(total_estimate))) %>%
-  ungroup()
-
-print(age_table_changes)
-
-
-
-# Plot the bar chart
-ggplot(age_table_changes, aes(x = age, y = change, fill = tenure)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.6) +
-  labs(title = "Change in Households by Age",
-       subtitle = "Change in <span style='color:#445ca9'><b>homeowners</b></span> and <span style='color:#8baeaa'><b>renters</b></span> from 2018 to 2022",
-       x = "Age Group",
-       y = "Change in Number of Households",
-       fill = "Tenure") +
-  theme_hda() +
-  scale_y_continuous(limits = c(-1000, 2000)) +
-  scale_fill_manual(values = c("#445ca9", "#8baeaa"), name = "Tenure", labels = c("Homeowner", "Renter"))
-
-
-```
-
-
-```{r}
-
-## Cost Burden by Tenure 
-
-library(ggplot2)
-library(ggiraph)
-library(ggiraphExtra)
-install.packages("scales")
-library(scales)
-
-
-#| label: fig-cb-tenure
-#| fig-cap: "Cost-burdened households by tenure"
-
-faar_cb <- b25106
-
-str(faar_cb)
-
-faar_cb <- faar_cb |> 
-  group_by(year, tenure, cb) |> 
-  summarise(estimate = sum(estimate)) |> 
-  filter(cb == "Cost-burdened") |> 
-  mutate(year_label = as.character(year))
-
-faar_cb_plot <- ggplot(faar_cb,
-                     aes(x = year_label,
-                         y = estimate,
-                         fill = tenure,
-                         data_id = estimate,
-                         tooltip = label_number(big.mark = ",")(estimate))) +
+pums_gap_cb |> 
+  ggplot(aes(x = n, y = ami_faar, fill = fct_rev(core_workforce))) +
   geom_col() +
-  geom_col_interactive() +
-  facet_grid(~tenure) +
-  theme_hda() +
-  add_zero_line("y") +
-  scale_fill_hda() +
-  scale_y_continuous(labels = label_number(big.mark = ",")) + 
-  theme(axis.text.x = element_text(angle = 90, vjust = .2)) +
-  labs(title = "Cost-burdened households by tenure",
-       subtitle = "From 2010 to 2021",
-       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25106.")
+  geom_text(
+    data = . %>% filter(n > 500),
+    aes(label = label_comma()(n)),
+    position = position_stack(vjust = 0.5),
+    color = "white"
+  ) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_fill_hda(-1, guide = guide_legend(reverse = T)) +
+  labs(
+    title = "Households who need affordable homes",
+    subtitle = "Number of households paying more than 30% of income on housing",
+    caption = pums_cap
+  ) +
+  theme_hda(
+    panel.grid.major.y = element_blank(),
+    legend.position = "top",
+    legend.justification = "left",
+    axis.text.x = element_blank()
+  )
 
-publish_plot(faar_cb_plot)
+```
 
-print(faar_cb_plot)
+## Rental housing gap
 
-# pdf(file = "faar_cb_plot.pdf", height = 3, width = 5)
-# print(faar_cb_plot)
-# dev.off()
+Wage and rent growth patterns across the Fredericksburg region from 2015 to 2024 reveal a concerning dynamic of persistent unaffordability. While both metrics demonstrate parallel upward trajectories, with cumulative increases ranging from 30-50% across localities, this synchronization effectively absorbed most household income gains into housing costs.
 
+This pattern is particularly evident in Fredericksburg proper, where the close tracking between wage and rent growth meant that households earning the average annual wage saw minimal improvement in their discretionary income after accounting for housing expenses.
+
+The parallel growth trajectories effectively locked in existing affordability challenges, as wage increases that might have provided relief from housing cost burdens were instead captured by proportional rent increases. This dynamic appears most pronounced in urban centers like Fredericksburg and Stafford, where the close coupling between wage and rent growth perpetuated, rather than alleviated, existing patterns of housing stress for cost-burdened households.
+
+```{r}
+
+# Load wage data
+
+faar_wages_yr <- read_rds("data/faar_qcew.rds") |> 
+  filter(period == "annual")
+
+faar_wages_qtr <- read_rds("data/faar_qcew.rds") |> 
+  filter(period == "quarterly") |> 
+  #filter(year > 2019) |> 
+  group_by(name) |> 
+  arrange(name, year, qtr) |> 
+  mutate(chg = avg_annual_pay - first(avg_annual_pay), # Cumulative change
+         pct_wage = chg / first(avg_annual_pay)) # Percent change
+
+# Load rent data
+
+faar_rent_qtr <- read_rds("data/faar_costar.rds") |>
+  select(1:3, 7:8) |> 
+  filter(name != "Region") |> 
+  #filter(year > 2019) |> 
+  group_by(name) |> 
+  arrange(name, year, qtr) |> 
+  mutate(chg = asking_rent_per_unit - first(asking_rent_per_unit), # Cumulative change
+         pct_rent = chg / first(asking_rent_per_unit)) |>  # Percent change
+  select(1:3, 7)
+
+rent_inc <- faar_wages_qtr |> 
+  select(name, year, qtr, pct_wage) |> 
+  left_join(faar_rent_qtr) |> 
+  pivot_longer(
+    cols = 4:5,
+    names_to = "type",
+    values_to = "pct_chg"
+  ) |> 
+  mutate(yrqtr = paste0(year, " Q", qtr))
 
 ```
 
 ```{r}
+#| label: fig-rent-inc
+#| fig-cap: "Wage growth versus rent growth by locality"
 
-#Cost Burden by Income Group 
+fig_subtitle3 <- paste(
+  "Percent change in ",
+  "<span style='color: #445ca9'><b>median asking rent</b></span> and",
+  "<span style='color: #8baeaa'><b>average annual wage</b></span> ",
+  "from 2015 Q1 to 2024 Q1"
+)
 
-
-systemfonts::register_font("Lato")
-gdtools::register_gfont("Lato")
-gdtools::register_gfont("Roboto Slab")
-
-
-#| label: fig-cb-income
-#| fig-cap: "Cost-burdened households by income"
-
-
-faar_cb <- b25106
-
-str(faar_cb)
-
-# Create income groups based on the specified ranges
-
-faar_cb <- faar_cb %>%
-  mutate(faar_cb = case_when(
-    income <= 19999 ~ "$20,000 or less",
-    income >= 20000 & income <= 34999 ~ "$20,000 to $34,999",
-    income >= 35000 & income <= 49999 ~ "$35,000 to $49,999",
-    income >= 50000 & income <= 74999 ~ "$50,000 to $74,999",
-    income >= 75000 ~ "$75,000 or more",
-    TRUE ~ "Other"  # Optional catch-all for values not matching any range
-  ))
-
-# Convert income_group to factor to maintain categorical nature
-faar_cb_income_group<- factor(faar_cb,
-                                      levels = c("$20,000 or less", "$20,000 to $34,999", 
-                                                 "$35,000 to $49,999", "$50,000 to $74,999", 
-                                                 "$75,000 or more"))
-
-# Now faar_cb will have an income_group column categorized as specified
-
-faar_cb_income <- faar_cb |> 
-  group_by(year, tenure, income, cb) |> 
-  summarise(estimate = sum(estimate)) |> 
-  filter(cb == "Cost-burdened") |> 
-  mutate(year = as.character(year))
-
-#visualization 
-
-faar_cb_income_plot <- ggplot(faar_cb_income,
-                              aes(x = income,
-                                  y = estimate,
-                                  fill = tenure,
-                                  tooltip = paste("Estimate: ", format(estimate, big.mark = ",")))) +
-  geom_col(position = "dodge") + # Use position = "dodge" to place bars side by side
-  facet_grid(~tenure) + 
-  theme_hda() +  
-  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +  # add_zero_line("y") replaced with geom_hline()
-  scale_fill_hda() +  
-  scale_y_continuous(labels = label_number(big.mark = ",")) +  
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.2)) +
-  labs(title = "Cost-burdened households by income",
-       subtitle = "From 2010 to 2021",
-       x = "Income Group",
-       y = "Number of Cost-Burdened Households",
-       caption = "**Source:** U.S. Census Bureau, American Community Survey, 5-year estimates, Table B25106.")
-
-# Display the plot
-print(faar_cb_income_plot)
-
-# Add interactive features with ggiraph
-ggiraph_plot <- girafe(ggobj = faar_cb_income_plot)
-
-# Display the plot
-print(ggiraph_plot) #I could use help on thinking through how to better visualize this - perhaps in shiny it works?
+ggplot(rent_inc, aes(x = yrqtr, y = pct_chg, color = type, group = type)) +
+  facet_wrap(~name) +
+  geom_line() +
+  scale_color_hda() +
+  scale_y_continuous(
+    limits = c(-0.15, 0.61),
+    breaks = seq(-0.1, 0.5, 0.1),
+    labels = label_percent()
+  ) +
+  add_zero_line() +
+  theme_hda(
+    axis.text.x = element_blank()
+  ) +
+  labs(
+    title = "Wage growth versus rent growth by locality",
+    subtitle = fig_subtitle3,
+    caption = "**Sources:** BLS Quarterly Census of Employment and Wages; CoStar Group, Inc."
+  )
 
 ```
 
+The rental housing gap analysis reveals severe shortages for lower-income households in the region. The deficit is most acute for households at 30% AMI or below, with a shortfall of approximately 5,600 affordable units. This shortage gradually diminishes at higher income levels, with about 2,300 units needed for households between 31-50% AMI and roughly 450 units for the 51-80% AMI bracket. In contrast, households above 80% AMI have access to abundant affordable and very affordable rental options, suggesting a significant mismatch between housing supply and the needs of lower-income residents.
+
+```{r}
+#| label: fig-rent-gap
+#| fig-cap: "Rental housing gap by AMI"
+
+faar_chas |> 
+  mutate(
+    estimate = case_when(
+      gapcode == "Gap" ~ estimate * -1,
+      gapcode == "Matches or less than income" ~ estimate
+    )
+  ) |> 
+  summarise(
+    estimate = sum(estimate),
+    .by = c(household_income, match)
+  ) |> 
+  mutate(
+    match = factor(match, c("Unaffordable", "Affordable", "Very affordable"))
+  ) |> 
+  #filter(household_income != "80% AMI or greater") |> 
+  ggplot(aes(x = estimate, y = household_income, fill = fct_rev(match))) +
+  geom_col() +
+  geom_text(
+    data = . %>% filter(estimate < 0),
+    aes(label = label_comma()(estimate)),
+    color = hda_pal[5],
+    nudge_x = -300,
+    hjust = 1
+  ) +
+  scale_fill_manual(
+    values = c(hda_pal[1], hda_pal[2], hda_pal[5]),
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  scale_x_continuous(
+    limits = c(-7000, 14500),
+    labels = label_comma()
+  ) +
+  add_zero_line("x") +
+  theme_hda(
+    flip_gridlines = T,
+    legend.position = "top"
+  ) +
+  labs(
+    title = "Rental housing gap by AMI",
+    subtitle = "Affordability of current home for all renters in region",
+    caption = "**Source:** U.S Department of Housing and Urban Development, Comprehensive Housing Affordability Strategy (CHAS), Table 18C."
+  )
+
+
+# To wipe out cost burden among all renters, at least **8,300 new affordable rentals** would be needed. This can be achieved by the development of dedicated affordable housing, as well as direct rental assistance to households.
+
+```
+
+::: {.callout-note}
+### Affordability categories
+
+*Unaffordable* — Housing costs exceed the maximum affordable threshold for that household's AMI level  
+*Affordable* — Housing costs align with or fall slightly below the household's AMI level  
+*Very affordable* — Housing costs fall substantially below what the household could afford at their AMI level
+
+:::
+
+### Core workforce rental affordability
+
+. . .
+
+
+## Homeownership gap
+
+. . .
+
+### Core workforce homeownership affordability
+
+. . .

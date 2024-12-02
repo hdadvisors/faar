@@ -283,7 +283,7 @@
     "href": "market-rental.html",
     "title": "6  Rental market",
     "section": "",
-    "text": "6.1 Existing supply\nMost of the approximate 35,240 rental homes in the Fredericksburg region have 2 or 3 bedrooms, with these sizes accounting for nearly 73% of all rental units. One-bedroom units make up about 14% of rentals, while larger homes with 4 or more bedrooms represent approximately 14% of the rental stock. A small number of rental units (778) have no bedrooms, typically representing studio apartments.\n[1] 35237\n\n\n\n\n\n\n\n\nFigure 6.1: Renter-occupied homes by number of bedrooms\nSingle-family homes comprise the majority of rental properties in the region, with detached houses accounting for about 37% of units and attached homes making up another 16%. Multi-unit properties of varying sizes constitute about 45% of rentals, split between smaller properties with 2-4 units (6%), mid-sized buildings with 5-19 units (27%), and larger complexes with 20 or more units (12%). Manufactured homes account for 4% of rental properties.\nFigure 6.2: Renter-occupied homes by structure type\nThe most common rent range in the region is $1,500 to $1,999 per month, representing nearly 31% of all rental units. Another 27% of rentals fall between $1,000 and $1,499 monthly. Lower-cost units with rents under $1,000 make up about 15% of the market, while higher-end rentals above $2,000 represent approximately 22%. About 5% of rental units report no cash rent, typically indicating housing provided as part of employment or family arrangements.",
+    "text": "6.1 Existing supply\nMost of the approximate 35,240 rental homes in the Fredericksburg region have 2 or 3 bedrooms, with these sizes accounting for nearly 73% of all rental units. One-bedroom units make up about 14% of rentals, while larger homes with 4 or more bedrooms represent approximately 14% of the rental stock. A small number of rental units (778) have no bedrooms, typically representing studio apartments.\nFigure 6.1: Renter-occupied homes by number of bedrooms\nSingle-family homes comprise the majority of rental properties in the region, with detached houses accounting for about 37% of units and attached homes making up another 16%. Multi-unit properties of varying sizes constitute about 45% of rentals, split between smaller properties with 2-4 units (6%), mid-sized buildings with 5-19 units (27%), and larger complexes with 20 or more units (12%). Manufactured homes account for 4% of rental properties.\nFigure 6.2: Renter-occupied homes by structure type\nThe most common rent range in the region is $1,500 to $1,999 per month, representing nearly 31% of all rental units. Another 27% of rentals fall between $1,000 and $1,499 monthly. Lower-cost units with rents under $1,000 make up about 15% of the market, while higher-end rentals above $2,000 represent approximately 22%. About 5% of rental units report no cash rent, typically indicating housing provided as part of employment or family arrangements.",
     "crumbs": [
       "Housing market",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Rental market</span>"
@@ -320,6 +320,72 @@
     "crumbs": [
       "Housing market",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Rental market</span>"
+    ]
+  },
+  {
+    "objectID": "gaps-current.html",
+    "href": "gaps-current.html",
+    "title": "7  Current housing gaps",
+    "section": "",
+    "text": "7.1 Overview\nMonthly housing costs show substantial variation across income bands in the Fredericksburg region. Maximum affordable housing costs scale proportionally with Area Median Income (AMI), ranging from about $1,000 monthly for households below 30% AMI to over $4,000 for those above 120% AMI.\nHowever, actual current housing costs demonstrate a compressed range between approximately $1,500 and $2,500 monthly across all income bands, creating particular affordability challenges for lower-income households.\nAs a result of this mismatch, housing cost burdens reveal stark disparities between income groups, with similar patterns varying between core workforce and other households. Among core workforce households, severe cost burdens affect about two-thirds of those below 30% AMI, while an additional 44% of households between 30-50% AMI face moderate cost burdens.\nThe burden decreases significantly for higher income brackets, with only 7-8% of households above 80% AMI experiencing any cost burden. Similar patterns emerge for non-core workforce households, though with notably higher cost burdens in the 80-100% AMI range at 19% compared to 8% for core workforce households.\nFigure 7.1: Housing affordability by AMI",
+    "crumbs": [
+      "Housing gaps",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Current housing gaps</span>"
+    ]
+  },
+  {
+    "objectID": "gaps-current.html#rental-housing-gap",
+    "href": "gaps-current.html#rental-housing-gap",
+    "title": "7  Current housing gaps",
+    "section": "7.2 Rental housing gap",
+    "text": "7.2 Rental housing gap\nWage and rent growth patterns across the Fredericksburg region from 2015 to 2024 reveal a concerning dynamic of persistent unaffordability. While both metrics demonstrate parallel upward trajectories, with cumulative increases ranging from 30-50% across localities, this synchronization effectively absorbed most household income gains into housing costs.\nThis pattern is particularly evident in Fredericksburg proper, where the close tracking between wage and rent growth meant that households earning the average annual wage saw minimal improvement in their discretionary income after accounting for housing expenses.\nThe parallel growth trajectories effectively locked in existing affordability challenges, as wage increases that might have provided relief from housing cost burdens were instead captured by proportional rent increases. This dynamic appears most pronounced in urban centers like Fredericksburg and Stafford, where the close coupling between wage and rent growth perpetuated, rather than alleviated, existing patterns of housing stress for cost-burdened households.\n\n\n\n\n\n\n\n\nFigure 7.2: Wage growth versus rent growth by locality\n\n\n\n\n\nThe rental housing gap analysis reveals severe shortages for lower-income households in the region. The deficit is most acute for households at 30% AMI or below, with a shortfall of approximately 5,600 affordable units. This shortage gradually diminishes at higher income levels, with about 2,300 units needed for households between 31-50% AMI and roughly 450 units for the 51-80% AMI bracket. In contrast, households above 80% AMI have access to abundant affordable and very affordable rental options, suggesting a significant mismatch between housing supply and the needs of lower-income residents.\n\n\n\n\n\n\n\n\nFigure 7.3: Rental housing gap by AMI\n\n\n\n\n\n\n\n\n\n\n\nAffordability categories\n\n\n\nUnaffordable — Housing costs exceed the maximum affordable threshold for that household’s AMI level\nAffordable — Housing costs align with or fall slightly below the household’s AMI level\nVery affordable — Housing costs fall substantially below what the household could afford at their AMI level\n\n\n\nCore workforce rental affordability\n. . .",
+    "crumbs": [
+      "Housing gaps",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Current housing gaps</span>"
+    ]
+  },
+  {
+    "objectID": "gaps-current.html#homeownership-gap",
+    "href": "gaps-current.html#homeownership-gap",
+    "title": "7  Current housing gaps",
+    "section": "7.3 Homeownership gap",
+    "text": "7.3 Homeownership gap\n. . .\n\nCore workforce homeownership affordability\n. . .",
+    "crumbs": [
+      "Housing gaps",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Current housing gaps</span>"
+    ]
+  },
+  {
+    "objectID": "gaps-proj.html",
+    "href": "gaps-proj.html",
+    "title": "8  Projected housing gaps",
+    "section": "",
+    "text": "8.1 Overview\n. . .",
+    "crumbs": [
+      "Housing gaps",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Projected housing gaps</span>"
+    ]
+  },
+  {
+    "objectID": "gaps-proj.html#household-projections",
+    "href": "gaps-proj.html#household-projections",
+    "title": "8  Projected housing gaps",
+    "section": "8.2 Household projections",
+    "text": "8.2 Household projections\n. . .",
+    "crumbs": [
+      "Housing gaps",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Projected housing gaps</span>"
+    ]
+  },
+  {
+    "objectID": "gaps-proj.html#important-trends",
+    "href": "gaps-proj.html#important-trends",
+    "title": "8  Projected housing gaps",
+    "section": "8.3 Important trends",
+    "text": "8.3 Important trends\n. . .",
+    "crumbs": [
+      "Housing gaps",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Projected housing gaps</span>"
     ]
   }
 ]

@@ -31,10 +31,10 @@ book:
       chapters:
         - market-homeown.qmd
         - market-rental.qmd
-  #  - part: "Housing gaps"
-  #    chapters:
-  #      - gaps-current.qmd
-  #      - gaps-proj.qmd
+    - part: "Housing gaps"
+      chapters:
+        - gaps-current.qmd
+        - gaps-proj.qmd
   #  - part: "Local fact sheets"
   #    chapters:
   #      - local-fred.qmd
@@ -52,8 +52,8 @@ format:
     grid: 
       sidebar-width: 300px
     fontsize: "100%"
-    template-partials:
-     - toc.html
+    #template-partials:
+    # - toc.html
     toc-title: "On this page"
     number-depth: 2
     reference-location: margin

@@ -1,9 +1,11 @@
 {
-  "hash": "e28b2edd15cdf25d94305896a3e2fd50",
+  "hash": "5403e1bf2bb5bc535d3b1c943abbb978",
   "result": {
     "engine": "knitr",
-    "markdown": "# Projected gaps {#sec-gaps-proj}\n\n\n::: {.cell}\n\n:::\n\n\n. . .\n\n\n::: {.cell layout-align=\"left\"}\n\n:::\n",
-    "supporting": [],
+    "markdown": "# Projected housing gaps {#sec-projected-gaps}\n\n\n\n\n::: {.cell}\n\n:::\n\n\n\n## Overview\n\n. . .\n\n## Household projections\n\n. . .\n\n## Important trends\n\n. . .\n\n",
+    "supporting": [
+      "gaps-proj_files"
+    ],
     "filters": [
       "rmarkdown/pagebreak.lua"
     ],

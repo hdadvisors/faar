@@ -6,7 +6,7 @@ library(readxl)
 
 faar <- c("51630", "51033", "51099", "51177", "51179", "51137") # FAAR FIPS codes
 
-years <- 2019:2020
+years <- 2021
 
 sumlev <- "050"
 
@@ -25,7 +25,6 @@ walk(years, ~{
 
 # Tables to get
 tables <- c(7, 9, paste0(18, LETTERS[1:3]))
-
 
 # Go through and write out the various tables
 walk(tables, function(table) {
@@ -75,13 +74,13 @@ walk(tables, function(table) {
       left_join(dict, by = c("Code" = "Column Name"))
     cleaned_with_dict
   })
-  file_name <- glue("Table{table}_2019to2020.csv")
+  file_name <- glue("Table{table}_2021.csv")
   message(glue("Writing file {file_name}..."))
-  write_csv(mytable, glue("data/{file_name}"))
+  write_csv(mytable, glue("data/CHAS/{file_name}"))
 })
 
 
-cb_7 <- read_csv("data/Table7_2019to2020.csv")|> 
+cb_7 <- read_csv("data/CHAS/Table7_2021.csv") |> 
   clean_names() |> 
   filter(line_type == "Detail") |> 
   select(year, estimate, moe, county, fips, tenure, household_income, household_type, cost_burden) |> 

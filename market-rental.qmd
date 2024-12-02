@@ -45,7 +45,7 @@ renter_bedroom <- read_rds("data/b25042.rds") |>
   ) |> 
   mutate(br = fct_wrap(br, 10))
 
-sum(renter_bedroom$estimate)
+# sum(renter_bedroom$estimate)
 
 ggplot(
   renter_bedroom,

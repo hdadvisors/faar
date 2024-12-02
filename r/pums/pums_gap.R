@@ -39,7 +39,26 @@ faar_ami_join <- faar_ami |>
         "ami120" ~ "100-120% AMI"
       )
   ) |> 
-  select(hh_size, ami_faar, income, aff_rent, aff_own)
+  arrange(hh_size, ami_faar) |> 
+  mutate(
+    ami_faar = factor(
+      ami_faar, levels = c("Below 30% AMI", "30-50% AMI", "50-80% AMI", "80-100% AMI", "100-120% AMI")
+    )
+  ) |> 
+  #select(hh_size, ami_faar, income, aff_rent, aff_own)
+  select(hh_size, ami_faar, aff_rent)
+
+
+
+pums_gap_rent <- pums_faar_hh |> 
+  filter(tenure == "Renter") |> 
+  left_join(
+    faar_ami_join,
+    by = "hh_size"
+  )
+
+
+
 
 
 pums_gap_supply <- pums_faar_hh |> 
