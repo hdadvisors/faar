@@ -25,7 +25,10 @@ pums_faar_hh <- read_rds("data/pums/pums_faar.rds") |> filter(SPORDER == 1)
 # Source caption for most plots
 pums_cap <- "**Source:** HDAdvisors calculations of 2018-2022 ACS 5-year data."
 
-faar_chas <- read_rds("data/tb_18_match.rds")
+#faar_chas_7 <- read_rds("data/chas_t7.rds")
+
+#faar_chas_18 <- read_rds("data/chas_t18c.rds")
+
 
 ```
 
@@ -36,6 +39,8 @@ Monthly housing costs show substantial variation across income bands in the Fred
 However, actual current housing costs demonstrate a compressed range between approximately \$1,500 and \$2,500 monthly across all income bands, creating particular affordability challenges for lower-income households.
 
 ```{r}
+#| label: fig-costs
+#| fig-cap: "Affordable and actual housing costs by AMI"
 
 fig_subtitle1 <- paste(
   "Range of monthly",
@@ -114,8 +119,6 @@ pums_faar_hh |>
     axis.title.x = element_text()
   )
 
-
-
 ```
 
 As a result of this mismatch, housing cost burdens reveal stark disparities between income groups, with similar patterns varying between core workforce and other households. Among core workforce households, severe cost burdens affect about two-thirds of those below 30% AMI, while an additional 44% of households between 30-50% AMI face moderate cost burdens.
@@ -123,7 +126,7 @@ As a result of this mismatch, housing cost burdens reveal stark disparities betw
 The burden decreases significantly for higher income brackets, with only 7-8% of households above 80% AMI experiencing any cost burden. Similar patterns emerge for non-core workforce households, though with notably higher cost burdens in the 80-100% AMI range at 19% compared to 8% for core workforce households.
 
 ```{r}
-#| label: fig-cb
+#| label: fig-cb-pums
 #| fig-cap: "Housing affordability by AMI"
 
 fig_subtitle2 <- paste(
@@ -178,6 +181,8 @@ pums_faar_hh |>
   )
 
 ```
+
+. . .
 
 ```{r}
 #| label: fig-gap-cb
@@ -315,11 +320,214 @@ ggplot(rent_inc, aes(x = yrqtr, y = pct_chg, color = type, group = type)) +
 
 ```
 
-The rental housing gap analysis reveals severe shortages for lower-income households in the region. The deficit is most acute for households at 30% AMI or below, with a shortfall of approximately 5,600 affordable units. This shortage gradually diminishes at higher income levels, with about 2,300 units needed for households between 31-50% AMI and roughly 450 units for the 51-80% AMI bracket. In contrast, households above 80% AMI have access to abundant affordable and very affordable rental options, suggesting a significant mismatch between housing supply and the needs of lower-income residents.
+```{r}
+#| eval: false
+
+categorize_size <- function(hh_size) {
+  case_when(
+    hh_size <= 2 ~ "1-2 persons",
+    hh_size == 3 ~ "3 persons",
+    hh_size == 4 ~ "4 persons",
+    hh_size >= 5 ~ "5+ persons"
+  )
+}
+
+categorize_bedrooms <- function(bedrooms) {
+  case_when(
+    bedrooms <= 1 ~ "0-1 bedrooms",
+    bedrooms == 2 ~ "2 bedrooms",
+    bedrooms == 3 ~ "3 bedrooms",
+    bedrooms >= 4 ~ "4+ bedrooms"
+  )
+}
+
+size_bed_lookup <- data.frame(
+  size_cat = c("1-2 persons", "3 persons", "4 persons", "5+ persons"),
+  bed_cat = c("0-1 bedrooms", "2 bedrooms", "3 bedrooms", "4+ bedrooms")
+)
+
+faar_ami <- read_rds("data/pums/faar_ami_pums.rds") |> 
+  select(3:5) |> 
+  mutate(hh_size = str_remove_all(hh_size, "-person")) |> 
+  mutate(
+    cost_low = case_when(
+      level == "ami30" ~ 0,
+      .default = (lag(income) + 1)/12*0.3
+    ), .after = 2, .by = hh_size
+  ) |> 
+  mutate(cost_up = income/12*0.3) |> 
+  mutate(
+    label = case_when(
+      level == "ami30" ~ "Below 30% AMI",
+      level == "ami50" ~ "30-50% AMI",
+      level == "ami80" ~ "50-80% AMI",
+      level == "ami100" ~ "80-100% AMI",
+      level == "ami120" ~ "100-120% AMI",
+    )
+  ) |> 
+  select(hh_size, level, label, cost_low, cost_up) |> 
+  add_row(
+    hh_size = c(as.character(1:8)),
+    level = "ami999",
+    label = "Above 120% AMI",
+    cost_low = (c(97700, 111650, 125600, 139550, 150700, 161900, 173050, 184200) + 1)/12*0.3,
+    cost_up = 9999
+  )
+
+faar_ami_cat <- faar_ami |> 
+  mutate(
+    size_cat = case_when(
+      hh_size <= 2 ~ "1-2 persons",
+      hh_size == 3 ~ "3 persons",
+      hh_size == 4 ~ "4 persons",
+      hh_size >= 5 ~ "5+ persons"
+    )
+  ) |> 
+  group_by(level, size_cat) |>  # Using label instead of creating ami_cat
+  summarise(
+    max_cost = max(cost_up),
+    .groups = "drop"
+  ) |> 
+  rename(ami_faar = level) |> 
+  pivot_wider(
+    names_from = ami_faar,
+    values_from = max_cost
+  ) |> 
+  select(1, 4:6, 2:3)
+
+pums_gap_survey <- pums_faar_hh |> 
+  filter(
+    tenure == 'Renter',
+    hh_income > 0
+  ) |>
+  select(1, 3:4, 6, 17, 18, 31, 35, 37, 58:217) |> 
+  mutate(
+    hh_size_cat = categorize_size(hh_size),
+    .after = 5
+  ) |> 
+  mutate(
+    unit_bed_cat = categorize_bedrooms(bedrooms),
+    .after = 6
+  ) |> 
+  left_join(size_bed_lookup, by = c("unit_bed_cat" = "bed_cat")) |> 
+  rename(unit_size_cat = size_cat) |> 
+  left_join(faar_ami_cat, by = c("hh_size_cat" = "size_cat")) |> 
+  mutate(
+    aff30 = cost_rent <= ami30,
+    aff50 = cost_rent <= ami50,
+    aff80 = cost_rent <= ami80,
+    aff100 = cost_rent <= ami100,
+    aff120 = cost_rent <= ami120,
+    aff999 = TRUE
+  ) |> 
+  mutate(
+    ami_unit = case_when(
+      # First check standard AMI progression
+      aff30 ~ "Below 30% AMI",
+      aff50 ~ "30-50% AMI",
+      aff80 ~ "50-80% AMI",
+      aff100 ~ "80-100% AMI",
+      aff120 ~ "100-120% AMI",
+      aff999 ~ "Above 120% AMI",
+      # Catch any units that don't fit the pattern
+      .default = "Needs review"
+    )
+  )
+
+pums_gap_demand <- pums_gap_survey |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_faar, hh_size_cat) |> 
+  summarise(
+    hh = survey_total(vartype = "cv")
+  ) |> 
+  ungroup() 
+
+pums_gap_supply <- pums_gap_survey |> 
+  to_survey(type = "housing", design = "rep_weights") |>
+  group_by(ami_unit, unit_bed_cat) |> 
+  summarise(
+    units = survey_total(vartype = "cv"),
+    .groups = "drop"
+  ) |> 
+  complete(
+    ami_unit, unit_bed_cat,
+    fill = list(units = 0)
+  )
+
+pums_gap_deficit <- pums_gap_demand |> 
+  left_join(size_bed_lookup, by = c("hh_size_cat" = "size_cat")) |> 
+  left_join(pums_gap_supply, by = c("ami_faar" = "ami_unit", "bed_cat" = "unit_bed_cat")) |> 
+  mutate(deficit = units - hh) |> 
+  select(1, hh_size = 2, bedrooms = 5, 3, 6, 8)
+
+write_rds(pums_gap_deficit, "data/pums_gap_deficit.rds")
+
+```
+
+The Fredericksburg region faces significant rental housing gaps at both ends of the income spectrum. Nearly 4,000 extremely low-income households (earning below 30% AMI) lack access to affordable rental units, while a similar deficit exists for households earning above 120% AMI.
+
+The middle market shows substantial surpluses, particularly for households earning between 50-80% AMI where there are almost 8,000 more units than households. This suggests many higher-income renters are likely occupying units that would be affordable to lower-income households, while the lowest-income renters face severe challenges finding affordable housing.
+
+```{r}
+#| label: fig-gap-pums
+#| fig-cap: "Surplus or deficit of rental units by AMI"
+
+pums_gap_deficit <- read_rds("data/pums_gap_deficit.rds")
+
+pums_gap_deficit |> 
+  summarise(
+    deficit = sum(deficit),
+    .by = ami_faar
+  ) |> 
+  mutate(
+    sign = case_when(
+      deficit < 0 ~ "neg",
+      .default = "pos"
+    )
+  ) |> 
+  mutate(
+    ami_faar = fct_case_when(
+      ami_faar == "Below 30% AMI" ~ "Below 30% AMI",
+      ami_faar == "30-50% AMI" ~ "30-50% AMI",
+      ami_faar == "50-80% AMI" ~ "50-80% AMI",
+      ami_faar == "80-100% AMI" ~ "80-100% AMI",
+      ami_faar == "100-120% AMI" ~ "100-120% AMI",
+      ami_faar == "Above 120% AMI" ~ "Above 120% AMI"
+    )
+  ) |> 
+  ggplot(aes(x = deficit, y = ami_faar, fill = sign)) +
+  geom_col() +
+  geom_text(
+    data = . %>% filter(sign == "neg"),
+    aes(label = deficit),
+    nudge_x = 500,
+    color = "white"
+  ) +
+  geom_text(
+    data = . %>% filter(sign == "pos"),
+    aes(label = deficit),
+    nudge_x = -500,
+    color = "white"
+  ) +
+  scale_fill_manual(values = c(hda_pal[4], hda_pal[1])) +
+  add_zero_line("x") +
+  theme_hda(flip_gridlines = T) +
+  labs(
+    title = "Surplus or deficit of rental units by AMI",
+    subtitle = "Rental gap for Fredericksburg region",
+    caption = pums_cap
+  )
+
+```
+
+
 
 ```{r}
 #| label: fig-rent-gap
 #| fig-cap: "Rental housing gap by AMI"
+#| eval: false
+
+# The rental housing gap analysis reveals severe shortages for lower-income households in the region. The deficit is most acute for households at 30% AMI or below, with a shortfall of approximately 5,600 affordable units. This shortage gradually diminishes at higher income levels, with about 2,300 units needed for households between 31-50% AMI and roughly 450 units for the 51-80% AMI bracket. In contrast, households above 80% AMI have access to abundant affordable and very affordable rental options, suggesting a significant mismatch between housing supply and the needs of lower-income residents.
 
 faar_chas |> 
   mutate(
@@ -367,26 +575,293 @@ faar_chas |>
 
 # To wipe out cost burden among all renters, at least **8,300 new affordable rentals** would be needed. This can be achieved by the development of dedicated affordable housing, as well as direct rental assistance to households.
 
+# ::: {.callout-note}
+# ### Affordability categories
+# 
+# *Unaffordable* — Housing costs exceed the maximum affordable threshold for that household's AMI level  
+# *Affordable* — Housing costs align with or fall slightly below the household's AMI level  
+# *Very affordable* — Housing costs fall substantially below what the household could afford at their AMI level
+# 
+# :::
+
 ```
-
-::: {.callout-note}
-### Affordability categories
-
-*Unaffordable* — Housing costs exceed the maximum affordable threshold for that household's AMI level  
-*Affordable* — Housing costs align with or fall slightly below the household's AMI level  
-*Very affordable* — Housing costs fall substantially below what the household could afford at their AMI level
-
-:::
 
 ### Core workforce rental affordability
 
-. . .
+```{r}
+
+locality_wages <- read_csv("data/faar_locality_wages.csv") |> 
+  filter(
+    job_actual != "Fire Protection",
+    !(locality == "Orange" & job_actual == "Social Assistance")
+  )
+
+rate <- 0.065  # 6.5% annual interest rate
+tax_ins <- 0.25  # Property tax and insurance as percentage of monthly payment (25%)
+dp <- 0.20  # Down payment percentage (20%)
+
+local_wages_cty <- locality_wages |> 
+  summarize(
+    salary = mean(salary), .by = locality
+  ) |> 
+  mutate(
+    aff_rent = salary/12*0.3,
+    aff_own = 
+      (salary/12*0.28) /
+      ((rate/12 * (1 + rate/12)^360) /
+         ((1+rate/12)^360 - 1) /
+         (1-(tax_ins/12)) /
+         (1-dp))
+  )
+
+```
+
+Public sector workers in King George can afford the highest monthly rent at \$1,620, followed by Caroline at \$1,556 and Spotsylvania at \$1,509. Police, fire, and teaching professionals in Fredericksburg and Stafford face somewhat tighter rental budgets, with affordable limits of \$1,423 and \$1,333 respectively. Orange has the lowest affordable rent threshold at $1,249.
+
+For context, the average one-bedroom unit in the region rents for \$1,620, while two-bedroom units average \$1,812.
+
+```{r}
+#| label: fig-rent-cwf
+#| fig-cap: "Affordable rents for public sector salaries"
+
+local_wages_cty |> 
+  ggplot(aes(x = aff_rent, y = fct_reorder(locality, aff_rent), label = label_dollar(accuracy = 1)(aff_rent))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", hjust = 0.5, nudge_x = -100) +
+  geom_vline(xintercept = 1620, color = "grey") +
+  geom_vline(xintercept = 1812, color = "grey") +
+  geom_text(
+    aes(x = 1620, y = "King George", label = "Average\n1-bed\nrent:\n$1,620"), vjust = 0.6, hjust = 0, nudge_x = 20, size = 2
+  ) +
+  geom_text(
+    aes(x = 1812, y = "King George", label = "Average\n2-bed\nrent:\n$1,812"), vjust = 0.6, hjust = 0, nudge_x = 20, size = 2
+  ) +
+  scale_x_continuous(limits = c(0, 2200), expand = c(0.01, 0.01), labels = label_dollar()) +
+  scale_y_discrete(expand = c(0.1, 0)) +
+  add_zero_line("x") +
+  labs(
+    title = "Affordable rents for public sector salaries",
+    subtitle = "Based on average wages for police, fire, and teacher jobs",
+    caption = "**Sources:** HDAdvisors calculations of local government salary data; CoStar Group, Inc."
+  ) +
+  theme_hda(flip_gridlines = T)
+
+```
 
 
 ## Homeownership gap
 
-. . .
+```{r}
+
+calc_min_income <- function(price, 
+                          rate = 0.065,
+                          tax_ins = 0.25,
+                          dp = 0.20,
+                          term = 30,
+                          dti = 0.28) {
+  
+  # Calculate monthly payment based on price
+  monthly_loan <- price * (1 - dp) * 
+    (rate/12 * (1 + rate/12)^(term * 12)) / 
+    ((1 + rate/12)^(term * 12) - 1)
+  
+  # Add taxes and insurance to get total monthly payment
+  monthly_total <- monthly_loan / (1 - tax_ins/12)
+  
+  # Calculate annual income needed based on DTI ratio
+  annual_income <- (monthly_total / dti) * 12
+  
+  return(annual_income)
+}
+
+```
+
+Most modestly-sized homes -- let alone larger ones --- are out of reach for typical renters. The median renter income of \$55,500 falls \$33,026 short of affording even a three-bedroom home. This gap expands dramatically for larger homes, with four and five-plus bedroom homes requiring more than double the typical renter's income.
+
+This disparity effectively locks many renters out of homeownership entirely, as the income requirements for every home size far exceed their earning capacity. The situation suggests a significant portion of the region's renters may remain unable to build wealth through homeownership unless there are major changes in either home prices, interest rates, or wage growth.
+
+```{r}
+#| label: fig-rent-own
+#| fig-cap: "Affordable home purchase prices for public sector salaries"
+
+# pums_faar_hh |> 
+#   filter(tenure == "Renter") |> 
+#   to_survey(type = "housing", design = "rep_weights") |>
+#   summarise(
+#     minc = survey_median(hh_income, vartype = "cv")
+#   )
+
+mls_cap = "**Sources:** Fredericksburg Area Association of REALTORS®; Bright MLS."
+
+faar_mls <- read_rds("data/faar_mls.rds") |> 
+  mutate(list_date = close_date - days(dom), .after = 6) |> 
+  mutate(list_month = floor_date(list_date, unit = "month"), .after = 7)
+
+faar_mls_sf <- read_rds("data/faar_mls_sf.rds")
+
+mls_sales_2024 <- faar_mls |> 
+  filter(year == 2024) |> 
+  mutate(
+    beds = fct_case_when(
+      beds < 3 ~ "2 bedrooms",
+      beds == 3 ~ "3 bedrooms",
+      beds == 4 ~ "4 bedrooms",
+      beds > 4 ~ "5+ bedrooms"
+    )
+  ) |> 
+  summarise(
+    msp = median(close_price),
+    .by = beds
+  ) |> 
+  mutate(min_inc = calc_min_income(msp))
+  
+mls_sales_2024 |> 
+  filter(beds != "2 bedrooms") |> 
+  ggplot(aes(x = min_inc, y = beds)) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(
+    aes(label = label_currency()(min_inc)),
+    color = "white",
+    nudge_x = -10000
+  ) +
+  geom_vline(xintercept = 55500, color = "black") +
+  geom_text(
+    aes(x = 55500, y = "5+ bedrooms", label = "Median renter income:\n$55,500"), hjust = 0, nudge_x = 2000, color = "white"
+  ) +
+  add_zero_line("x") +
+  theme_hda(flip_gridlines = T, axis.text.x = element_blank(), panel.grid.major.x = element_blank()) +
+  labs(
+    title = "Minimum income needed to purchase median home by bedroom",
+    subtitle = "Based on all sales in 2024 through November",
+    caption = mls_cap
+  )
+
+```
+
+Assumptions for calculations of minimum incomes:
+
+* Loan terms = 30-year fixed rate mortgage at 6.50%
+* Taxes and insurance = 25% of monthly loan payment
+* Down payment = 20% of purchase price
+* Debt-to-income ratio = 0.28
+
+```{r}
+
+pums_bed_fn <- function() {
+
+  pums_bed <- pums_faar_hh |>
+    filter(tenure == "Renter") |>
+    mutate(
+      aff3bed = case_when(
+        hh_income >= 88525.73 ~ TRUE,
+        .default = FALSE
+      ),
+      aff4bed = case_when(
+        hh_income >= 116303.59 ~ TRUE,
+        .default = FALSE
+      ),
+      aff5bed = case_when(
+        hh_income >= 139432.52 ~ TRUE,
+        .default = FALSE
+      ),
+      hh_size = case_when(
+        hh_size <= 2 ~ "1-2 persons",
+        hh_size == 3 ~ "3 persons",
+        hh_size == 4 ~ "4 persons",
+        hh_size >= 5 ~ "5+ persons"
+      )
+    ) |> 
+    to_survey(type = "housing", design = "rep_weights")
+
+  pums_aff3bed <- pums_bed |> 
+    group_by(hh_size, aff3bed) |> 
+    summarise(n = survey_total(vartype = "cv")) |> 
+    mutate(bed = "3 bedroom", .after = 1) |> 
+    rename(tf = 3)
+  
+  pums_aff4bed <- pums_bed |> 
+    group_by(hh_size, aff4bed) |> 
+    summarise(n = survey_total(vartype = "cv")) |> 
+    mutate(bed = "4 bedroom", .after = 1) |> 
+    rename(tf = 3)
+  
+  pums_aff5bed <- pums_bed |> 
+    group_by(hh_size, aff5bed) |> 
+    summarise(n = survey_total(vartype = "cv")) |> 
+    mutate(bed = "5+ bedrooms", .after = 1) |> 
+    rename(tf = 3)
+  
+  bind_rows(pums_aff3bed, pums_aff4bed, pums_aff5bed)
+  
+}
+
+pums_afford_br <- pums_bed_fn() |> 
+  filter(tf == TRUE) |> 
+  filter(!n %in% c(2170, 1447, 505, 606, 2170, 2005)) |> 
+  mutate(
+    n = case_match(
+      n,
+      1394 ~ 1394 - 916,
+      1529 ~ 1529 - 859,
+      1130 ~ 1130 - 434,
+      .default = n
+    )
+  )
+
+```
+
+Among households with 1-2 persons, approximately 4,000 current renters could theoretically afford a 3-bedroom home based on their income. However, the market dynamics become more complex for larger households.
+
+For 3-person households, about 1,200 renters could afford homes split between 3 and 4 bedrooms, while 4-person households show a similar pattern with roughly 1,000 qualified buyers. The most constrained segment appears to be households with 5+ persons, where only about 500 renters could afford homes sized appropriately for their needs (4+ bedrooms).
+
+```{r}
+#| label: fig-afford-br
+#| fig-cap: "Number of renters who can afford median-priced homes"
+
+
+pums_afford_br |> 
+  ggplot(aes(x = n, y = hh_size, fill = bed)) +
+  geom_col() +
+  scale_fill_hfv() +
+  add_zero_line("x") +
+  theme_hda(
+    flip_gridlines = T, legend.position = "top"
+  ) +
+  labs(
+    title = "Number of renters who can afford median-priced homes",
+    subtitle = "Based on all sales in 2024 through November",
+    caption = "**Sources:** Fredericksburg Area Association of REALTORS®; Bright MLS; ACS PUMS."
+  )
+
+```
+
+::: {.callout-note}
+This analysis suggests a substantial pool of qualified buyers across all household sizes who remain in the rental market, likely due to supply constraints rather than financial limitations.
+:::
 
 ### Core workforce homeownership affordability
 
-. . .
+The data reveals a significant affordability gap for public sector workers in the region. While their salaries support maximum home purchases ranging from \$144,439 in Orange to \$187,385 in King George, the actual median home prices are substantially higher.
+
+Stafford shows the starkest contrast --- while public sector workers can afford homes up to \$154,160, the median sales price has climbed above \$500,000 by 2024. Similar gaps exist in all localities, with median prices typically ranging from \$350,000 to \$450,000, far exceeding what police officers, firefighters, and teachers can afford on their salaries.
+
+```{r}
+#| label: fig-own-own
+#| fig-cap: "Affordable home purchase prices for public sector salaries"
+
+local_wages_cty |> 
+  ggplot(aes(x = aff_own, y = fct_reorder(locality, aff_own), label = label_dollar(accuracy = 1)(aff_own))) +
+  geom_col(fill = hda_pal[1]) +
+  geom_text(color = "white", hjust = 0.5, nudge_x = -15000) +
+  scale_x_continuous(expand = c(0.01, 0.01), labels = label_dollar(accuracy = 1)) +
+  scale_y_discrete(expand = c(0.1, 0)) +
+  add_zero_line("x") +
+  labs(
+    title = "Affordable home purchase prices for public sector salaries",
+    subtitle = "Based on average wages for police, fire, and teacher jobs",
+    caption = "**Sources:** HDAdvisors calculations of local government salary data."
+  ) +
+  theme_hda(flip_gridlines = T)
+
+```
+

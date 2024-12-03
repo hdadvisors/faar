@@ -10,7 +10,7 @@ years <- 2021
 
 sumlev <- "050"
 
-dir.create(glue("data/{sumlev}"))
+#dir.create(glue("data/chas"))
 
 walk(years, ~{
   url <- glue("https://www.huduser.gov/PORTAL/datasets/cp/{.x - 4}thru{.x}-{sumlev}-csv.zip")
