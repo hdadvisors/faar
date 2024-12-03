@@ -1,18 +1,9 @@
-install.packages("sf")
-install.packages("ggplot2")
-install.packages("scales")
-install.packages("tigris")
-install.packages("dplyr")
 
 
-remotes::install_github("hdadvisors/hdatools")
 
 library(tidyverse)
-library(ggplot2)
 library(sf)
-library(scales)
 library(hdatools)
-library(dplyr)
 library(tigris)
 
 
@@ -24,8 +15,10 @@ wecoop <- read_rds("data/wecoop.rds") %>%
   mutate(fips = as.character(fips))
 
 #List of FAAR counties
-FAAR_counties <- c("Caroline County", "King George County", "Orange County", 
+faar_co <- c("Caroline County", "King George County", "Orange County", 
                           "Spotsylvania County", "Stafford County", "Fredericksburg city")
+
+faar_fips <- c("51033", "51099", "51137", "51177", "51179", "51630")
 
 wecoop_filtered <- wecoop %>%
   group_by(fips, name) %>%
