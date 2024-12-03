@@ -50,6 +50,9 @@ for (file in files) {
 
 }
 
+
+## Assemble all data ----------------------------
+
 # Combine all dataframes into one
 faar_geocode <- bind_rows(geocoded_dfs)
 
@@ -269,8 +272,6 @@ faar_sales <- bind_rows(
 )
 
 write_rds(faar_sales, "data/faar_sales.rds")
-
-
 
 
 ## Remove all categories but Name, Closing Date, Closing Price

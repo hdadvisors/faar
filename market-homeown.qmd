@@ -394,7 +394,13 @@ ggplot(filter(bps_local, year != 2024), aes(x = year, y = index, color = name)) 
 
 ```
 
-. . .
+New single-family construction has been spread throughout the region, but several concentrated areas are noticeable on the map below. These include larger subdivisions around the following places:
+
+* Ladysmith and Bowling Green (Caroline County)
+* Hop Yard Landing (King George County)
+* New Post and Harrison Village (Spotsylvania County)
+* Southern Gateway, Embrey Mill, and Shelton Woods (Stafford County)
+* Lake of the Woods (Orange County)
 
 ```{r}
 #| label: fn-make-hex-map
@@ -481,7 +487,7 @@ faar_mls_sf |>
 
 ```
 
-Four-bedroom homes consistently represent the largest segment of new construction, peaking at approximately 350 new units sold in 2022. Smaller three-bedroom homes maintained steady construction levels around 250 units annually, while five-bedroom homes showed relative stability at about 100 units annually. Totals for 2024 are through April only.
+Four-bedroom homes consistently represent the largest segment of new construction, peaking at approximately 350 new units sold in 2022. Smaller three-bedroom homes maintained steady construction levels around 250 units annually, while five-bedroom homes showed relative stability at about 100 units annually.
 
 ```{r}
 #| label: fig-nc-beds
@@ -522,7 +528,7 @@ ggplot(filter(mls_nc_sf, beds != "Other"), aes(x = year, y = n, fill = beds)) +
   ) +
   labs(
     title = "Number of new homes by bedroom",
-    subtitle = "All new construction homes sold from 2020 through April 2024",
+    subtitle = "All new construction homes sold from 2020 through November 2024",
     caption = mls_cap
   )
 ```
@@ -554,7 +560,7 @@ ggplot(filter(mls_nc_sf, beds != "Other"), aes(x = year, y = fin_sqft, color = b
   ) +
   labs(
     title = "Median finished size of new homes by bedroom",
-    subtitle = "All new construction homes sold from 2020 through April 2024",
+    subtitle = "All new construction homes sold from January 2020 through November 2024",
     caption = mls_cap
   )
 
@@ -571,7 +577,6 @@ The total volume of home sales in the Fredericksburg region shows distinct seaso
 #| fig-cap: "Total monthly home sales"
 
 mls_sales <- faar_mls |> 
-  filter(close_month != "2024-05-01") |> 
   mutate(
     year = year(close_month),
     month = month(close_month, label = T),
@@ -600,7 +605,7 @@ ggplot(mls_sales, aes(x = month, y = sales, alpha = year, color = year, fill = y
   add_zero_line() +
   labs(
     title = "Total monthly home sales",
-    subtitle = "All homes sold in region from January 2020 through April 2024",
+    subtitle = "All homes sold in region from January 2020 through November 2024",
     caption = mls_cap
   ) +
   theme_hda(
@@ -616,7 +621,6 @@ The median time homes spend on the market reveals significant market evolution o
 #| fig-cap: "Monthly median days on market"
 
 mls_dom <- faar_mls |> 
-  filter(close_month != "2024-05-01") |> 
   mutate(
     year = year(close_date),
     month = month(close_date, label = T),
@@ -642,7 +646,7 @@ ggplot(mls_dom, aes(x = month, y = dom, alpha = year, color = year, fill = year,
   add_zero_line() +
   labs(
     title = "Median monthly days on market",
-    subtitle = "All homes sold in region from January 2020 through April 2024",
+    subtitle = "All homes sold in region from January 2020 through November 2024",
     caption = mls_cap
   ) +
   theme_hda(
@@ -651,14 +655,13 @@ ggplot(mls_dom, aes(x = month, y = dom, alpha = year, color = year, fill = year,
 
 ```
 
-Median home sale prices demonstrate consistent upward momentum throughout the period. Starting from approximately \$300,000 in early 2020, prices have risen steadily, with particularly sharp increases during 2021 and 2022. Current median prices hover around \$425,000, representing a roughly 40% increase over the four-year period, though the rate of appreciation appears to have moderated in recent months.
+Median home sale prices demonstrate consistent upward momentum throughout the period. Starting from approximately \$300,000 in early 2020, prices have risen steadily, with particularly sharp increases during 2021 and 2022. Current median prices (as of November 2024) hover around \$470,000, representing a roughly 55% increase over the four-year period, though the rate of appreciation appears to have moderated in recent months.
 
 ```{r}
 #| label: fig-price-line
 #| fig-cap: "Monthly median sales price"
 
 mls_msp <- faar_mls |> 
-  filter(close_month != "2024-05-01") |> 
   mutate(
     year = year(close_date),
     month = month(close_date, label = T),
@@ -689,7 +692,7 @@ ggplot(mls_msp, aes(x = month, y = msp, alpha = year, color = year, fill = year,
   add_zero_line() +
   labs(
     title = "Monthly median home sales price",
-    subtitle = "All homes sold in region from January 2020 through April 2024",
+    subtitle = "All homes sold in region from January 2020 through November 2024",
     caption = mls_cap
   ) +
   theme_hda(
@@ -698,7 +701,7 @@ ggplot(mls_msp, aes(x = month, y = msp, alpha = year, color = year, fill = year,
 
 ```
 
-The distribution of closing prices across different price segments highlights the market's structural transformation. In 2020, about 45% of sales occurred below \$300,000, while only 5% exceeded \$500,000. By 2024, this distribution has shifted dramatically --- only 9% of sales fall below \$300,000, while approximately 41% of transactions occur above \$500,000, reflecting both home price appreciation and changes in the composition of sales activity.
+The distribution of closing prices across different price segments highlights the market's structural transformation. In early 2020, about 45% of sales occurred below \$300,000, while only 5% exceeded \$500,000. By late 2024, this distribution has shifted dramatically --- only 8% of sales fall below \$300,000, while approximately 51% of transactions occur above \$500,000, reflecting both home price appreciation and changes in the composition of sales activity.
 
 ```{r}
 #| label: fig-price-range
@@ -756,7 +759,7 @@ ggplot(mls_price_range, aes(x = qtr, y = pct, fill = fct_rev(price_range), group
     hjust = 0.5
   ) +
   geom_text(
-    data = . %>% filter(year == 2024, qtr == "Q2"),
+    data = . %>% filter(year == 2024, qtr == "Q4"),
     aes(y = pct_label, label = label_percent(accuracy = 1)(pct)),
     color = "white",
     hjust = 0.5
@@ -776,7 +779,7 @@ ggplot(mls_price_range, aes(x = qtr, y = pct, fill = fct_rev(price_range), group
   ) +
   labs(
     title = "Closing price range",
-    subtitle = "All homes sold in region from January 2020 through April 2024",
+    subtitle = "All homes sold in region from January 2020 through November 2024",
     caption = mls_cap
   )
 
@@ -787,7 +790,6 @@ ggplot(mls_price_range, aes(x = qtr, y = pct, fill = fct_rev(price_range), group
 ```{r}
 
 mls_local <- faar_mls |> 
-  filter(close_month != "2024-05-01") |> 
   #group_by(name, year, month) |> 
   summarise(
     sales = n(),
@@ -817,7 +819,7 @@ ggplot(mls_local, aes(x = year, y = sales, fill = year, alpha = year)) +
   add_zero_line() +
   labs(
     title = "Total annual home sales by locality",
-    subtitle = "All homes sold from January 2020 through April 2024",
+    subtitle = "All homes sold from January 2020 through November 2024",
     caption = mls_cap
   ) +
   theme_hda(
@@ -827,7 +829,7 @@ ggplot(mls_local, aes(x = year, y = sales, fill = year, alpha = year)) +
 
 ```
 
-Market velocity, measured by median days on market, shows increasing differentiation between localities over time. While all jurisdictions experienced extremely rapid sales during 2021-2022 with median marketing periods of 5-10 days, recent trends reveal growing disparity. Stafford and Spotsylvania maintain relatively quick sales at 8-10 days, while Orange and Caroline have seen marketing times extend to 20-25 days. King George and Fredericksburg occupy the middle ground with typical marketing periods of 10-13 days.
+Market velocity, measured by median days on market, shows increasing differentiation between localities over time. While all jurisdictions experienced extremely rapid sales during 2021-2022 with median marketing periods of 5-10 days, recent trends reveal growing disparity. Stafford, Spotsylvania, and Fredericksburg maintain relatively quick sales at 8-10 days, while Orange and Caroline have seen marketing times extend closer to 20 days. King George occupies the middle ground with typical marketing periods just under 15 days.
 
 ```{r}
 
@@ -840,13 +842,14 @@ ggplot(mls_local, aes(x = year, y = dom, fill = year, alpha = year)) +
     expand = c(0, 0)
   ) +
   scale_y_continuous(
+    limits = c(0, 22),
     expand = c(0.01, 0.05),
     labels = label_comma()
   ) +
   add_zero_line() +
   labs(
     title = "Annual median days on market by locality",
-    subtitle = "All homes sold from January 2020 through April 2024",
+    subtitle = "All homes sold from January 2020 through November 2024",
     caption = mls_cap
   ) +
   theme_hda(
@@ -856,7 +859,7 @@ ggplot(mls_local, aes(x = year, y = dom, fill = year, alpha = year)) +
 
 ```
 
-Price appreciation patterns demonstrate both the region's overall growth and persistent jurisdictional differences. Stafford leads the market with median prices now exceeding \$500,000, representing about 35% appreciation since 2020. The remaining jurisdictions cluster between \$350,000 and \$450,000, with King George, Fredericksburg, and Spotsylvania showing similar trajectories. Orange and Caroline, while experiencing steady growth, maintain lower price points with current medians near \$350,000 and \$325,000 respectively.
+Price appreciation patterns demonstrate both the region's overall growth and persistent jurisdictional differences. Stafford leads the market with median prices now exceeding \$500,000, representing about 35% appreciation since 2020. The remaining jurisdictions cluster between \$350,000 and \$450,000, with King George, Fredericksburg, and Spotsylvania showing similar trajectories. Orange and Caroline, while experiencing steady growth, maintain lower price points with current medians near \$410,000 and \$365,000 respectively.
 
 ```{r}
 
@@ -875,7 +878,7 @@ ggplot(mls_local, aes(x = year, y = msp, fill = year, alpha = year)) +
   add_zero_line() +
   labs(
     title = "Annual median sales price by locality",
-    subtitle = "All homes sold from January 2020 through April 2024",
+    subtitle = "All homes sold from January 2020 through November 2024",
     caption = mls_cap
   ) +
   theme_hda(
@@ -887,7 +890,7 @@ ggplot(mls_local, aes(x = year, y = msp, fill = year, alpha = year)) +
 
 ### Market segments
 
-The market dynamics between detached homes and townhomes reveal divergent volume trends but similar price trajectories. Annual sales of detached homes peaked near 8,000 units in 2021 before declining sharply to about 1,500 units by early 2024. Townhome sales, while more modest in volume, maintained relatively stable levels around 1,000-1,200 units annually until 2023. Both segments have experienced steady price appreciation, with detached homes rising from about \$360,000 to \$460,000 and townhomes increasing from \$270,000 to \$380,000. Marketing times show growing differences, as detached homes now typically require 12 days to sell compared to 6-7 days for townhomes.
+The market dynamics between detached homes and townhomes reveal divergent volume trends but similar price trajectories. Annual sales of detached homes peaked near 8,000 units in 2021 before declining sharply to about 4,000 units by late 2024. Townhome sales, while more modest in volume, maintained relatively stable levels around 1,000-1,200 units annually until 2023. Both segments have experienced steady price appreciation, with detached homes rising from about \$360,000 to \$485,000 and townhomes increasing from \$270,000 to \$390,000. Marketing times show growing differences, as detached homes now typically require 12 days to sell compared to 6-7 days for townhomes.
 
 ```{r}
 #| label: fig-mls-type
@@ -933,7 +936,7 @@ mls_type_title <- paste0(
     theme_hda() +
     labs(
       title = mls_type_title,
-      subtitle = "Total annual sales"
+      subtitle = "Total annual sales (2024 YTD through November)"
     )
   ) /
   
@@ -991,7 +994,7 @@ mls_type_title <- paste0(
 
 ```
 
-The comparison between resale and new construction markets highlights distinct patterns in both volume and buyer behavior. Resale transactions dominated the market with peak volumes exceeding 8,500 units in 2021, while new construction maintained consistent but much lower volumes around 800-1,000 units annually. Marketing periods for new homes have increased dramatically from 10 days in 2021 to nearly 40 days in 2024, while resale properties stabilized at about 10 days. Price trends show new construction commanding a significant premium, with current median prices near \$500,000 compared to about \$425,000 for resales, though both segments have experienced similar appreciation rates of roughly 30% since 2020.
+The comparison between resale and new construction markets highlights distinct patterns in both volume and buyer behavior. Resale transactions dominated the market with peak volumes exceeding 8,500 units in 2021, while new construction maintained consistent but much lower volumes around 800-1,000 units annually. Marketing periods for new homes have increased dramatically from 10 days in 2021 to nearly 40 days in 2024, while resale properties stabilized at about 10 days. Price trends show new construction commanding a significant premium, with current median prices near \$500,000 compared to about \$450,000 for resales, though both segments have experienced similar appreciation rates of roughly 30% since 2020.
 
 ```{r}
 #| label: fig-mls-nc
@@ -1025,7 +1028,7 @@ mls_nc_title <- paste0(
     theme_hda() +
     labs(
       title = mls_nc_title,
-      subtitle = "Total annual sales"
+      subtitle = "Total annual sales (2024 YTD through November)"
     )
   ) /
   
@@ -1082,8 +1085,3 @@ mls_nc_title <- paste0(
   )
 
 ```
-
-
-
-
-
