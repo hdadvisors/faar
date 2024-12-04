@@ -1,0 +1,73 @@
+locality,metric,metric_fill,detail,value
+Fredericksburg,Average wage,Average wage,Health care and social assistance,80477
+Fredericksburg,Average wage,Average wage,Food and accommodation,26403
+Fredericksburg,Average wage,Average wage,Retail trade,34832
+Caroline,Average wage,Average wage,Administrative and support,36732
+Caroline,Average wage,Average wage,Retail trade,29584
+Caroline,Average wage,Average wage,Food and accommodation,24608
+King George,Average wage,Average wage,Scientific and technical services,100727
+King George,Average wage,Average wage,Retail trade,31011
+King George,Average wage,Average wage,Food and accommodation,21789
+Orange,Average wage,Average wage,Retail trade,33964
+Orange,Average wage,Average wage,Manufacturing,69501
+Orange,Average wage,Average wage,Food and accommodation,25379
+Spotsylvania,Average wage,Average wage,Retail trade,39783
+Spotsylvania,Average wage,Average wage,Health care and social assistance,51405
+Spotsylvania,Average wage,Average wage,Food and accommodation,23754
+Stafford,Average wage,Average wage,Retail trade,36142
+Stafford,Average wage,Average wage,Health care and social assistance,54133
+Stafford,Average wage,Average wage,Scientific and technical services,102193
+Fredericksburg,Median renter income,Median renter income,Median renter income,64451
+Caroline,Median renter income,Median renter income,Median renter income,45000
+King George,Median renter income,Median renter income,Median renter income,58168
+Orange,Median renter income,Median renter income,Median renter income,50150
+Spotsylvania,Median renter income,Median renter income,Median renter income,62923
+Stafford,Median renter income,Median renter income,Median renter income,70744
+Fredericksburg,Average asking rent,,2024 YTD,1796
+Caroline,Average asking rent,,2024 YTD,1493
+King George,Average asking rent,,2024 YTD,1414
+Orange,Average asking rent,,2024 YTD,1009
+Spotsylvania,Average asking rent,,2024 YTD,1780
+Stafford,Average asking rent,,2024 YTD,1847
+Fredericksburg,Median sales price,,2024 YTD,449999
+Caroline,Median sales price,,2024 YTD,365900
+King George,Median sales price,,2024 YTD,465000
+Orange,Median sales price,,2024 YTD,409990
+Spotsylvania,Median sales price,,2024 YTD,454000
+Stafford,Median sales price,,2024 YTD,525000
+Fredericksburg,Median gross rent,,,1462
+Caroline,Median gross rent,,,1212
+King George,Median gross rent,,,1385
+Orange,Median gross rent,,,1085
+Spotsylvania,Median gross rent,,,1677
+Stafford,Median gross rent,,,1828
+Fredericksburg,Projected household growth,,,3730
+Caroline,Projected household growth,,,3159
+King George,Projected household growth,,,3851
+Orange,Projected household growth,,,3576
+Spotsylvania,Projected household growth,,,19516
+Stafford,Projected household growth,,,28094
+Fredericksburg,Annual production needed,,,143.4615385
+Caroline,Annual production needed,,,121.5
+King George,Annual production needed,,,148.1153846
+Orange,Annual production needed,,,137.5384615
+Spotsylvania,Annual production needed,,,750.6153846
+Stafford,Annual production needed,,,1080.538462
+Fredericksburg,Annual average permits,,Jan 2000 to Sep 2024,144
+Caroline,Annual average permits,,Jan 2000 to Sep 2024,345
+King George,Annual average permits,,Jan 2000 to Sep 2024,226
+Orange,Annual average permits,,Jan 2000 to Sep 2024,383
+Spotsylvania,Annual average permits,,Jan 2000 to Sep 2024,1697
+Stafford,Annual average permits,,Jan 2000 to Sep 2024,937
+Fredericksburg,Income to afford,Income to afford,Median sales price,99593.72
+Caroline,Income to afford,Income to afford,Median sales price,80980.94
+King George,Income to afford,Income to afford,Median sales price,102913.74
+Orange,Income to afford,Income to afford,Median sales price,90738.93
+Spotsylvania,Income to afford,Income to afford,Median sales price,100479.22
+Stafford,Income to afford,Income to afford,Median sales price,116192.93
+Fredericksburg,Income to afford,Income to afford,Average asking rent,71840
+Caroline,Income to afford,Income to afford,Average asking rent,59720
+King George,Income to afford,Income to afford,Average asking rent,56560
+Orange,Income to afford,Income to afford,Average asking rent,40360
+Spotsylvania,Income to afford,Income to afford,Average asking rent,71200
+Stafford,Income to afford,Income to afford,Average asking rent,73880

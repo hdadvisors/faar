@@ -1,3 +1,7 @@
 # Executive summary {#sec-exec-sum .unnumbered}
 
-<to be added>
+Click the image below to download the 20-slide Executive Summary presentation:
+
+[![](img/exec-sum.png){width=500}](pdf/FAAR Housing Study - Executive Summary.pdf)
+
+[*Executive Summary*](pdf/FAAR Housing Study - Executive Summary.pdf) (PDF)

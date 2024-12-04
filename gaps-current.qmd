@@ -182,8 +182,6 @@ pums_faar_hh |>
 
 ```
 
-. . .
-
 ```{r}
 #| label: fig-gap-cb
 #| fig-cap: "Households who need affordable homes"

@@ -1,0 +1,22 @@
+# Local fact sheets {#sec-exec-sum .unnumbered}
+
+Click on the images below to download PDF fact sheets for each locality:
+
+::: {layout-ncol=2}
+[![Caroline County](img/lfs-caro.png)](pdf/FAAR Fact Sheet - Caroline.pdf)
+
+[![City of Fredericksburg](img/lfs-fred.png)](pdf/FAAR Fact Sheet - Fredericksburg.pdf)
+:::
+
+::: {layout-ncol=2}
+[![King George County](img/lfs-kg.png)](pdf/FAAR Fact Sheet - King George.pdf)
+
+[![Orange County](img/lfs-org.png)](pdf/FAAR Fact Sheet - Orange.pdf)
+:::
+
+::: {layout-ncol=2}
+[![Spotsylvania County](img/lfs-spot.png)](pdf/FAAR Fact Sheet - Spotsylvania.pdf)
+
+[![Stafford County](img/lfs-staf.png)](pdf/FAAR Fact Sheet - Stafford.pdf)
+:::
+

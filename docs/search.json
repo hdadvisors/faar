@@ -10,6 +10,16 @@
     ]
   },
   {
+    "objectID": "exec-sum.html",
+    "href": "exec-sum.html",
+    "title": "Executive summary",
+    "section": "",
+    "text": "Click the image below to download the 20-slide Executive Summary presentation:\n\nExecutive Summary (PDF)",
+    "crumbs": [
+      "Executive summary"
+    ]
+  },
+  {
     "objectID": "engagement.html",
     "href": "engagement.html",
     "title": "1  Engagement",
@@ -34,7 +44,7 @@
     "href": "engagement.html#gap-analysis-implications",
     "title": "1  Engagement",
     "section": "1.2 Gap Analysis Implications",
-    "text": "1.2 Gap Analysis Implications\n\nDiverse Stakeholder Recruitment\nDue to the limited scope of engagement conducted thus far, we recommended that any ongoing or future stakeholder recruitment—–in the rollout of this work and beyond–—include diverse professional expertise and experiences. This comprises real estate professionals, employers, and those that work within traditional workforce occupations.\nIt may be valuable to review housing outcomes with stakeholders that live and work in the communities FAAR serves. Additionally, including a diversity of geography to broaden feedback from urban, suburban, and rural communities will be important to more effectively understand the variety of needs across the region and determine how housing challenges cascade across landscapes.\n\n\nEducational Awareness\nUsing data and findings from the housing gap analysis, FAAR could help orchestrate an educational campaign about the opportunities for workforce and economic development to collaborate in the housing field. One example to potentially emulate is Workforce Housing Now, an initiative led by the Community Foundation of Loudoun and Northern Fauquier Counties. They describe the it as\n\n“…a public awareness campaign amplifying Loudoun’s voice for workforce housing as the missing ingredient to our community’s prosperity.” \n\nRespondents reported that the forthcoming housing gap analysis resources could serve as a way to “empower and equip” their communities with greater knowledge. Regionalism could also be a focus of such a campaign to expand awareness and partnerships across fields, like those who are tied to homelessness and economic development. Often these fields work independently of each other and have limited understandings of the challenges facing their respective target populations.\n\n\nApproaches to Regionalism\nThe housing gap analysis will not only need to account for the unique needs and gaps in each locality but also account for the interjurisdictional nature of populations housed in the FAAR region. For example, Loisann’s Hope House serves unhoused and working populations across the region and both economic development authorities interviewed recruit workforce from outside of their home counties.\nWhile many localities aspire to have residents that live and work within their bounds, the reality is that many households will continue to commute or migrate in search of affordable options. The housing gap analysis could be leveraged to call attention to the reality of these differences and to help illuminate missing markets.",
+    "text": "1.2 Gap Analysis Implications\n\nDiverse Stakeholder Recruitment\nDue to the limited scope of engagement conducted thus far, we recommended that any ongoing or future stakeholder recruitment—–in the rollout of this work and beyond–—include diverse professional expertise and experiences. This comprises real estate professionals, employers, and those that work within traditional workforce occupations.\nIt may be valuable to review housing outcomes with stakeholders that live and work in the communities FAAR serves. Additionally, including a diversity of geography to broaden feedback from urban, suburban, and rural communities will be important to more effectively understand the variety of needs across the region and determine how housing challenges cascade across landscapes.\n\n\nEducational Awareness\nUsing data and findings from the housing gap analysis, FAAR could help orchestrate an educational campaign about the opportunities for workforce and economic development to collaborate in the housing field. One example to potentially emulate is Workforce Housing Now, an initiative led by the Community Foundation of Loudoun and Northern Fauquier Counties. They describe it as\n\n“…a public awareness campaign amplifying Loudoun’s voice for workforce housing as the missing ingredient to our community’s prosperity.” \n\nRespondents reported that the forthcoming housing gap analysis resources could serve as a way to “empower and equip” their communities with greater knowledge. Regionalism could also be a focus of such a campaign to expand awareness and partnerships across fields, like those who are tied to homelessness and economic development. Often these fields work independently of each other and have limited understandings of the challenges facing their respective target populations.\n\n\nApproaches to Regionalism\nThe housing gap analysis will not only need to account for the unique needs and gaps in each locality but also account for the interjurisdictional nature of populations housed in the FAAR region. For example, Loisann’s Hope House serves unhoused and working populations across the region and both economic development authorities interviewed recruit workforce from outside of their home counties.\nWhile many localities aspire to have residents that live and work within their bounds, the reality is that many households will continue to commute or migrate in search of affordable options. The housing gap analysis could be leveraged to call attention to the reality of these differences and to help illuminate missing markets.",
     "crumbs": [
       "<span class='chapter-number'>1</span>  <span class='chapter-title'>Engagement</span>"
     ]
@@ -327,7 +337,7 @@
     "href": "gaps-current.html",
     "title": "7  Current housing gaps",
     "section": "",
-    "text": "7.1 Overview\nMonthly housing costs show substantial variation across income bands in the Fredericksburg region. Maximum affordable housing costs scale proportionally with Area Median Income (AMI), ranging from about $1,000 monthly for households below 30% AMI to over $4,000 for those above 120% AMI.\nHowever, actual current housing costs demonstrate a compressed range between approximately $1,500 and $2,500 monthly across all income bands, creating particular affordability challenges for lower-income households.\nFigure 7.1: Affordable and actual housing costs by AMI\nAs a result of this mismatch, housing cost burdens reveal stark disparities between income groups, with similar patterns varying between core workforce and other households. Among core workforce households, severe cost burdens affect about two-thirds of those below 30% AMI, while an additional 44% of households between 30-50% AMI face moderate cost burdens.\nThe burden decreases significantly for higher income brackets, with only 7-8% of households above 80% AMI experiencing any cost burden. Similar patterns emerge for non-core workforce households, though with notably higher cost burdens in the 80-100% AMI range at 19% compared to 8% for core workforce households.\nFigure 7.2: Housing affordability by AMI\n. . .",
+    "text": "7.1 Overview\nMonthly housing costs show substantial variation across income bands in the Fredericksburg region. Maximum affordable housing costs scale proportionally with Area Median Income (AMI), ranging from about $1,000 monthly for households below 30% AMI to over $4,000 for those above 120% AMI.\nHowever, actual current housing costs demonstrate a compressed range between approximately $1,500 and $2,500 monthly across all income bands, creating particular affordability challenges for lower-income households.\nFigure 7.1: Affordable and actual housing costs by AMI\nAs a result of this mismatch, housing cost burdens reveal stark disparities between income groups, with similar patterns varying between core workforce and other households. Among core workforce households, severe cost burdens affect about two-thirds of those below 30% AMI, while an additional 44% of households between 30-50% AMI face moderate cost burdens.\nThe burden decreases significantly for higher income brackets, with only 7-8% of households above 80% AMI experiencing any cost burden. Similar patterns emerge for non-core workforce households, though with notably higher cost burdens in the 80-100% AMI range at 19% compared to 8% for core workforce households.\nFigure 7.2: Housing affordability by AMI",
     "crumbs": [
       "Housing gaps",
       "<span class='chapter-number'>7</span>  <span class='chapter-title'>Current housing gaps</span>"
@@ -375,6 +385,16 @@
     "crumbs": [
       "Housing gaps",
       "<span class='chapter-number'>8</span>  <span class='chapter-title'>Projected housing gaps</span>"
+    ]
+  },
+  {
+    "objectID": "local-fact-sheets.html",
+    "href": "local-fact-sheets.html",
+    "title": "Local fact sheets",
+    "section": "",
+    "text": "Click on the images below to download PDF fact sheets for each locality:\n\n\n\n\n\n\n\n\n\nCaroline County\n\n\n\n\n\n\n\nCity of Fredericksburg\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nKing George County\n\n\n\n\n\n\n\nOrange County\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSpotsylvania County\n\n\n\n\n\n\n\nStafford County",
+    "crumbs": [
+      "Local fact sheets"
     ]
   }
 ]

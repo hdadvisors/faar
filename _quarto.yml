@@ -35,6 +35,7 @@ book:
       chapters:
         - gaps-current.qmd
         - gaps-proj.qmd
+    - local-fact-sheets.qmd
   #  - part: "Local fact sheets"
   #    chapters:
   #      - local-fred.qmd
