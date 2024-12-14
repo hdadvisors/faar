@@ -21,8 +21,8 @@ book:
   chapters:
     - index.qmd
     - exec-sum.qmd
-    - engagement.qmd
-    - data-notes.qmd
+    #- engagement.qmd
+    #- data-notes.qmd
     - part: "Housing spectrum"
       chapters:
         - spectrum-reg.qmd
@@ -36,6 +36,10 @@ book:
         - gaps-current.qmd
         - gaps-proj.qmd
     - local-fact-sheets.qmd
+  appendices: 
+    - engagement.qmd
+    - data-notes.qmd
+  
   #  - part: "Local fact sheets"
   #    chapters:
   #      - local-fred.qmd

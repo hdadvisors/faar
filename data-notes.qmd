@@ -85,7 +85,7 @@ HUD bases its AMIs on the median incomes of *families* rather than *households*.
 MFIs are calculated as follows:
 
 1. **Data source:** HUD uses median family income data from the most recent version of the American Community Survey (ACS), an annual Census Bureau survey completed by 1% of the population. For FY 2024, the latest ACS estimates were from 2022.
-2. **Reliability:** Because the ACS is based on a sample, HUD tests each the income estimates for each area to determine whether the margin of error is within an acceptable range.
+2. **Reliability:** Because the ACS is based on a sample, HUD tests each area's income estimate to determine whether the margin of error is within an acceptable range.
 3. **Inflation adjustment:** To account for the two-year lag from the ACS sample, HUD adjusts each value according to an inflation factor based on Consumer Price Index (CPI) projections published by the Congressional Budget Office (CBO).
 4. **Round final value:** HUD rounds the adjusted median income value to the nearest $100. This result is the official MFI for a given area.
 

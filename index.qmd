@@ -4,11 +4,6 @@ engine: knitr
 
 # About this study {.unnumbered}
 
-::: {.callout-note}
-### Note
-*Last updated `r format(Sys.Date(), "%B %d, %Y")`*
-:::
-
 This study is a regional housing gap analysis conducted by [HDAdvisors](https://www.hdadvisors.net) (HDA) for the [Fredericksburg Area Association of REALTORS®](https://www.faarmembers.com/) (FAAR). The study has four objectives:
 
 * Frame workforce housing needs within the context of the region’s full housing spectrum,
@@ -17,3 +12,11 @@ This study is a regional housing gap analysis conducted by [HDAdvisors](https://
 * Present results at both the regional and local levels with fact sheets and other deliverables that can be easily disseminated and consumed by multiple audiences.
 
 Use the links on the left side of this page to navigate between chapters.
+
+## Download full study {.unnumbered}
+
+Click the image below to download the 112-page PDF of the complete study:
+
+[![](img/faar-rpt.png){width=500}](pdf/FAAR Housing Gap Analysis 2024.pdf)
+
+[*Full study document*](pdf/FAAR Housing Study - Executive Summary.pdf) (PDF, 7.3 MB)

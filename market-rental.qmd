@@ -114,7 +114,6 @@ ggplot() +
 The most common rent range in the region is \$1,500 to \$1,999 per month, representing nearly 31% of all rental units. Another 27% of rentals fall between \$1,000 and \$1,499 monthly. Lower-cost units with rents under \$1,000 make up about 15% of the market, while higher-end rentals above \$2,000 represent approximately 22%. About 5% of rental units report no cash rent, typically indicating housing provided as part of employment or family arrangements.
 
 ```{r}
-
 #| label: fig-renter-supply
 #| fig-cap: "Renter-occupied homes by monthly gross rent"
 

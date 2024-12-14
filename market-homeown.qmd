@@ -803,6 +803,8 @@ mls_local <- faar_mls |>
 The distribution of home sales volume across localities reveals stark differences in market size and trajectory. Stafford and Spotsylvania dominate the regional market, each recording over 3,000 annual sales at their peak in 2021. However, both jurisdictions have experienced substantial declines, with current volumes approximately 60% below their peaks. The region's smaller markets, including Orange, Caroline, King George, and Fredericksburg, demonstrate more modest but still significant reductions, with current annual sales volumes ranging from about 100 to 600 units.
 
 ```{r}
+#| label: fig-local-sales
+#| fig-cap: "Total annual home sales by locality"
 
 ggplot(mls_local, aes(x = year, y = sales, fill = year, alpha = year)) +
   facet_wrap(~fct_reorder(name, sales, .desc = T), nrow = 1) +
@@ -832,6 +834,8 @@ ggplot(mls_local, aes(x = year, y = sales, fill = year, alpha = year)) +
 Market velocity, measured by median days on market, shows increasing differentiation between localities over time. While all jurisdictions experienced extremely rapid sales during 2021-2022 with median marketing periods of 5-10 days, recent trends reveal growing disparity. Stafford, Spotsylvania, and Fredericksburg maintain relatively quick sales at 8-10 days, while Orange and Caroline have seen marketing times extend closer to 20 days. King George occupies the middle ground with typical marketing periods just under 15 days.
 
 ```{r}
+#| label: fig-local-dom
+#| fig-cap: "Annual median days on market by locality"
 
 ggplot(mls_local, aes(x = year, y = dom, fill = year, alpha = year)) +
   facet_wrap(~fct_reorder(name, dom), nrow = 1) +
@@ -862,6 +866,8 @@ ggplot(mls_local, aes(x = year, y = dom, fill = year, alpha = year)) +
 Price appreciation patterns demonstrate both the region's overall growth and persistent jurisdictional differences. Stafford leads the market with median prices now exceeding \$500,000, representing about 35% appreciation since 2020. The remaining jurisdictions cluster between \$350,000 and \$450,000, with King George, Fredericksburg, and Spotsylvania showing similar trajectories. Orange and Caroline, while experiencing steady growth, maintain lower price points with current medians near \$410,000 and \$365,000 respectively.
 
 ```{r}
+#| label: fig-local-msp
+#| fig-cap: "Annual median sales price by locality"
 
 ggplot(mls_local, aes(x = year, y = msp, fill = year, alpha = year)) +
   facet_wrap(~fct_reorder(name, msp, .desc = T), nrow = 1) +
