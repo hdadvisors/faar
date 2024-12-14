@@ -55,7 +55,7 @@ format:
     theme:
       - lumen
     grid: 
-      sidebar-width: 300px
+      sidebar-width: 275px
     fontsize: "100%"
     #template-partials:
     # - toc.html
